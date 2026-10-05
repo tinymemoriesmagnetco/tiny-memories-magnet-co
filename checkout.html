@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Tiny Memories Magnet Co.</title>
+
+  <style>
+    :root {
+      --cream: #faf7f0;
+      --cream-dark: #f1ebe1;
+      --white: #fffdf9;
+      --charcoal: #383432;
+      --text-light: #68615c;
+      --rose: #b97968;
+      --rose-dark: #a96858;
+      --rose-light: #d4aaa0;
+      --sage: #899780;
+      --sage-light: #b8c2af;
+      --gold: #c6a36a;
+      --border: #e5ddd1;
+      --danger: #a84e4e;
+      --success: #61795d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--charcoal);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    /* HEADER */
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 6%;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 25px;
+    }
+
+    .logo-link img {
+      display: block;
+      width: 145px;
+      height: auto;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      font-size: 15px;
+      color: var(--charcoal);
+      transition: color 0.2s ease;
+    }
+
+    nav a:hover {
+      color: var(--rose);
+    }
+
+    /* PAGE */
+
+    .page {
+      width: min(1150px, 92%);
+      margin: 0 auto;
+      padding: 55px 0 80px;
+    }
+
+    .page-heading {
+      text-align: center;
+      margin-bottom: 45px;
+    }
+
+    .eyebrow {
+      color: var(--rose);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 5vw, 58px);
+      margin: 0 0 12px;
+      line-height: 1.05;
+    }
+
+    .page-heading p {
+      max-width: 650px;
+      margin: 0 auto;
+      color: var(--text-light);
+      font-size: 17px;
+    }
+
+    /* CHECKOUT GRID */
+
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(56, 52, 50, 0.05);
+    }
+
+    .card + .card {
+      margin-top: 24px;
+    }
+
+    .card h2 {
+      margin: 0 0 22px;
+      font-size: 25px;
+    }
+
+    .card h3 {
+      margin: 28px 0 14px;
+      font-size: 18px;
+    }
+
+    /* FORM */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .required {
+      color: var(--rose);
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--charcoal);
+      padding: 12px 13px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 3px rgba(185, 121, 104, 0.12);
+    }
+
+    textarea {
+      min-height: 105px;
+      resize: vertical;
+    }
+
+    /* ORDER SUMMARY */
+
+    .order-items {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .order-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .order-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .item-image {
+      width: 62px;
+      height: 62px;
+      flex: 0 0 62px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--cream-dark);
+      object-fit: cover;
+    }
+
+    .magnet-placeholder {
+      width: 62px;
+      height: 62px;
+      flex: 0 0 62px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5px;
+      font-size: 10px;
+      color: var(--text-light);
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .item-details {
+      color: var(--text-light);
+      font-size: 13px;
+    }
+
+    .item-price {
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .custom-details {
+      margin-top: 7px;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    .summary-lines {
+      margin-top: 22px;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 9px 0;
+      color: var(--text-light);
+    }
+
+    .summary-line.total {
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid var(--border);
+      color: var(--charcoal);
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    /* BUNDLE NOTE */
+
+    .bundle-note {
+      background: var(--sage-light);
+      border-radius: 12px;
+      padding: 13px 15px;
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--charcoal);
+    }
+
+    /* PAYPAL */
+
+    .paypal-box {
+      margin-top: 25px;
+      padding-top: 25px;
+      border-top: 1px solid var(--border);
+    }
+
+    .paypal-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .paypal-title h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .paypal-badge {
+      background: #f5f0e7;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 5px 10px;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .paypal-handle {
+      color: var(--text-light);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    #paypal-button-container {
+      min-height: 45px;
+    }
+
+    .paypal-loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    /* STATUS */
+
+    .status {
+      display: none;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.error {
+      background: #f8e9e7;
+      border: 1px solid #e5b8b1;
+      color: var(--danger);
+    }
+
+    .status.success {
+      background: #edf3eb;
+      border: 1px solid #c2d2bd;
+      color: var(--success);
+    }
+
+    .status.info {
+      background: #f2efe8;
+      border: 1px solid var(--border);
+      color: var(--text-light);
+    }
+
+    /* EMPTY CART */
+
+    .empty-cart {
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .empty-cart h2 {
+      margin-bottom: 10px;
+    }
+
+    .empty-cart p {
+      color: var(--text-light);
+      margin-bottom: 25px;
+    }
+
+    .button {
+      display: inline-block;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 22px;
+      background: var(--rose);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .button:hover {
+      background: var(--rose-dark);
+      transform: translateY(-1px);
+    }
+
+    /* CONFIRMATION */
+
+    .confirmation {
+      display: none;
+      text-align: center;
+      max-width: 700px;
+      margin: 30px auto;
+    }
+
+    .confirmation.show {
+      display: block;
+    }
+
+    .checkmark {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--sage-light);
+      margin: 0 auto 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 35px;
+    }
+
+    .confirmation h2 {
+      font-size: 34px;
+      margin: 0 0 10px;
+    }
+
+    .confirmation p {
+      color: var(--text-light);
+    }
+
+    .order-number {
+      margin: 20px 0;
+      padding: 14px;
+      background: var(--cream-dark);
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    /* FOOTER */
+
+    footer {
+      background: var(--charcoal);
+      color: white;
+      padding: 35px 6%;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    footer p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    footer .muted {
+      opacity: 0.7;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 850px) {
+      .checkout-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-wrap {
+        flex-direction: column;
+      }
+
+      nav {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        padding-top: 35px;
+      }
+
+      .card {
+        padding: 22px;
+        border-radius: 16px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+
+      .logo-link img {
+        width: 125px;
+      }
+
+      nav {
+        gap: 14px;
+      }
+
+      nav a {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="nav-wrap">
+
+    <a class="logo-link" href="index.html">
+      <img src="logo.png.png" alt="Tiny Memories Magnet Co.">
+    </a>
+
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="custom-magnets.html">Custom Photo Magnets</a>
+      <a href="shop-magnets.html">Shop Magnets</a>
+      <a href="index.html#about">About</a>
+    </nav>
+
+  </div>
+</header>
+
+
+<main class="page">
+
+  <div id="checkoutContent">
+
+    <div class="page-heading">
+      <div class="eyebrow">Almost yours</div>
+      <h1>Checkout</h1>
+      <p>
+        Finish your order below. Your memories are almost ready to become
+        tiny magnets.
+      </p>
+    </div>
+
+
+    <div id="status" class="status"></div>
+
+
+    <div class="checkout-grid">
+
+      <!-- LEFT SIDE -->
+
+      <div>
+
+        <section class="card">
+
+          <h2>Your Information</h2>
+
+          <form id="checkout-form">
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label for="firstName">
+                  First Name <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  autocomplete="given-name"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="lastName">
+                  Last Name <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  autocomplete="family-name"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="email">
+                  Email <span class="required">*</span>
+                </label>
+
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  autocomplete="email"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="phone">
+                  Phone
+                </label>
+
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  autocomplete="tel"
+                >
+              </div>
+
+            </div>
+
+
+            <h3>Shipping Address</h3>
+
+            <div class="form-grid">
+
+              <div class="form-group full">
+                <label for="address">
+                  Street Address <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  autocomplete="street-address"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group full">
+                <label for="address2">
+                  Apartment, Suite, Unit, etc.
+                </label>
+
+                <input
+                  type="text"
+                  id="address2"
+                  name="address2"
+                  autocomplete="address-line2"
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="city">
+                  City <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  autocomplete="address-level2"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="state">
+                  State <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  autocomplete="address-level1"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="zip">
+                  ZIP Code <span class="required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  id="zip"
+                  name="zip"
+                  autocomplete="postal-code"
+                  required
+                >
+              </div>
+
+
+              <div class="form-group">
+                <label for="country">
+                  Country <span class="required">*</span>
+                </label>
+
+                <select
+                  id="country"
+                  name="country"
+                  autocomplete="country"
+                  required
+                >
+                  <option value="US" selected>United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="MX">Mexico</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="AU">Australia</option>
+                </select>
+              </div>
+
+            </div>
+
+
+            <h3>Order Notes</h3>
+
+            <div class="form-group">
+
+              <label for="orderNotes">
+                Anything you'd like us to know?
+              </label>
+
+              <textarea
+                id="orderNotes"
+                name="orderNotes"
+                placeholder="Optional notes about your order..."
+              ></textarea>
+
+            </div>
+
+          </form>
+
+        </section>
+
+
+        <!-- PAYPAL -->
+
+        <section class="card paypal-box">
+
+          <div class="paypal-title">
+            <h2>Pay with PayPal</h2>
+            <span class="paypal-badge">Secure checkout</span>
+          </div>
+
+          <div class="paypal-handle">
+            PayPal account: <strong>@tinymemoriesmagnetco</strong>
+          </div>
+
+          <div id="paypal-status" class="status"></div>
+
+          <div id="paypal-button-container">
+            <div class="paypal-loading">
+              Loading secure PayPal checkout...
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- RIGHT SIDE -->
+
+      <aside>
+
+        <section class="card">
+
+          <h2>Your Order</h2>
+
+          <div id="order-items" class="order-items"></div>
+
+          <div class="summary-lines">
+
+            <div class="summary-line">
+              <span>Magnets</span>
+              <strong id="subtotal">$0.00</strong>
+            </div>
+
+            <div class="summary-line">
+              <span>Shipping</span>
+              <strong id="shipping">$5.00</strong>
+            </div>
+
+            <div class="summary-line total">
+              <span>Total</span>
+              <strong id="total">$0.00</strong>
+            </div>
+
+          </div>
+
+
+          <div class="bundle-note">
+            <strong>Bundle pricing:</strong>
+            1 for $3 · 3 for $9 · 6 for $18 · 9 for $24.
+            Bundle savings are automatically applied to your order.
+          </div>
+
+        </section>
+
+      </aside>
+
+    </div>
+
+  </div>
+
+
+  <!-- SUCCESS -->
+
+  <section id="confirmation" class="card confirmation">
+
+    <div class="checkmark">✓</div>
+
+    <h2>Thank You!</h2>
+
+    <p>
+      Your Tiny Memories order has been successfully placed.
+    </p>
+
+    <div class="order-number">
+      PayPal Order #<span id="confirmation-order-id"></span>
+    </div>
+
+    <p>
+      We'll use the information you provided to prepare your order.
+      Keep an eye on your email for order updates.
+    </p>
+
+    <a class="button" href="index.html">
+      Back to Tiny Memories
+    </a>
+
+  </section>
+
+</main>
+
+
+<footer>
+
+  <p><strong>Tiny Memories Magnet Co.</strong></p>
+
+  <p class="muted">
+    Tiny memories. Big feelings.
+  </p>
+
+</footer>
+
+
+<script>
+
+  /*
+   * ============================================================
+   * TINY MEMORIES MAGNET CO.
+   * CHECKOUT + PAYPAL
+   * ============================================================
+   */
+
+  const CART_KEY = "tinyMemoriesCart";
+
+  const SHIPPING_COST = 5;
+
+
+  // ------------------------------------------------------------
+  // GET CART
+  // ------------------------------------------------------------
+
+  function getCart() {
+
+    try {
+
+      const cart = JSON.parse(
+        localStorage.getItem(CART_KEY) || "[]"
+      );
+
+      return Array.isArray(cart) ? cart : [];
+
+    } catch (error) {
+
+      console.error("Could not read cart:", error);
+
+      return [];
+
+    }
+
+  }
+
+
+  // ------------------------------------------------------------
+  // BUNDLE PRICING
+  // ------------------------------------------------------------
+
+  function calculateMerchandiseTotal(quantity) {
+
+    quantity = Number(quantity) || 0;
+
+    const groupsOfNine = Math.floor(quantity / 9);
+
+    let remainder = quantity % 9;
+
+    let total = groupsOfNine * 24;
+
+
+    if (remainder >= 6) {
+
+      total += 18;
+
+      remainder -= 6;
+
+    }
+
+
+    if (remainder >= 3) {
+
+      total += 9;
+
+      remainder -= 3;
+
+    }
+
+
+    total += remainder * 3;
+
+
+    return total;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // CART QUANTITY
+  // ------------------------------------------------------------
+
+  function getTotalQuantity(cart) {
+
+    return cart.reduce((total, item) => {
+
+      return total + (Number(item.quantity) || 0);
+
+    }, 0);
+
+  }
+
+
+  // ------------------------------------------------------------
+  // MONEY
+  // ------------------------------------------------------------
+
+  function money(amount) {
+
+    return "$" + Number(amount).toFixed(2);
+
+  }
+
+
+  // ------------------------------------------------------------
+  // STATUS
+  // ------------------------------------------------------------
+
+  function showStatus(message, type = "info") {
+
+    const status = document.getElementById("status");
+
+    status.textContent = message;
+
+    status.className = "status show " + type;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  function showPaypalStatus(message, type = "info") {
+
+    const status = document.getElementById("paypal-status");
+
+    status.textContent = message;
+
+    status.className = "status show " + type;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // DISPLAY ORDER
+  // ------------------------------------------------------------
+
+  function renderOrder() {
+
+    const cart = getCart();
+
+    const orderItems = document.getElementById("order-items");
+
+    orderItems.innerHTML = "";
+
+
+    if (cart.length === 0) {
+
+      document.getElementById("checkoutContent").innerHTML = `
+
+        <div class="card empty-cart">
+
+          <h2>Your cart is empty</h2>
+
+          <p>
+            Add some tiny memories before checking out.
+          </p>
+
+          <a class="button" href="shop-magnets.html">
+            Shop Magnets
+          </a>
+
+        </div>
+
+      `;
+
+      return false;
+
+    }
+
+
+    cart.forEach(item => {
+
+      const row = document.createElement("div");
+
+      row.className = "order-item";
+
+
+      let imageHTML = `
+        <div class="magnet-placeholder">
+          Tiny<br>Memory
+        </div>
+      `;
+
+
+      // Custom photo magnet
+
+      if (
+        item.type === "custom" &&
+        item.photos &&
+        item.photos.length &&
+        item.photos[0].dataUrl
+      ) {
+
+        imageHTML = `
+          <img
+            class="item-image"
+            src="${item.photos[0].dataUrl}"
+            alt="Custom photo"
+          >
+        `;
+
+      }
+
+
+      const quantity = Number(item.quantity) || 1;
+
+
+      let details = `Quantity: ${quantity}`;
+
+
+      if (item.type === "custom") {
+
+        details += `
+          <div class="custom-details">
+            Custom photo magnet order
+          </div>
+        `;
+
+      }
+
+
+      row.innerHTML = `
+
+        ${imageHTML}
+
+        <div class="item-info">
+
+          <div class="item-name">
+            ${escapeHTML(item.name || "Magnet")}
+          </div>
+
+          <div class="item-details">
+            ${details}
+          </div>
+
+        </div>
+
+        <div class="item-price">
+          ${money(3 * quantity)}
+        </div>
+
+      `;
+
+
+      orderItems.appendChild(row);
+
+    });
+
+
+    const quantity = getTotalQuantity(cart);
+
+    const merchandiseTotal =
+      calculateMerchandiseTotal(quantity);
+
+    const total =
+      merchandiseTotal + SHIPPING_COST;
+
+
+    document.getElementById("subtotal").textContent =
+      money(merchandiseTotal);
+
+    document.getElementById("shipping").textContent =
+      money(SHIPPING_COST);
+
+    document.getElementById("total").textContent =
+      money(total);
+
+
+    return true;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // ESCAPE HTML
+  // ------------------------------------------------------------
+
+  function escapeHTML(value) {
+
+    const div = document.createElement("div");
+
+    div.textContent = value == null ? "" : String(value);
+
+    return div.innerHTML;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // FORM DATA
+  // ------------------------------------------------------------
+
+  function getCustomerInformation() {
+
+    const form =
+      document.getElementById("checkout-form");
+
+
+    return {
+
+      firstName:
+        document.getElementById("firstName").value.trim(),
+
+      lastName:
+        document.getElementById("lastName").value.trim(),
+
+      email:
+        document.getElementById("email").value.trim(),
+
+      phone:
+        document.getElementById("phone").value.trim()
+
+    };
+
+  }
+
+
+  function getShippingInformation() {
+
+    return {
+
+      address:
+        document.getElementById("address").value.trim(),
+
+      address2:
+        document.getElementById("address2").value.trim(),
+
+      city:
+        document.getElementById("city").value.trim(),
+
+      state:
+        document.getElementById("state").value.trim(),
+
+      zip:
+        document.getElementById("zip").value.trim(),
+
+      country:
+        document.getElementById("country").value
+
+    };
+
+  }
+
+
+  function getOrderNotes() {
+
+    return document
+      .getElementById("orderNotes")
+      .value
+      .trim();
+
+  }
+
+
+  // ------------------------------------------------------------
+  // VALIDATE CHECKOUT FORM
+  // ------------------------------------------------------------
+
+  function validateCheckoutForm() {
+
+    const form =
+      document.getElementById("checkout-form");
+
+
+    if (!form.checkValidity()) {
+
+      form.reportValidity();
+
+      showPaypalStatus(
+        "Please complete the required checkout fields first.",
+        "error"
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // CREATE PAYPAL ORDER
+  // ------------------------------------------------------------
+
+  async function createPaypalOrder() {
+
+    if (!validateCheckoutForm()) {
+
+      throw new Error(
+        "Please complete your checkout information."
+      );
+
+    }
+
+
+    const cart = getCart();
+
+
+    if (!cart.length) {
+
+      throw new Error(
+        "Your cart is empty."
+      );
+
+    }
+
+
+    const customer =
+      getCustomerInformation();
+
+
+    const shipping =
+      getShippingInformation();
+
+
+    const orderNotes =
+      getOrderNotes();
+
+
+    const response = await fetch(
+      "/api/orders",
+      {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          cart: cart,
+
+          customer: customer,
+
+          shipping: shipping,
+
+          orderNotes: orderNotes
+
+        })
+
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Create PayPal order failed:",
+        data
+      );
+
+      throw new Error(
+        data.error ||
+        "Unable to create PayPal order."
+      );
+
+    }
+
+
+    return data.id;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // CAPTURE PAYPAL ORDER
+  // ------------------------------------------------------------
+
+  async function capturePaypalOrder(orderID) {
+
+    const response = await fetch(
+      `/api/orders/${encodeURIComponent(orderID)}/capture`,
+      {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        }
+
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Capture failed:",
+        data
+      );
+
+      throw new Error(
+        data.error ||
+        "Payment could not be completed."
+      );
+
+    }
+
+
+    return data;
+
+  }
+
+
+  // ------------------------------------------------------------
+  // SUCCESSFUL ORDER
+  // ------------------------------------------------------------
+
+  function finishSuccessfulOrder(orderID) {
+
+    const customer =
+      getCustomerInformation();
+
+
+    const orderRecord = {
+
+      orderID: orderID,
+
+      customer: customer,
+
+      shipping: getShippingInformation(),
+
+      orderNotes: getOrderNotes(),
+
+      cart: getCart(),
+
+      createdAt:
+        new Date().toISOString()
+
+    };
+
+
+    localStorage.setItem(
+      "tinyMemoriesLastOrder",
+      JSON.stringify(orderRecord)
+    );
+
+
+    // Clear cart
+
+    localStorage.removeItem(CART_KEY);
+
+
+    document.getElementById("checkoutContent")
+      .style.display = "none";
+
+
+    document
+      .getElementById("confirmation")
+      .classList.add("show");
+
+
+    document
+      .getElementById("confirmation-order-id")
+      .textContent = orderID;
+
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  // ------------------------------------------------------------
+  // LOAD PAYPAL
+  // ------------------------------------------------------------
+
+  async function loadPayPal() {
+
+    try {
+
+      /*
+       * Ask our backend for the public PayPal Client ID.
+       */
+
+      const configResponse =
+        await fetch("/api/paypal-config");
+
+
+      if (!configResponse.ok) {
+
+        throw new Error(
+          "Could not load PayPal configuration."
+        );
+
+      }
+
+
+      const config =
+        await configResponse.json();
+
+
+      if (!config.clientId) {
+
+        throw new Error(
+          "PayPal Client ID is missing."
+        );
+
+      }
+
+
+      /*
+       * Load PayPal's JavaScript SDK.
+       */
+
+      await loadPayPalSDK(
+        config.clientId
+      );
+
+
+      /*
+       * Render the PayPal button.
+       */
+
+      renderPayPalButtons();
+
+
+    } catch (error) {
+
+      console.error(
+        "PayPal loading error:",
+        error
+      );
+
+
+      showPaypalStatus(
+        "PayPal could not load. Make sure your server is running and your PayPal credentials are set correctly.",
+        "error"
+      );
+
+
+      document.getElementById(
+        "paypal-button-container"
+      ).innerHTML = "";
+
+    }
+
+  }
+
+
+  // ------------------------------------------------------------
+  // LOAD PAYPAL SDK
+  // ------------------------------------------------------------
+
+  function loadPayPalSDK(clientId) {
+
+    return new Promise((resolve, reject) => {
+
+      if (window.paypal) {
+
+        resolve();
+
+        return;
+
+      }
+
+
+      const script =
+        document.createElement("script");
+
+
+      script.src =
+        "https://www.paypal.com/sdk/js" +
+        "?client-id=" +
+        encodeURIComponent(clientId) +
+        "&currency=USD" +
+        "&intent=capture" +
+        "&components=buttons";
+
+
+      script.onload = () => {
+
+        if (window.paypal) {
+
+          resolve();
+
+        } else {
+
+          reject(
+            new Error(
+              "PayPal SDK loaded but PayPal was unavailable."
+            )
+          );
+
+        }
+
+      };
+
+
+      script.onerror = () => {
+
+        reject(
+          new Error(
+            "Could not load PayPal JavaScript SDK."
+          )
+        );
+
+      };
+
+
+      document.head.appendChild(script);
+
+    });
+
+  }
+
+
+  // ------------------------------------------------------------
+  // PAYPAL BUTTON
+  // ------------------------------------------------------------
+
+  function renderPayPalButtons() {
+
+    const container =
+      document.getElementById(
+        "paypal-button-container"
+      );
+
+
+    container.innerHTML = "";
+
+
+    paypal.Buttons({
+
+      style: {
+
+        layout: "vertical",
+
+        color: "gold",
+
+        shape: "rect",
+
+        label: "paypal",
+
+        height: 48
+
+      },
+
+
+      /*
+       * Create the PayPal order.
+       */
+
+      createOrder: async function() {
+
+        try {
+
+          showPaypalStatus(
+            "Creating your secure PayPal order...",
+            "info"
+          );
+
+
+          const orderID =
+            await createPaypalOrder();
+
+
+          document.getElementById(
+            "paypal-status"
+          ).className = "status";
+
+
+          return orderID;
+
+
+        } catch (error) {
+
+          console.error(error);
+
+
+          showPaypalStatus(
+            error.message ||
+            "Could not create your PayPal order.",
+            "error"
+          );
+
+
+          throw error;
+
+        }
+
+      },
+
+
+      /*
+       * PayPal approves the payment.
+       */
+
+      onApprove: async function(
+        data,
+        actions
+      ) {
+
+        try {
+
+          showPaypalStatus(
+            "Payment approved. Completing your order...",
+            "info"
+          );
+
+
+          const result =
+            await capturePaypalOrder(
+              data.orderID
+            );
+
+
+          if (
+            result &&
+            result.success
+          ) {
+
+            finishSuccessfulOrder(
+              data.orderID
+            );
+
+          } else {
+
+            throw new Error(
+              "PayPal payment was not completed."
+            );
+
+          }
+
+
+        } catch (error) {
+
+          console.error(
+            "Payment completion error:",
+            error
+          );
+
+
+          showPaypalStatus(
+            error.message ||
+            "Something went wrong while completing your payment.",
+            "error"
+          );
+
+        }
+
+      },
+
+
+      /*
+       * Buyer cancels PayPal checkout.
+       */
+
+      onCancel: function() {
+
+        showPaypalStatus(
+          "PayPal checkout was cancelled. Your cart is still saved.",
+          "info"
+        );
+
+      },
+
+
+      /*
+       * PayPal reports an error.
+       */
+
+      onError: function(error) {
+
+        console.error(
+          "PayPal button error:",
+          error
+        );
+
+
+        showPaypalStatus(
+          "PayPal encountered an error. Please try again.",
+          "error"
+        );
+
+      }
+
+    }).render(
+      "#paypal-button-container"
+    );
+
+  }
+
+
+  // ------------------------------------------------------------
+  // START
+  // ------------------------------------------------------------
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+      const hasItems =
+        renderOrder();
+
+
+      if (hasItems) {
+
+        loadPayPal();
+
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>

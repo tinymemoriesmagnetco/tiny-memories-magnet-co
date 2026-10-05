@@ -1,0 +1,14 @@
+{
+  "name": "tiny-memories-paypal",
+  "version": "1.0.0",
+  "description": "PayPal backend for Tiny Memories Magnet Co.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
