@@ -1,0 +1,10 @@
+server.js
+worker.js
+wrangler.jsonc
+package.json
+package-lock.json
+orders.json
+.env
+.env.*
+.git
+.gitignore
