@@ -7,5 +7,13 @@
   "assets": {
     "directory": "./",
     "binding": "ASSETS"
-  }
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tiny-memories-orders",
+      "database_id": "1541ba71da932cd61dba4788b29464a4"
+    }
+  ]
 }
