@@ -42,46 +42,49 @@
             color: var(--charcoal);
         }
 
-        /* HEADER */
-
+        /* FULL-WIDTH BRAND HEADER */
         header {
             background: var(--white);
             border-bottom: 1px solid var(--border);
-
-            padding: 18px 6%;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 30px;
+            text-align: center;
         }
 
         .logo-link {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 310px;
+            padding: 18px 20px;
+            background: var(--cream);
         }
 
         .logo-link img {
             display: block;
-            width: 230px;
-            max-width: 100%;
+            width: min(100%, 570px);
             height: auto;
+            object-fit: contain;
         }
 
         nav {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 28px;
+            flex-wrap: wrap;
+            gap: 18px 38px;
+            padding: 19px 20px;
+            background: var(--white);
+            border-top: 1px solid var(--border);
         }
 
         nav a {
             color: var(--charcoal);
             text-decoration: none;
             font-size: 16px;
-            transition: 0.2s;
+            transition: color 0.2s;
         }
 
-        nav a:hover {
+        nav a:hover, nav a:focus-visible {
             color: var(--rose);
         }
 
@@ -165,13 +168,13 @@
         }
 
         .shop-cards {
-            max-width: 850px;
+            max-width: 1150px;
 
             margin: 0 auto;
 
             display: grid;
 
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
 
             gap: 30px;
         }
@@ -331,20 +334,17 @@
 
         @media (max-width: 800px) {
 
-            header {
-                flex-direction: column;
-                text-align: center;
-                padding: 20px;
+            .logo-link {
+                min-height: 220px;
+                padding: 16px;
             }
 
             .logo-link img {
-                width: 210px;
+                width: min(100%, 400px);
             }
 
             nav {
-                flex-wrap: wrap;
                 gap: 12px 18px;
-                justify-content: center;
             }
 
             .hero {
@@ -366,6 +366,10 @@
         }
 
         @media (max-width: 500px) {
+
+            .logo-link {
+                min-height: 170px;
+            }
 
             .hero h1 {
                 font-size: 39px;
@@ -407,6 +411,8 @@
         <a href="shop-magnets.html">
             Shop Magnets
         </a>
+
+        <a href="specialty-group-magnets.html">Specialty Group Magnets</a>
 
         <a href="#about">
             About
@@ -496,6 +502,16 @@
                 Shop Now
             </a>
 
+        </div>
+
+        <div class="shop-card">
+            <div class="icon">🎀</div>
+            <h3>Specialty Group Magnets</h3>
+            <p>
+                Explore our Western and Alphabet complete sets,
+                or personalize name magnets with your favorite color and name.
+            </p>
+            <a href="specialty-group-magnets.html" class="button">Explore Group Magnets</a>
         </div>
 
     </div>
