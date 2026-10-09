@@ -1,26 +1,228 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Specialty Group Magnets | Tiny Memories Magnet Co.</title>
 <style>
-:root{--cream:#faf7f0;--white:#fffdf9;--rose:#b97968;--sage:#899780;--charcoal:#383432;--border:#e5ddd1}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--charcoal);font-family:Georgia,serif}header{background:var(--white);text-align:center;border-bottom:1px solid var(--border);padding:20px}header img{display:block;width:min(100%,680px);max-height:300px;object-fit:contain;margin:auto}nav{display:flex;justify-content:center;flex-wrap:wrap;gap:12px 26px;padding:20px 5px 6px}nav a{color:var(--charcoal);text-decoration:none}nav a:hover{color:var(--rose)}.intro{text-align:center;padding:65px 20px 45px;background:linear-gradient(135deg,#f8f1e8,#f0e8dd)}h1{font-size:clamp(34px,5vw,54px);margin:0 0 14px}h2{font-size:32px;text-align:center}p{line-height:1.6}.intro p{max-width:620px;margin:auto;font-size:19px}.wrap{max-width:1100px;margin:auto;padding:45px 20px 75px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:25px}.card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:25px;box-shadow:0 10px 28px #46372d12}.placeholder{height:240px;border-radius:12px;background:linear-gradient(135deg,#e9e3d9,#dce4d7);display:flex;align-items:center;justify-content:center;text-align:center;color:#655e57;font-size:20px;padding:20px;border:2px dashed #b8c2af}.price{font-weight:bold;font-size:24px;color:#a96858}.btn{background:var(--rose);border:0;border-radius:9px;color:white;padding:14px 22px;font:inherit;font-weight:bold;cursor:pointer}.btn:hover{background:#a96858}.custom{margin-top:50px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}label{display:block;font-weight:bold;margin-bottom:7px}input,select{width:100%;padding:12px;border:1px solid #ccc0b2;border-radius:8px;background:white;font:inherit}input[type=color]{height:48px;padding:4px}.field{margin-bottom:17px}.hint{font-size:14px;color:#68615c}.notice{margin-top:18px;font-weight:bold;color:#4e7050}footer{text-align:center;background:var(--white);padding:36px;border-top:1px solid var(--border)}@media(max-width:680px){.grid,.form-grid{grid-template-columns:1fr}.placeholder{height:190px}}
+:root{
+  --cream:#faf7f0;
+  --white:#fffdf9;
+  --rose:#b97968;
+  --sage:#899780;
+  --charcoal:#383432;
+  --border:#e5ddd1;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--charcoal);font-family:Georgia,serif}
+header{background:var(--white);text-align:center;border-bottom:1px solid var(--border);padding:20px}
+header img{display:block;width:min(100%,680px);max-height:300px;object-fit:contain;margin:auto}
+nav{display:flex;justify-content:center;flex-wrap:wrap;gap:12px 26px;padding:20px 5px 6px}
+nav a{color:var(--charcoal);text-decoration:none}
+nav a:hover{color:var(--rose)}
+.intro{text-align:center;padding:65px 20px 45px;background:linear-gradient(135deg,#f8f1e8,#f0e8dd)}
+h1{font-size:clamp(34px,5vw,54px);margin:0 0 14px}
+h2{font-size:32px;text-align:center;margin:0 0 28px}
+h3{font-size:21px}
+p{line-height:1.6}
+.intro p{max-width:620px;margin:auto;font-size:19px}
+.wrap{max-width:1100px;margin:auto;padding:45px 20px 75px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:25px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:25px;box-shadow:0 10px 28px #46372d12}
+.product-photo{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;background:#eee7dd}
+.price{font-weight:bold;font-size:24px;color:#a96858}
+.btn{background:var(--rose);border:0;border-radius:9px;color:white;padding:14px 22px;font:inherit;font-weight:bold;cursor:pointer}
+.btn:hover{background:#a96858}
+.custom,.individual{margin-top:55px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+label{display:block;font-weight:bold;margin-bottom:7px}
+input,select{width:100%;padding:12px;border:1px solid #ccc0b2;border-radius:8px;background:white;font:inherit}
+input[type=color]{height:48px;padding:4px}
+.field{margin-bottom:17px}
+.hint{font-size:14px;color:#68615c}
+.notice{margin-top:18px;font-weight:bold;color:#4e7050}
+footer{text-align:center;background:var(--white);padding:36px;border-top:1px solid var(--border)}
+@media(max-width:680px){
+  .grid,.form-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<header><a href="index.html"><img src="logo.png.png" alt="Tiny Memories Magnet Co. logo"></a><nav><a href="index.html">Home</a><a href="custom-magnets.html">Custom Photo Magnets</a><a href="shop-magnets.html">Shop Magnets</a><a href="specialty-group-magnets.html">Specialty Group Magnets</a><a href="index.html#about">About</a></nav></header>
-<section class="intro"><h1>Specialty Group Magnets</h1><p>Discover complete specialty sets and personalized name magnets made just for you.</p></section>
-<main class="wrap"><h2>Shop Complete Sets</h2><div class="grid">
-<article class="card"><div class="placeholder">🌾<br>Western Collection photo coming soon</div><h3>Western Collection — Complete Set</h3><p>A complete set of Western-inspired magnets.</p><p class="price">$20.00</p><button class="btn" onclick="addSet('Western Collection — Complete Set','SPECIAL-WESTERN',20)">Add Set to Cart</button></article>
-<article class="card"><div class="placeholder">✿<br>Alphabet Collection photo coming soon</div><h3>Alphabet Collection — Complete Set</h3><p>The complete alphabet magnet collection.</p><p class="price">$120.00</p><button class="btn" onclick="addSet('Alphabet Collection — Complete Set','SPECIAL-ALPHABET',120)">Add Set to Cart</button></article>
-</div>
-<section class="custom"><h2>Custom Name Magnets</h2><div class="card"><p>Personalize your magnets with any color and the name of your choice.</p><div class="form-grid"><div class="field"><label for="customName">Name to print</label><input id="customName" maxlength="80" placeholder="Enter the name" required></div><div class="field"><label for="colorName">Color description (optional)</label><input id="colorName" placeholder="e.g., dusty rose, sky blue"></div><div class="field"><label for="colorPicker">Pick a color</label><input id="colorPicker" type="color" value="#b97968"><div class="hint">Use the color picker or describe your preferred color above.</div></div><div class="field"><label for="bundle">Choose bundle</label><select id="bundle"><option value="1|3">1 magnet — $3</option><option value="3|9">3 magnets — $9</option><option value="6|18">6 magnets — $18</option><option value="9|24">9 magnets — $24</option></select></div></div><button class="btn" onclick="addCustom()">Add Custom Magnets to Cart</button><p id="message" class="notice" role="status" aria-live="polite"></p></div></section>
-</main><footer><strong>Tiny Memories Magnet Co.</strong><p>Tiny memories. Big feelings.</p><p>© 2026 Tiny Memories</p></footer>
+
+<header>
+  <a href="index.html">
+    <img src="logo.png.png" alt="Tiny Memories Magnet Co. logo">
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="custom-magnets.html">Custom Photo Magnets</a>
+    <a href="shop-magnets.html">Shop Magnets</a>
+    <a href="specialty-group-magnets.html">Specialty Group Magnets</a>
+    <a href="index.html#about">About</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <h1>Specialty Group Magnets</h1>
+  <p>Discover specialty collections and personalized name magnets made just for you.</p>
+</section>
+
+<main class="wrap">
+
+  <h2>Shop Complete Sets</h2>
+
+  <div class="grid">
+
+    <article class="card">
+      <img class="product-photo"
+           src="MAG-Western.png"
+           alt="Western Collection complete magnet set">
+      <h3>Western Collection — Complete Set</h3>
+      <p>A complete set of six Western-inspired magnets.</p>
+      <p class="price">$20.00</p>
+      <button class="btn" onclick="addSet('Western Collection — Complete Set','SPECIAL-WESTERN',20)">
+        Add Set to Cart
+      </button>
+    </article>
+
+    <article class="card">
+      <img class="product-photo"
+           src="MAG-Alphabet.png"
+           alt="Alphabet Collection magnets">
+      <h3>Alphabet Collection — Complete Set</h3>
+      <p>The complete alphabet magnet collection.</p>
+      <p class="price">$120.00</p>
+      <button class="btn" onclick="addSet('Alphabet Collection — Complete Set','SPECIAL-ALPHABET',120)">
+        Add Set to Cart
+      </button>
+    </article>
+
+  </div>
+
+  <section class="individual">
+    <h2>Look at What I Made Magnets</h2>
+
+    <div class="grid">
+      <article class="card">
+        <img class="product-photo"
+             src="MAG-LOOKATWHT.png"
+             alt="Look at What I Made personalized children's artwork magnets">
+        <h3>Look at What I Made — Individual Magnet</h3>
+        <p>A colorful magnet for displaying your little one's creations.</p>
+        <p class="price">$3.00 each</p>
+        <button class="btn" onclick="addSet('Look at What I Made — Individual Magnet','SPECIAL-LOOKATWHT',3)">
+          Add Magnet to Cart
+        </button>
+      </article>
+    </div>
+  </section>
+
+  <section class="custom">
+    <h2>Custom Name Magnets</h2>
+
+    <div class="card">
+      <p>Personalize your magnets with any color and the name of your choice.</p>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="customName">Name to print</label>
+          <input id="customName" maxlength="80" placeholder="Enter the name" required>
+        </div>
+
+        <div class="field">
+          <label for="colorName">Color description (optional)</label>
+          <input id="colorName" placeholder="e.g., dusty rose, sky blue">
+        </div>
+
+        <div class="field">
+          <label for="colorPicker">Pick a color</label>
+          <input id="colorPicker" type="color" value="#b97968">
+          <div class="hint">Use the color picker or describe your preferred color above.</div>
+        </div>
+
+        <div class="field">
+          <label for="bundle">Choose bundle</label>
+          <select id="bundle">
+            <option value="1|3">1 magnet — $3</option>
+            <option value="3|9">3 magnets — $9</option>
+            <option value="6|18">6 magnets — $18</option>
+            <option value="9|24">9 magnets — $24</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn" onclick="addCustom()">
+        Add Custom Magnets to Cart
+      </button>
+    </div>
+  </section>
+
+  <p id="message" class="notice" role="status" aria-live="polite"></p>
+
+</main>
+
+<footer>
+  <strong>Tiny Memories Magnet Co.</strong>
+  <p>Tiny memories. Big feelings.</p>
+  <p>© 2026 Tiny Memories</p>
+</footer>
+
 <script>
-// This page saves a draft cart separately until the existing checkout/cart format is verified.
-const CART_KEY='tinyMemoriesSpecialtyDraftCart';
-function addItem(item){let cart;try{cart=JSON.parse(localStorage.getItem(CART_KEY)||'[]');if(!Array.isArray(cart))cart=[]}catch(e){cart=[]}cart.push(item);localStorage.setItem(CART_KEY,JSON.stringify(cart));document.getElementById('message').textContent='Saved to your specialty cart draft. Checkout connection is not set up yet.'}
-function addSet(name,sku,price){addItem({name,sku,price,quantity:1})}
-function addCustom(){const name=document.getElementById('customName').value.trim();if(!name){document.getElementById('message').textContent='Please enter a name first.';document.getElementById('customName').focus();return}const [quantity,price]=document.getElementById('bundle').value.split('|').map(Number);addItem({name:'Custom Name Magnets',sku:'SPECIAL-CUSTOM-NAME',price,quantity:1,magnetCount:quantity,personalizedName:name,color:document.getElementById('colorName').value.trim()||document.getElementById('colorPicker').value})}
+const CART_KEY = "tinyMemoriesSpecialtyDraftCart";
+
+function addItem(item) {
+  let cart;
+
+  try {
+    cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    if (!Array.isArray(cart)) cart = [];
+  } catch (error) {
+    cart = [];
+  }
+
+  cart.push(item);
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+
+  document.getElementById("message").textContent =
+    "Saved to your specialty cart draft. Checkout connection is not set up yet.";
+}
+
+function addSet(name, sku, price) {
+  addItem({
+    name,
+    sku,
+    price,
+    quantity: 1
+  });
+}
+
+function addCustom() {
+  const name = document.getElementById("customName").value.trim();
+
+  if (!name) {
+    document.getElementById("message").textContent =
+      "Please enter a name first.";
+    document.getElementById("customName").focus();
+    return;
+  }
+
+  const [quantity, price] =
+    document.getElementById("bundle").value.split("|").map(Number);
+
+  addItem({
+    name: "Custom Name Magnets",
+    sku: "SPECIAL-CUSTOM-NAME",
+    price,
+    quantity: 1,
+    magnetCount: quantity,
+    personalizedName: name,
+    color:
+      document.getElementById("colorName").value.trim() ||
+      document.getElementById("colorPicker").value
+  });
+}
 </script>
-</body></html>
+
+</body>
+</html>
