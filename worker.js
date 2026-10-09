@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -83,6 +84,122 @@ function calculateMerchandiseTotal(quantity) {
   return Number(total.toFixed(2));
 }
 
+// Calculate prices securely on the server.
+function validQuantity(value, max = 500) {
+  const n = Number(value);
+
+  return Number.isSafeInteger(n) && n >= 1 && n <= max
+    ? n
+    : null;
+}
+
+function priceCart(items) {
+  let handmadeQuantity = 0;
+  let customPhotoTotal = 0;
+  let specialtyTotal = 0;
+  let totalQuantity = 0;
+
+  const cleanItems = [];
+
+  for (const item of items) {
+    if (!item || typeof item !== "object") {
+      throw new Error("Invalid cart item.");
+    }
+
+    const quantity = validQuantity(item.quantity);
+
+    if (!quantity) {
+      throw new Error("Invalid item quantity.");
+    }
+
+    const sku = String(item.sku || "").trim().toUpperCase();
+    const type = String(item.type || "handmade").toLowerCase();
+
+    const clean = {
+      id: String(item.id || "").slice(0, 150),
+      type,
+      sku,
+      name: String(item.name || "Magnet").slice(0, 200),
+      quantity,
+      instructions: String(item.instructions || "").slice(0, 3000),
+      customerName: String(item.customerName || "").slice(0, 200),
+      customerEmail: String(item.customerEmail || "").slice(0, 200),
+      customerPhone: String(item.customerPhone || "").slice(0, 100),
+      photos: Array.isArray(item.photos) ? item.photos : []
+    };
+
+    if (sku === "SPECIAL-WESTERN") {
+      clean.type = "specialty";
+      clean.lineTotal = quantity * 20;
+      specialtyTotal += clean.lineTotal;
+
+    } else if (sku === "SPECIAL-ALPHABET") {
+      clean.type = "specialty";
+      clean.lineTotal = quantity * 120;
+      specialtyTotal += clean.lineTotal;
+
+    } else if (sku === "SPECIAL-CUSTOM-NAME") {
+      const magnetCount = validQuantity(item.magnetCount, 9);
+
+      if (![1, 3, 6, 9].includes(magnetCount)) {
+        throw new Error("Invalid personalized magnet bundle size.");
+      }
+
+      clean.type = "specialty";
+      clean.magnetCount = magnetCount;
+
+      clean.customName = String(
+        item.customName ||
+        item.personalizedName ||
+        item.nameText ||
+        ""
+      ).slice(0, 200);
+
+      clean.color = String(
+        item.color ||
+        item.selectedColor ||
+        ""
+      ).slice(0, 100);
+
+      clean.lineTotal =
+        quantity * calculateMerchandiseTotal(magnetCount);
+
+      specialtyTotal += clean.lineTotal;
+
+    } else if (type === "custom" && sku === "CUSTOM-PHOTO") {
+      clean.lineTotal = calculateMerchandiseTotal(quantity);
+      customPhotoTotal += clean.lineTotal;
+
+    } else if (
+      type === "handmade" &&
+      /^MAG-[A-Z0-9-]+$/.test(sku)
+    ) {
+      handmadeQuantity += quantity;
+
+      // Handmade discounts are applied to the full handmade cart.
+      clean.lineTotal = quantity * 3;
+
+    } else {
+      throw new Error("Unrecognized product in cart: " + sku);
+    }
+
+    totalQuantity += quantity;
+    cleanItems.push(clean);
+  }
+
+  // Handmade, custom photo and specialty pricing are separate.
+  const merchandiseTotal =
+    calculateMerchandiseTotal(handmadeQuantity) +
+    customPhotoTotal +
+    specialtyTotal;
+
+  return {
+    cleanItems,
+    totalQuantity,
+    merchandiseTotal: Number(merchandiseTotal.toFixed(2))
+  };
+}
+
 function getPayPalBaseUrl(env) {
   return env.PAYPAL_ENV === "production"
     ? "https://api-m.paypal.com"
@@ -141,23 +258,19 @@ async function createOrder(request, env) {
       return json({ error: "Your cart is empty." }, 400);
     }
 
-    let totalQuantity = 0;
+    let priced;
 
-    for (const item of items) {
-      const quantity = Number(item.quantity) || 0;
-
-      if (quantity < 1) {
-        return json(
-          { error: "Invalid item quantity." },
-          400
-        );
-      }
-
-      totalQuantity += quantity;
+    try {
+      priced = priceCart(items);
+    } catch (error) {
+      return json({ error: error.message }, 400);
     }
 
-    const merchandiseTotal =
-      calculateMerchandiseTotal(totalQuantity);
+    const {
+      cleanItems,
+      totalQuantity,
+      merchandiseTotal
+    } = priced;
 
     const shippingTotal = 5;
 
@@ -165,28 +278,7 @@ async function createOrder(request, env) {
       (merchandiseTotal + shippingTotal).toFixed(2)
     );
 
-    const cleanItems = items.map(item => {
-      const quantity = Number(item.quantity) || 1;
-
-      return {
-        id: item.id || null,
-        type: item.type || "handmade",
-        sku: item.sku || "",
-        name: item.name || "Magnet",
-        quantity,
-        instructions: item.instructions || "",
-        customerName: item.customerName || "",
-        customerEmail: item.customerEmail || "",
-        customerPhone: item.customerPhone || "",
-        photos: Array.isArray(item.photos)
-          ? item.photos
-          : [],
-        lineTotal: calculateMerchandiseTotal(quantity)
-      };
-    });
-
-    const accessToken =
-      await getPayPalAccessToken(env);
+    const accessToken = await getPayPalAccessToken(env);
 
     const paypalResponse = await fetch(
       `${getPayPalBaseUrl(env)}/v2/checkout/orders`,
@@ -214,16 +306,14 @@ async function createOrder(request, env) {
                   }
                 }
               },
-              description:
-                "Tiny Memories Magnet Co. order"
+              description: "Tiny Memories Magnet Co. order"
             }
           ]
         })
       }
     );
 
-    const paypalData =
-      await paypalResponse.json();
+    const paypalData = await paypalResponse.json();
 
     if (!paypalResponse.ok) {
       return json(
@@ -291,6 +381,7 @@ async function createOrder(request, env) {
       id: paypalData.id,
       total
     });
+
   } catch (error) {
     console.error("Create order error:", error);
 
@@ -310,8 +401,7 @@ async function captureOrder(orderID, env) {
       );
     }
 
-    const accessToken =
-      await getPayPalAccessToken(env);
+    const accessToken = await getPayPalAccessToken(env);
 
     const paypalResponse = await fetch(
       `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`,
@@ -324,8 +414,7 @@ async function captureOrder(orderID, env) {
       }
     );
 
-    const paypalData =
-      await paypalResponse.json();
+    const paypalData = await paypalResponse.json();
 
     if (!paypalResponse.ok) {
       return json(
@@ -368,6 +457,7 @@ async function captureOrder(orderID, env) {
       status: paypalData.status,
       paypal: paypalData
     });
+
   } catch (error) {
     console.error("Capture order error:", error);
 
@@ -423,6 +513,7 @@ async function getAdminOrders(request, env) {
     }));
 
     return json(orders);
+
   } catch (error) {
     console.error("Admin orders error:", error);
 
