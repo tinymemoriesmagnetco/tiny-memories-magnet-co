@@ -1124,5 +1124,26 @@
     updateCartCount();
 </script>
 
+<script>
+/* Count one Custom Photo Magnets page view per browser session. */
+(function () {
+  const key = "tm_custom_magnets_view_counted";
+  try {
+    if (sessionStorage.getItem(key)) return;
+  } catch (_) {}
+  fetch("/api/track-view", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ page: window.location.pathname })
+  }).then(function (response) {
+    if (response.ok) {
+      try { sessionStorage.setItem(key, "yes"); } catch (_) {}
+    }
+  }).catch(function (error) {
+    console.log("View tracking unavailable:", error);
+  });
+})();
+</script>
+
 </body>
 </html>
