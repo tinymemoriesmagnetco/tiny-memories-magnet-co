@@ -18,7 +18,574 @@
             --rose: #b97968;
             --rose-dark: #a96858;
             --rose-light: #d4aaa0;
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tiny Memories Magnet Co.</title>
+
+    <style>
+
+        :root {
+            --cream: #faf7f0;
+            --cream-dark: #f1ebe1;
+            --white: #fffdf9;
+            --charcoal: #383432;
+
+            --rose: #b97968;
+            --rose-dark: #a96858;
+            --rose-light: #d4aaa0;
+
+            --sage: #899780;
+            --sage-light: #b8c2af;
+
+            --gold: #c6a36a;
+
+            --border: #e5ddd1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, serif;
+            background: var(--cream);
+            color: var(--charcoal);
+        }
+
+        /* FULL-WIDTH BRAND HEADER */
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 310px;
+            padding: 18px 20px;
+            background: var(--cream);
+        }
+
+        .logo-link img {
+            display: block;
+            width: min(100%, 570px);
+            height: auto;
+            object-fit: contain;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px 38px;
+            padding: 19px 20px;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+        }
+
+        nav a {
+            color: var(--charcoal);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a:focus-visible {
+            color: var(--rose);
+        }
+
+        /* HERO */
+
+        .hero {
+            text-align: center;
+
+            padding: 110px 20px 115px;
+
+            background: linear-gradient(
+                135deg,
+                #f8f1e8,
+                #f0e8dd
+            );
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero h1 {
+            margin: 0 auto 22px;
+
+            max-width: 850px;
+
+            font-size: 62px;
+
+            line-height: 1.05;
+        }
+
+        .hero p {
+            max-width: 650px;
+
+            margin: 0 auto 32px;
+
+            font-size: 20px;
+
+            line-height: 1.7;
+        }
+
+        .button {
+            display: inline-block;
+
+            background: var(--rose);
+
+            color: white;
+
+            text-decoration: none;
+
+            padding: 15px 28px;
+
+            border-radius: 9px;
+
+            font-weight: bold;
+
+            border: none;
+
+            cursor: pointer;
+
+            font-family: Georgia, serif;
+
+            transition: 0.2s;
+        }
+
+        .button:hover {
+            background: var(--rose-dark);
+            transform: translateY(-2px);
+        }
+
+        /* SHOP */
+
+        .shop-section {
+            padding: 80px 6%;
+        }
+
+        .section-title {
+            text-align: center;
+
+            font-size: 38px;
+
+            margin: 0 0 50px;
+        }
+
+        .shop-cards {
+            max-width: 1150px;
+
+            margin: 0 auto;
+
+            display: grid;
+
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+
+            gap: 30px;
+        }
+
+        .shop-card {
+            background: var(--white);
+
+            border: 1px solid var(--border);
+
+            border-radius: 18px;
+
+            padding: 40px 32px;
+
+            text-align: center;
+
+            box-shadow:
+                0 10px 28px rgba(70, 55, 45, 0.07);
+
+            transition: 0.25s;
+
+            display: flex;
+
+            flex-direction: column;
+
+            min-height: 320px;
+        }
+
+        .shop-card:hover {
+            transform: translateY(-5px);
+
+            box-shadow:
+                0 16px 35px rgba(70, 55, 45, 0.11);
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .shop-card h3 {
+            font-size: 24px;
+            margin: 8px 0 15px;
+        }
+
+        .shop-card p {
+            font-size: 17px;
+            line-height: 1.6;
+            margin: 0 0 28px;
+        }
+
+        .shop-card .button {
+            margin-top: auto;
+        }
+
+        /* HOW IT WORKS */
+
+        .how {
+            padding: 80px 6%;
+
+            background: var(--cream-dark);
+
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+
+            text-align: center;
+        }
+
+        .steps {
+            max-width: 950px;
+
+            margin: 0 auto;
+
+            display: grid;
+
+            grid-template-columns: repeat(4, 1fr);
+
+            gap: 35px;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+
+            margin: 0 auto 15px;
+
+            border-radius: 50%;
+
+            background: var(--sage);
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-weight: bold;
+
+            font-family: Arial, sans-serif;
+        }
+
+        .step h3 {
+            font-size: 20px;
+            margin: 0 0 10px;
+        }
+
+        .step p {
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ABOUT */
+
+        .about {
+            padding: 85px 20px;
+            text-align: center;
+        }
+
+        .about-symbol {
+            font-size: 32px;
+            color: var(--rose);
+            margin-bottom: 12px;
+        }
+
+        .about p {
+            max-width: 680px;
+
+            margin: 0 auto;
+
+            font-size: 18px;
+
+            line-height: 1.8;
+        }
+
+        /* CONNECT WITH US */
+        .connect {
+            padding: 70px 6% 85px;
+            background: var(--cream-dark);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .connect h2 { font-size: 38px; margin: 0 0 12px; }
+        .connect-intro { font-size: 17px; line-height: 1.6; margin: 0 auto 32px; max-width: 650px; }
+        .connect-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 850px; margin: auto; }
+        .connect-link { display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: var(--charcoal); background: var(--white); border: 1px solid var(--border); border-radius: 14px; text-align: left; overflow-wrap: anywhere; transition: transform .2s, border-color .2s; }
+        .connect-link:hover { transform: translateY(-3px); border-color: var(--rose); }
+        .connect-icon { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; background: #f3e7e1; color: var(--rose-dark); }
+        .connect-icon svg { width: 24px; height: 24px; }
+        .connect-details strong { display: block; font-size: 17px; margin-bottom: 4px; }
+        .connect-details span { font-size: 14px; line-height: 1.4; }
+        @media (max-width: 650px) { .connect-links { grid-template-columns: 1fr; } .connect h2 { font-size: 32px; } }
+
+        /* FOOTER */
+
+        footer {
+            background: var(--white);
+
+            border-top: 1px solid var(--border);
+
+            text-align: center;
+
+            padding: 42px 20px;
+        }
+
+        footer strong {
+            font-size: 18px;
+        }
+
+        footer p {
+            margin: 10px 0;
+            color: #68615c;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 800px) {
+
+            .logo-link {
+                min-height: 220px;
+                padding: 16px;
+            }
+
+            .logo-link img {
+                width: min(100%, 400px);
+            }
+
+            nav {
+                gap: 12px 18px;
+            }
+
+            .hero {
+                padding: 80px 20px;
+            }
+
+            .hero h1 {
+                font-size: 45px;
+            }
+
+            .shop-cards {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .logo-link {
+                min-height: 170px;
+            }
+
+            .hero h1 {
+                font-size: 39px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <a href="index.html" class="logo-link">
+        <img
+            src="logo.png.png"
+            alt="Tiny Memories Magnet Co."
+        >
+    </a>
+
+    <nav>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="custom-magnets.html">
+            Custom Photo Magnets
+        </a>
+
+        <a href="shop-magnets.html">
+            Shop Magnets
+        </a>
+
+        <a href="specialty-group-magnets.html">Specialty Group Magnets</a>
+
+        <a href="#about">
+            About
+        </a>
+
+    </nav>
+
+</header>
+
+
+<section class="hero">
+
+    <h1>
+        Tiny Memories.<br>
+        Big Feelings.
+    </h1>
+
+    <p>
+        Turn your favorite moments into handmade
+        magnets you'll love seeing every day.
+    </p>
+
+    <a
+        href="custom-magnets.html"
+        class="button"
+    >
+        Create Your Custom Magnets
+    </a>
+
+</section>
+
+
+<section class="shop-section">
+
+    <h2 class="section-title">
+        Shop Tiny Memories
+    </h2>
+
+    <div class="shop-cards">
+
+        <div class="shop-card">
+
+            <div class="icon">
+                📸
+            </div>
+
+            <h3>
+                Custom Photo Magnets
+            </h3>
+
+            <p>
+                Turn your favorite photos into
+                beautiful handmade keepsakes
+                you'll love seeing every day.
+            </p>
+
+            <a
+                href="custom-magnets.html"
+                class="button"
+            >
+                Create Yours
+            </a>
+
+        </div>
+
+
+        <div class="shop-card">
+
+            <div class="icon">
+                🧲
+            </div>
+
+            <h3>
+                Handmade Magnets
+            </h3>
+
+            <p>
+                Sweet, funny, motivational,
+                seasonal, and just-because
+                magnets for every little moment.
+            </p>
+
+            <a
+                href="shop-magnets.html"
+                class="button"
+            >
+                Shop Now
+            </a>
+
+        </div>
+
+        <div class="shop-card">
+            <div class="icon">🎀</div>
+            <h3>Specialty Group Magnets</h3>
+            <p>
+                Explore our Western and Alphabet complete sets,
+                or personalize name magnets with your favorite color and name.
+            </p>
+            <a href="specialty-group-magnets.html" class="button">Explore Group Magnets</a>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="how">
+
+    <h2 class="section-title">
+        How It Works
+    </h2>
+
+    <div class="steps">
+
+        <div class="step">
+
+            <div class="step-number">
+                1
+            </div>
+
+            <h3>
+                Choose
+            </h3>
+
+            <p>
+                Pick your favorite magnets
+                or create a custom order.
+            </p>
+
+        </div>
+
+
+        <div class="step">
+
+            <div class="step-numb
             --sage: #899780;
             --sage-light: #b8c2af;
 
