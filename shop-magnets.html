@@ -642,10 +642,10 @@ Every magnet is $3 individually.
 
 Photos are automatically loaded from:
 
-magnet-photos/SKU.jpg
+magnet-photos/SKU.png
 
 Example:
-magnet-photos/MAG-ALEXA.jpg
+magnet-photos/MAG-ALEXA.png
 
 Missing photos display a text preview.
 ========================================
@@ -790,12 +790,12 @@ const inventory = [
 
 /*
 ========================================
-AUTOMATIC PRODUCT PHOTOS
+AUTOMATIC PNG PRODUCT PHOTOS
 ========================================
 
 No need to manually list photo names.
 
-Upload the JPG into magnet-photos.
+Upload PNG files into magnet-photos.
 
 The image filename must match the SKU.
 
@@ -814,7 +814,7 @@ const products = inventory.map(
     category: category,
     price: 3,
 
-    image: "magnet-photos/" + sku + ".jpg"
+    image: "magnet-photos/" + sku + ".png"
 
   })
 );
@@ -930,8 +930,6 @@ function getCustomTotal() {
 
       const quantity = Number(item.quantity) || 0;
 
-      // Preserve the price supplied by
-      // the custom photo magnets page.
       const unitPrice = Number(
         item.unitPrice ?? item.price
       );
@@ -1023,13 +1021,6 @@ function renderProducts(list = products) {
 
     const art = document.createElement("div");
     art.className = "product-art";
-
-    /*
-      Always attempt to load the JPG.
-
-      If it doesn't exist, show the
-      product name instead.
-    */
 
     const img = document.createElement("img");
 
