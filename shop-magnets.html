@@ -1,1668 +1,830 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Shop Handmade Magnets | Tiny Memories Magnet Co.</title>
-
-    <style>
-        :root {
-            --cream: #faf7f0;
-            --cream-dark: #f1ebe1;
-            --white: #fffdf9;
-            --charcoal: #383432;
-            --text-light: #68615c;
-            --rose: #b97968;
-            --rose-dark: #a96858;
-            --rose-light: #d4aaa0;
-            --sage: #899780;
-            --sage-light: #b8c2af;
-            --gold: #c6a36a;
-            --gold-light: #dfca9c;
-            --border: #e5ddd1;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            background: var(--cream);
-            color: var(--charcoal);
-            font-family: Georgia, "Times New Roman", serif;
-            line-height: 1.6;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        header {
-            background: var(--white);
-            border-bottom: 1px solid var(--border);
-            padding: 14px 5%;
-        }
-
-        .nav {
-            max-width: 1200px;
-            margin: auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 30px;
-        }
-
-        .logo img {
-            width: 150px;
-            height: auto;
-            display: block;
-        }
-
-        nav {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            font-size: 15px;
-        }
-
-        nav a:hover {
-            color: var(--rose);
-        }
-
-        .cart-button {
-            border: 0;
-            background: var(--rose);
-            color: white;
-            padding: 9px 16px;
-            border-radius: 20px;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .cart-button:hover {
-            background: var(--rose-dark);
-        }
-
-        .hero {
-            text-align: center;
-            padding: 65px 20px 45px;
-            background:
-                radial-gradient(circle at top left, rgba(212,170,160,.18), transparent 35%),
-                radial-gradient(circle at top right, rgba(184,194,175,.2), transparent 35%);
-        }
-
-        .hero h1 {
-            margin: 0 0 10px;
-            font-size: clamp(36px, 5vw, 52px);
-        }
-
-        .hero p {
-            max-width: 700px;
-            margin: auto;
-            color: var(--text-light);
-            font-size: 17px;
-        }
-
-        .bundle-section {
-            max-width: 1150px;
-            margin: 35px auto 0;
-            padding: 0 20px;
-        }
-
-        .bundle-title {
-            text-align: center;
-            margin-bottom: 18px;
-        }
-
-        .bundle-title h2 {
-            margin-bottom: 5px;
-        }
-
-        .bundle-title p {
-            color: var(--text-light);
-            margin-top: 0;
-        }
-
-        .bundles {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-        }
-
-        .bundle {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 15px;
-            padding: 18px;
-            text-align: center;
-        }
-
-        .bundle strong {
-            display: block;
-            font-size: 24px;
-        }
-
-        .bundle span {
-            color: var(--rose-dark);
-            font-weight: bold;
-        }
-
-        .shop-area {
-            max-width: 1200px;
-            margin: 45px auto 80px;
-            padding: 0 20px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 14px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .search {
-            flex: 1;
-            min-width: 220px;
-        }
-
-        .search input,
-        .filter select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--white);
-            color: var(--charcoal);
-            font-family: inherit;
-            font-size: 16px;
-            outline: none;
-        }
-
-        .search input:focus,
-        .filter select:focus {
-            border-color: var(--rose);
-        }
-
-        .filter {
-            width: 220px;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .product-card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 6px 22px rgba(56, 52, 50, .04);
-            transition: transform .2s ease, box-shadow .2s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 28px rgba(56, 52, 50, .08);
-        }
-
-        .product-art {
-            aspect-ratio: 1 / 1;
-            background:
-                linear-gradient(135deg, var(--cream-dark), #f8eee9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 25px;
-            text-align: center;
-        }
-
-        .magnet-preview {
-            width: 150px;
-            min-height: 105px;
-            padding: 20px 14px;
-            border-radius: 8px;
-            background: var(--white);
-            border: 1px solid #d8cec1;
-            box-shadow: 0 8px 15px rgba(56,52,50,.14);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(-2deg);
-        }
-
-        .magnet-preview span {
-            font-size: 17px;
-            line-height: 1.25;
-        }
-
-        .product-info {
-            padding: 17px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .product-name {
-            font-size: 17px;
-            font-weight: bold;
-            line-height: 1.35;
-            margin-bottom: 8px;
-        }
-
-        .product-sku {
-            color: var(--text-light);
-            font-size: 12px;
-            margin-bottom: 12px;
-        }
-
-        .product-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-top: auto;
-        }
-
-        .price {
-            color: var(--rose-dark);
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .add-button {
-            border: 0;
-            background: var(--sage);
-            color: white;
-            padding: 9px 13px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: bold;
-        }
-
-        .add-button:hover {
-            background: #78886f;
-        }
-
-        .add-button:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 50px 20px;
-            color: var(--text-light);
-            display: none;
-        }
-
-        /* CART DRAWER */
-
-        .cart-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(56, 52, 50, .45);
-            z-index: 100;
-            display: none;
-        }
-
-        .cart-overlay.open {
-            display: block;
-        }
-
-        .cart-drawer {
-            position: fixed;
-            top: 0;
-            right: -440px;
-            width: min(440px, 100%);
-            height: 100vh;
-            background: var(--white);
-            z-index: 101;
-            box-shadow: -8px 0 30px rgba(0,0,0,.15);
-            transition: right .25s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-drawer.open {
-            right: 0;
-        }
-
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cart-header h2 {
-            margin: 0;
-        }
-
-        .close-cart {
-            border: 0;
-            background: transparent;
-            font-size: 28px;
-            cursor: pointer;
-            color: var(--charcoal);
-        }
-
-        .cart-items {
-            flex: 1;
-            overflow-y: auto;
-            padding: 18px;
-        }
-
-        .cart-item {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cart-item-name {
-            font-weight: bold;
-            line-height: 1.35;
-        }
-
-        .cart-item-sku {
-            color: var(--text-light);
-            font-size: 12px;
-            margin-top: 3px;
-        }
-
-        .cart-item-price {
-            color: var(--rose-dark);
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-top: 9px;
-        }
-
-        .quantity-controls button {
-            width: 27px;
-            height: 27px;
-            border: 1px solid var(--border);
-            background: var(--cream);
-            border-radius: 50%;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .quantity-controls button:hover {
-            border-color: var(--rose);
-        }
-
-        .remove-button {
-            border: 0 !important;
-            background: transparent !important;
-            color: var(--rose-dark);
-            width: auto !important;
-            height: auto !important;
-            border-radius: 0 !important;
-            margin-left: 8px;
-        }
-
-        .cart-empty {
-            text-align: center;
-            color: var(--text-light);
-            padding: 45px 15px;
-        }
-
-        .cart-footer {
-            border-top: 1px solid var(--border);
-            padding: 20px;
-            background: var(--cream);
-        }
-
-        .cart-total-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 21px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .cart-note {
-            color: var(--text-light);
-            font-size: 13px;
-            margin-bottom: 15px;
-        }
-
-        .checkout-button {
-            width: 100%;
-            border: 0;
-            background: var(--rose);
-            color: white;
-            padding: 14px;
-            border-radius: 25px;
-            font-family: inherit;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .checkout-button:hover {
-            background: var(--rose-dark);
-        }
-
-        footer {
-            background: var(--charcoal);
-            color: #eee6dc;
-            text-align: center;
-            padding: 35px 20px;
-        }
-
-        footer p {
-            margin: 5px 0;
-        }
-
-        .footer-small {
-            opacity: .7;
-            font-size: 14px;
-        }
-
-        @media (max-width: 1000px) {
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 750px) {
-            .nav {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            nav {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 12px 18px;
-            }
-
-            .bundles {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .bundles {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .filter {
-                width: 100%;
-            }
-
-            .magnet-preview {
-                width: 165px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Handmade Magnets | Tiny Memories Magnet Co.</title>
+<style>
+:root {
+  --cream:#faf7f0;
+  --white:#fffdf9;
+  --charcoal:#383432;
+  --muted:#68615c;
+  --rose:#b97968;
+  --sage:#899780;
+  --border:#e5ddd1;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--cream);
+  color:var(--charcoal);
+  font-family:Georgia,"Times New Roman",serif;
+  line-height:1.6;
+}
+a {color:inherit;text-decoration:none}
+header {
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  padding:14px 5%;
+}
+.nav {
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+}
+.logo {width:150px;height:auto;display:block}
+nav {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:22px;
+  font-size:15px;
+}
+nav a:hover {color:var(--rose)}
+button {font-family:inherit;cursor:pointer}
+.cart-button,.checkout-button {
+  border:0;
+  background:var(--rose);
+  color:white;
+  border-radius:25px;
+  padding:11px 18px;
+  font-weight:bold;
+}
+.hero {
+  text-align:center;
+  padding:65px 20px 45px;
+  background:
+    radial-gradient(circle at top left,#d4aaa030,transparent 35%),
+    radial-gradient(circle at top right,#b8c2af35,transparent 35%);
+}
+.hero h1 {
+  font-size:clamp(34px,5vw,52px);
+  margin:0 0 10px;
+}
+.hero p {
+  max-width:700px;
+  margin:auto;
+  color:var(--muted);
+  font-size:17px;
+}
+.bundle-section {
+  max-width:1150px;
+  margin:35px auto 0;
+  padding:0 20px;
+  text-align:center;
+}
+.bundle-section h2 {margin-bottom:5px}
+.bundle-section p {color:var(--muted)}
+.bundles {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-top:20px;
+}
+.bundle {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:18px;
+}
+.bundle strong {display:block;font-size:23px}
+.bundle span {color:#a96858;font-weight:bold}
+.shop-area {
+  max-width:1200px;
+  margin:45px auto 80px;
+  padding:0 20px;
+}
+.controls {
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-bottom:25px;
+}
+.controls input,.controls select {
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--white);
+  color:var(--charcoal);
+  font:inherit;
+}
+.controls input {flex:1;min-width:220px}
+.controls select {width:220px}
+.product-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+.product-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 6px 22px #3834320a;
+  transition:transform .2s,box-shadow .2s;
+}
+.product-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 12px 28px #38343215;
+}
+.product-art {
+  aspect-ratio:1;
+  background:linear-gradient(135deg,#f1ebe1,#f8eee9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.product-photo {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.magnet-preview {
+  width:75%;
+  min-height:105px;
+  padding:20px 14px;
+  background:var(--white);
+  border:1px solid #d8cec1;
+  border-radius:8px;
+  box-shadow:0 8px 15px #38343224;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  transform:rotate(-2deg);
+  font-size:17px;
+  line-height:1.3;
+}
+.product-info {
+  padding:17px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+.product-name {
+  font-size:17px;
+  font-weight:bold;
+  line-height:1.35;
+  margin-bottom:8px;
+}
+.product-sku {
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:12px;
+}
+.product-bottom {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:auto;
+}
+.price {
+  color:#a96858;
+  font-size:20px;
+  font-weight:bold;
+}
+.add-button {
+  border:0;
+  background:var(--sage);
+  color:white;
+  padding:9px 15px;
+  border-radius:20px;
+  font-weight:bold;
+}
+.add-button:hover {background:#78886f}
+.add-button:disabled {background:#aaa;cursor:not-allowed}
+.no-results {
+  display:none;
+  text-align:center;
+  padding:50px;
+  color:var(--muted);
+}
+.cart-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#38343275;
+  z-index:100;
+}
+.cart-overlay.open {display:block}
+.cart-drawer {
+  position:fixed;
+  top:0;
+  right:-450px;
+  width:min(440px,100%);
+  height:100vh;
+  background:var(--white);
+  z-index:101;
+  box-shadow:-8px 0 30px #0002;
+  transition:right .25s;
+  display:flex;
+  flex-direction:column;
+}
+.cart-drawer.open {right:0}
+.cart-header {
+  padding:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.cart-header h2 {margin:0}
+.close-cart {
+  border:0;
+  background:none;
+  font-size:28px;
+}
+.cart-items {
+  flex:1;
+  overflow-y:auto;
+  padding:18px;
+}
+.cart-item {
+  padding:15px 0;
+  border-bottom:1px solid var(--border);
+}
+.cart-item-name {font-weight:bold}
+.cart-item-sku {
+  font-size:12px;
+  color:var(--muted);
+}
+.cart-item-price {
+  color:#a96858;
+  margin-top:5px;
+}
+.quantity-controls {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:9px;
+}
+.quantity-controls button {
+  border:1px solid var(--border);
+  background:var(--cream);
+  border-radius:15px;
+  padding:4px 10px;
+}
+.remove-button {color:#a96858}
+.cart-empty {
+  text-align:center;
+  color:var(--muted);
+  padding:45px 15px;
+}
+.cart-footer {
+  background:var(--cream);
+  padding:20px;
+  border-top:1px solid var(--border);
+}
+.cart-total-row {
+  display:flex;
+  justify-content:space-between;
+  font-size:21px;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+.cart-note {
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:15px;
+}
+.checkout-button {
+  width:100%;
+  padding:14px;
+  font-size:17px;
+}
+footer {
+  background:var(--charcoal);
+  color:#eee6dc;
+  text-align:center;
+  padding:35px 20px;
+}
+footer p {margin:5px}
+@media(max-width:1000px) {
+  .product-grid {grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:750px) {
+  .nav {flex-direction:column;gap:12px}
+  nav {justify-content:center;gap:12px}
+  .product-grid {grid-template-columns:repeat(2,1fr)}
+  .bundles {grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px) {
+  .product-grid {grid-template-columns:1fr}
+  .controls select {width:100%}
+}
+</style>
 </head>
-
 <body>
 
 <header>
-    <div class="nav">
-
-        <a href="index.html">
-            <img
-                src="logo.png.png"
-                alt="Tiny Memories Magnet Co."
-                width="150"
-            >
-        </a>
-
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="custom-magnets.html">Custom Photo Magnets</a>
-            <a href="shop-magnets.html">Shop Magnets</a>
-            <a href="index.html#about">About</a>
-
-            <button
-                type="button"
-                class="cart-button"
-                onclick="openCart()"
-            >
-                Cart (<span id="cartCount">0</span>)
-            </button>
-        </nav>
-
-    </div>
+  <div class="nav">
+    <a href="index.html">
+      <img class="logo" src="logo.png.png"
+           alt="Tiny Memories Magnet Co.">
+    </a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="custom-magnets.html">Custom Photo Magnets</a>
+      <a href="shop-magnets.html">Shop Magnets</a>
+      <a href="index.html#about">About</a>
+      <button class="cart-button" onclick="openCart()">
+        Cart (<span id="cartCount">0</span>)
+      </button>
+    </nav>
+  </div>
 </header>
 
 <section class="hero">
-    <h1>Shop Handmade Magnets</h1>
-
-    <p>
-        Little reminders, funny thoughts, encouragement, and everyday
-        nonsense — made into magnets for your fridge, locker, office,
-        or wherever you need a little personality.
-    </p>
+  <h1>Shop Handmade Magnets</h1>
+  <p>
+    Little reminders, funny thoughts, encouragement, and everyday
+    nonsense — made into magnets for your fridge, locker, office,
+    or wherever you need a little personality.
+  </p>
 </section>
 
 <section class="bundle-section">
-
-    <div class="bundle-title">
-        <h2>Build Your Bundle</h2>
-
-        <p>
-            Mix and match any handmade magnets.
-        </p>
-    </div>
-
-    <div class="bundles">
-
-        <div class="bundle">
-            <strong>1 Magnet</strong>
-            <span>$3</span>
-        </div>
-
-        <div class="bundle">
-            <strong>3 Magnets</strong>
-            <span>$9</span>
-        </div>
-
-        <div class="bundle">
-            <strong>6 Magnets</strong>
-            <span>$18</span>
-        </div>
-
-        <div class="bundle">
-            <strong>9 Magnets</strong>
-            <span>$24</span>
-        </div>
-
-    </div>
-
+  <h2>Build Your Bundle</h2>
+  <p>Mix and match any handmade magnets.</p>
+  <div class="bundles">
+    <div class="bundle"><strong>1 Magnet</strong><span>$3</span></div>
+    <div class="bundle"><strong>3 Magnets</strong><span>$9</span></div>
+    <div class="bundle"><strong>6 Magnets</strong><span>$18</span></div>
+    <div class="bundle"><strong>9 Magnets</strong><span>$24</span></div>
+  </div>
 </section>
 
 <main class="shop-area">
+  <div class="controls">
+    <input type="search" id="searchInput"
+           placeholder="Search magnets..."
+           oninput="filterProducts()">
+    <select id="categoryFilter" onchange="filterProducts()">
+      <option value="all">All Magnets</option>
+      <option value="encouragement">Encouragement</option>
+      <option value="funny">Funny</option>
+      <option value="life">Life &amp; Reminders</option>
+      <option value="states">States</option>
+      <option value="months">Months</option>
+    </select>
+  </div>
 
-    <div class="controls">
+  <div class="product-grid" id="productGrid"></div>
 
-        <div class="search">
-            <input
-                type="search"
-                id="searchInput"
-                placeholder="Search magnets..."
-                oninput="filterProducts()"
-            >
-        </div>
-
-        <div class="filter">
-            <select
-                id="categoryFilter"
-                onchange="filterProducts()"
-            >
-                <option value="all">All Magnets</option>
-                <option value="encouragement">Encouragement</option>
-                <option value="funny">Funny</option>
-                <option value="life">Life &amp; Reminders</option>
-                <option value="states">States</option>
-                <option value="months">Months</option>
-            </select>
-        </div>
-
-    </div>
-
-    <div class="product-grid" id="productGrid"></div>
-
-    <div class="no-results" id="noResults">
-        <h2>No magnets found</h2>
-        <p>Try a different search or category.</p>
-    </div>
-
+  <div class="no-results" id="noResults">
+    <h2>No magnets found</h2>
+    <p>Try another search or category.</p>
+  </div>
 </main>
 
-<!-- CART OVERLAY -->
-
-<div
-    class="cart-overlay"
-    id="cartOverlay"
-    onclick="closeCart()"
-></div>
-
-<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay"
+     onclick="closeCart()"></div>
 
 <aside class="cart-drawer" id="cartDrawer">
-
-    <div class="cart-header">
-        <h2>Your Cart</h2>
-
-        <button
-            type="button"
-            class="close-cart"
-            onclick="closeCart()"
-            aria-label="Close cart"
-        >
-            ×
-        </button>
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <button class="close-cart" onclick="closeCart()"
+            aria-label="Close cart">×</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span>Magnet Total</span>
+      <span id="cartTotal">$0.00</span>
     </div>
-
-    <div class="cart-items" id="cartItems"></div>
-
-    <div class="cart-footer">
-
-        <div class="cart-total-row">
-            <span>Magnet Total</span>
-            <span id="cartTotal">$0.00</span>
-        </div>
-
-        <div class="cart-note">
-            Shipping is calculated at checkout.
-            Bundle pricing is automatically applied.
-        </div>
-
-        <button
-            type="button"
-            class="checkout-button"
-            onclick="checkout()"
-        >
-            Continue to Checkout
-        </button>
-
+    <div class="cart-note">
+      Shipping is calculated at checkout.
+      Bundle pricing is automatically applied.
     </div>
-
+    <button class="checkout-button" onclick="checkout()">
+      Continue to Checkout
+    </button>
+  </div>
 </aside>
 
 <footer>
-    <p><strong>Tiny Memories Magnet Co.</strong></p>
-    <p>Little magnets. Big feelings.</p>
-    <p class="footer-small">
-        © 2026 Tiny Memories Magnet Co.
-    </p>
+  <p><strong>Tiny Memories Magnet Co.</strong></p>
+  <p>Little magnets. Big feelings.</p>
+  <p>© 2026 Tiny Memories Magnet Co.</p>
 </footer>
 
 <script>
+/*
+ * Product entries:
+ * [Name, SKU, Stock, Category]
+ */
+const inventory = [
+  ["Tiny Memories Magnet Co. Logo","MAG-TMMC",23,"life"],
+  ["You're Killing It","MAG-KILL",23,"encouragement"],
+  ["Your Best Looks Different","MAG-BEST",24,"encouragement"],
+  ["Do It Because It Makes You Happy","MAG-HAPY",32,"encouragement"],
+  ["Grown Where You Are Planted","MAG-GROW",24,"encouragement"],
+  ["Stop Stressing","MAG-STOP",23,"life"],
+  ["Get Shit Done","MAG-GSHT",25,"funny"],
+  ["You Matter","MAG-YMAT",24,"encouragement"],
+  ["I Hope You Know How Loved You Are","MAG-LOVD",23,"encouragement"],
+  ["Smile Every Day","MAG-SMIL",24,"encouragement"],
+  ["Choose What Helps You Bloom","MAG-BLOM",24,"encouragement"],
+  ["You Are Enough","MAG-ENOUGH",24,"encouragement"],
+  ["North Carolina","MAG-NC",24,"states"],
+  ["Alexa, Clean the Kitchen","MAG-ALEXA",24,"funny"],
+  ["I Followed My Heart, It Led Me to the Fridge","MAG-FRIDGE",24,"funny"],
+  ["I Think You Are Doing a Beautiful Job","MAG-BEAUTJOB",24,"encouragement"],
+  ["You Can't Control","MAG-CONTROL",24,"life"],
+  ["It's Okay If It Takes Longer Than You Thought","MAG-LONGER",24,"encouragement"],
+  ["This Is Your Reminder","MAG-REMINDER",24,"life"],
+  ["Today's Affirmation","MAG-AFFIRMATION",24,"encouragement"],
+  ["Remember to Include Yourself","MAG-REMEMBER",24,"encouragement"],
+  ["Here Lies My Need","MAG-GRAVE",24,"funny"],
+  ["Be More Selfish This Is Literally Your Life","MAG-SELFISH",24,"life"],
+  ["Remember Your Why","MAG-YOURWHY",24,"encouragement"],
+  ["It Costs Nothing To Be Unhinged and I Love a Bargain","MAG-BARGAIN",24,"funny"],
+  ["One Day at a Time","MAG-ONEDAY",24,"encouragement"],
+  ["Just Because You're Struggling","MAG-STRUGGLING",24,"encouragement"],
+  ["What and I Can't Stress This Enough the Fuck","MAG-WTF",24,"funny"],
+  ["No Inspirational Quote","MAG-QUOTE",24,"funny"],
+  ["January","MAG-January",24,"months"],
+  ["February","MAG-February",24,"months"],
+  ["March","MAG-March",24,"months"],
+  ["April","MAG-April",24,"months"],
+  ["May","MAG-May",24,"months"],
+  ["June","MAG-June",24,"months"],
+  ["July","MAG-July",24,"months"],
+  ["August","MAG-August",24,"months"],
+  ["September","MAG-September",24,"months"],
+  ["October","MAG-October",24,"months"],
+  ["November","MAG-November",24,"months"],
+  ["December","MAG-December",24,"months"]
+];
 
-    /*
-     * ==========================================================
-     * PRODUCT INVENTORY
-     * ==========================================================
-     *
-     * There are 41 products in the inventory you originally gave me.
-     *
-     * I am not inventing a 42nd product just to make the number 42.
-     */
+/*
+ * Photos available in your ZIP folder.
+ * Remaining products show their text previews.
+ */
+const photoSKUs = new Set([
+  "MAG-HAPY",
+  "MAG-GROW",
+  "MAG-GSHT",
+  "MAG-LOVD",
+  "MAG-NC",
+  "MAG-ALEXA",
+  "MAG-FRIDGE",
+  "MAG-BEAUTJOB",
+  "MAG-LONGER",
+  "MAG-REMEMBER",
+  "MAG-GRAVE",
+  "MAG-SELFISH",
+  "MAG-BARGAIN",
+  "MAG-ONEDAY",
+  "MAG-STRUGGLING",
+  "MAG-QUOTE",
+  "MAG-January",
+  "MAG-February",
+  "MAG-March",
+  "MAG-April",
+  "MAG-May",
+  "MAG-June",
+  "MAG-July",
+  "MAG-August",
+  "MAG-October",
+  "MAG-November",
+  "MAG-December"
+]);
 
-    const products = [
+const products = inventory.map(([name,sku,stock,category]) => ({
+  name,
+  short:name,
+  sku,
+  stock,
+  category,
+  image:photoSKUs.has(sku)
+    ? "magnet-photos/" + sku + ".jpg"
+    : null
+}));
 
-        {
-            name: "Tiny Memories Magnet Co. Logo",
-            short: "Tiny Memories",
-            sku: "MAG-TMMC",
-            stock: 23,
-            category: "life"
-        },
+const CART_KEY = "tinyMemoriesCart";
 
-        {
-            name: "You're Killing It",
-            short: "You're killing it",
-            sku: "MAG-KILL",
-            stock: 23,
-            category: "encouragement"
-        },
+function loadCart() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CART_KEY));
+    return Array.isArray(saved) ? saved : [];
+  } catch(error) {
+    console.error(error);
+    return [];
+  }
+}
 
-        {
-            name: "Your Best Looks Different",
-            short: "Your best looks different",
-            sku: "MAG-BEST",
-            stock: 24,
-            category: "encouragement"
-        },
+let cart = loadCart();
 
-        {
-            name: "Do It Because It Makes You Happy",
-            short: "Do it because it makes you happy",
-            sku: "MAG-HAPY",
-            stock: 32,
-            category: "encouragement"
-        },
+function saveCart() {
+  try {
+    localStorage.setItem(CART_KEY,JSON.stringify(cart));
+    return true;
+  } catch(error) {
+    alert("Unable to save your cart. Please check browser storage.");
+    return false;
+  }
+}
 
-        {
-            name: "Grown Where You Are Planted",
-            short: "Grown where you are planted",
-            sku: "MAG-GROW",
-            stock: 24,
-            category: "encouragement"
-        },
+function getCartQuantity() {
+  return cart.reduce(
+    (total,item) => total + (Number(item.quantity)||0),0
+  );
+}
 
-        {
-            name: "Stop Stressing",
-            short: "Stop stressing",
-            sku: "MAG-STOP",
-            stock: 23,
-            category: "life"
-        },
+function getBundlePrice(quantity) {
+  let remaining = Number(quantity);
+  let total = 0;
 
-        {
-            name: "Get Shit Done",
-            short: "Get shit done",
-            sku: "MAG-GSHT",
-            stock: 25,
-            category: "funny"
-        },
+  while(remaining >= 9) {
+    total += 24;
+    remaining -= 9;
+  }
+  if(remaining >= 6) {
+    total += 18;
+    remaining -= 6;
+  }
+  if(remaining >= 3) {
+    total += 9;
+    remaining -= 3;
+  }
+  total += remaining * 3;
+  return total;
+}
 
-        {
-            name: "You Matter",
-            short: "You matter",
-            sku: "MAG-YMAT",
-            stock: 24,
-            category: "encouragement"
-        },
+function createPlaceholder(product) {
+  const preview = document.createElement("div");
+  preview.className = "magnet-preview";
+  preview.textContent = product.short;
+  return preview;
+}
 
-        {
-            name: "I Hope You Know How Loved You Are",
-            short: "I hope you know how loved you are",
-            sku: "MAG-LOVD",
-            stock: 23,
-            category: "encouragement"
-        },
+function renderProducts(list=products) {
+  const grid = document.getElementById("productGrid");
+  const noResults = document.getElementById("noResults");
+  grid.replaceChildren();
 
-        {
-            name: "Smile Every Day",
-            short: "Smile every day",
-            sku: "MAG-SMIL",
-            stock: 24,
-            category: "encouragement"
-        },
+  noResults.style.display = list.length ? "none" : "block";
 
-        {
-            name: "Choose What Helps You Bloom",
-            short: "Choose what helps you bloom",
-            sku: "MAG-BLOM",
-            stock: 24,
-            category: "encouragement"
-        },
+  list.forEach(product => {
+    const inCart = cart.find(
+      item => item.type !== "custom" && item.sku === product.sku
+    );
+    const available = product.stock - (Number(inCart?.quantity)||0);
 
-        {
-            name: "You Are Enough",
-            short: "You are enough",
-            sku: "MAG-ENOUGH",
-            stock: 24,
-            category: "encouragement"
-        },
+    const card = document.createElement("article");
+    card.className = "product-card";
 
-        {
-            name: "North Carolina",
-            short: "North Carolina",
-            sku: "MAG-NC",
-            stock: 24,
-            category: "states"
-        },
+    const art = document.createElement("div");
+    art.className = "product-art";
 
-        {
-            name: "Alexa, Clean the Kitchen",
-            short: "Alexa, Clean the kitchen",
-            sku: "MAG-ALEXA",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "I Followed My Heart, It Led Me to the Fridge",
-            short: "I followed my heart, it led me to the fridge",
-            sku: "MAG-FRIDGE",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "I Think You Are Doing a Beautiful Job",
-            short: "I think you are doing a beautiful job",
-            sku: "MAG-BEAUTJOB",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "You Can't Control",
-            short: "You Can't Control",
-            sku: "MAG-CONTROL",
-            stock: 24,
-            category: "life"
-        },
-
-        {
-            name: "It's Okay If It Takes Longer Than You Thought",
-            short: "It's Okay If It Takes Longer Than You Thought",
-            sku: "MAG-LONGER",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "This Is Your Reminder",
-            short: "This is your reminder",
-            sku: "MAG-REMINDER",
-            stock: 24,
-            category: "life"
-        },
-
-        {
-            name: "Today's Affirmation",
-            short: "Today's Affirmation",
-            sku: "MAG-AFFIRMATION",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "Remember to Include Yourself",
-            short: "Remember to Include Yourself",
-            sku: "MAG-REMEMBER",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "Here Lies My Need",
-            short: "Here Lies My Need",
-            sku: "MAG-GRAVE",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "Be More Selfish This Is Literally Your Life",
-            short: "Be More Selfish — This Is Literally Your Life",
-            sku: "MAG-SELFISH",
-            stock: 24,
-            category: "life"
-        },
-
-        {
-            name: "Remember Your Why",
-            short: "Remember Your Why",
-            sku: "MAG-YOURWHY",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "It Costs Nothing To Be Unhinged and I Love a Bargain",
-            short: "It Costs Nothing To Be Unhinged and I love a Bargain",
-            sku: "MAG-BARGAIN",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "One Day at a Time",
-            short: "One Day at a Time",
-            sku: "MAG-ONEDAY",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "Just Because You're Struggling",
-            short: "Just Because You're Struggling",
-            sku: "MAG-STRUGGLING",
-            stock: 24,
-            category: "encouragement"
-        },
-
-        {
-            name: "What and I Can't Stress This Enough the Fuck",
-            short: "What and i can't stress this enough the fuck",
-            sku: "MAG-WTF",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "No Inspirational Quote",
-            short: "No Inspirational Quote",
-            sku: "MAG-QUOTE",
-            stock: 24,
-            category: "funny"
-        },
-
-        {
-            name: "January",
-            short: "January",
-            sku: "MAG-January",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "February",
-            short: "February",
-            sku: "MAG-February",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "March",
-            short: "March",
-            sku: "MAG-March",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "April",
-            short: "April",
-            sku: "MAG-April",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "May",
-            short: "May",
-            sku: "MAG-May",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "June",
-            short: "June",
-            sku: "MAG-June",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "July",
-            short: "July",
-            sku: "MAG-July",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "August",
-            short: "August",
-            sku: "MAG-August",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "September",
-            short: "September",
-            sku: "MAG-September",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "October",
-            short: "October",
-            sku: "MAG-October",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "November",
-            short: "November",
-            sku: "MAG-November",
-            stock: 24,
-            category: "months"
-        },
-
-        {
-            name: "December",
-            short: "December",
-            sku: "MAG-December",
-            stock: 24,
-            category: "months"
-        }
-
-    ];
-
-    /*
-     * ==========================================================
-     * CART
-     * ==========================================================
-     */
-
-    const CART_KEY = "tinyMemoriesCart";
-
-    let cart = loadCart();
-
-    function loadCart() {
-        try {
-            const saved = localStorage.getItem(CART_KEY);
-
-            if (!saved) {
-                return [];
-            }
-
-            const parsed = JSON.parse(saved);
-
-            return Array.isArray(parsed) ? parsed : [];
-
-        } catch (error) {
-            console.error("Could not load cart:", error);
-            return [];
-        }
+    if(product.image) {
+      const img = document.createElement("img");
+      img.className = "product-photo";
+      img.src = product.image;
+      img.alt = product.name + " handmade magnet";
+      img.loading = "lazy";
+      img.onerror = () => {
+        img.remove();
+        art.appendChild(createPlaceholder(product));
+      };
+      art.appendChild(img);
+    } else {
+      art.appendChild(createPlaceholder(product));
     }
 
-    function saveCart() {
-        try {
-            localStorage.setItem(
-                CART_KEY,
-                JSON.stringify(cart)
-            );
+    const info = document.createElement("div");
+    info.className = "product-info";
 
-            return true;
+    const name = document.createElement("div");
+    name.className = "product-name";
+    name.textContent = product.name;
 
-        } catch (error) {
-            console.error("Could not save cart:", error);
+    const sku = document.createElement("div");
+    sku.className = "product-sku";
+    sku.textContent = "SKU: " + product.sku;
 
-            alert(
-                "We couldn't save your cart. Your browser storage may be full."
-            );
+    const bottom = document.createElement("div");
+    bottom.className = "product-bottom";
 
-            return false;
-        }
+    const price = document.createElement("div");
+    price.className = "price";
+    price.textContent = "$3";
+
+    const add = document.createElement("button");
+    add.className = "add-button";
+    add.type = "button";
+    add.textContent = available > 0 ? "Add" : "Sold Out";
+    add.disabled = available <= 0;
+    add.onclick = () => addToCart(product.sku);
+
+    bottom.append(price,add);
+    info.append(name,sku,bottom);
+    card.append(art,info);
+    grid.appendChild(card);
+  });
+}
+
+function filterProducts() {
+  const search = document.getElementById("searchInput")
+    .value.trim().toLowerCase();
+  const category = document.getElementById("categoryFilter").value;
+
+  const filtered = products.filter(product => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(search) ||
+      product.sku.toLowerCase().includes(search);
+    const matchesCategory =
+      category === "all" || product.category === category;
+    return matchesSearch && matchesCategory;
+  });
+
+  renderProducts(filtered);
+}
+
+function refreshProducts() {
+  filterProducts();
+}
+
+function addToCart(sku) {
+  const product = products.find(p => p.sku === sku);
+  if(!product) return;
+
+  const existing = cart.find(
+    item => item.type !== "custom" && item.sku === sku
+  );
+
+  if(existing) {
+    if(Number(existing.quantity) >= product.stock) {
+      alert("Only " + product.stock + " available.");
+      return;
     }
-
-    /*
-     * ==========================================================
-     * BUNDLE PRICING
-     * ==========================================================
-     *
-     * 1 = $3
-     * 3 = $9
-     * 6 = $18
-     * 9 = $24
-     *
-     * This applies to the total number of magnets in the cart,
-     * including custom magnets.
-     */
-
-    function getBundlePrice(quantity) {
-
-        let remaining = Number(quantity);
-        let total = 0;
-
-        while (remaining >= 9) {
-            total += 24;
-            remaining -= 9;
-        }
-
-        if (remaining >= 6) {
-            total += 18;
-            remaining -= 6;
-        }
-
-        if (remaining >= 3) {
-            total += 9;
-            remaining -= 3;
-        }
-
-        total += remaining * 3;
-
-        return total;
-    }
-
-    function getCartQuantity() {
-
-        return cart.reduce((total, item) => {
-            return total + (Number(item.quantity) || 0);
-        }, 0);
-
-    }
-
-    /*
-     * ==========================================================
-     * PRODUCTS
-     * ==========================================================
-     */
-
-    function renderProducts(list = products) {
-
-        const grid = document.getElementById("productGrid");
-        const noResults = document.getElementById("noResults");
-
-        grid.innerHTML = "";
-
-        if (list.length === 0) {
-            noResults.style.display = "block";
-            return;
-        }
-
-        noResults.style.display = "none";
-
-        list.forEach(product => {
-
-            const cartItem = cart.find(
-                item =>
-                    item.type !== "custom" &&
-                    item.sku === product.sku
-            );
-
-            const quantityInCart = cartItem
-                ? Number(cartItem.quantity)
-                : 0;
-
-            const available = product.stock - quantityInCart;
-
-            const card = document.createElement("article");
-            card.className = "product-card";
-
-            const art = document.createElement("div");
-            art.className = "product-art";
-
-            const preview = document.createElement("div");
-            preview.className = "magnet-preview";
-
-            const previewText = document.createElement("span");
-            previewText.textContent = product.short;
-
-            preview.appendChild(previewText);
-            art.appendChild(preview);
-
-            const info = document.createElement("div");
-            info.className = "product-info";
-
-            const name = document.createElement("div");
-            name.className = "product-name";
-            name.textContent = product.name;
-
-            const sku = document.createElement("div");
-            sku.className = "product-sku";
-            sku.textContent =
-                "SKU: " + product.sku;
-
-            const bottom = document.createElement("div");
-            bottom.className = "product-bottom";
-
-            const price = document.createElement("div");
-            price.className = "price";
-            price.textContent = "$3";
-
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "add-button";
-
-            if (available <= 0) {
-                button.disabled = true;
-                button.textContent = "Sold Out";
-            } else {
-                button.textContent = "Add";
-                button.addEventListener("click", function() {
-                    addToCart(product.sku);
-                });
-            }
-
-            bottom.appendChild(price);
-            bottom.appendChild(button);
-
-            info.appendChild(name);
-            info.appendChild(sku);
-            info.appendChild(bottom);
-
-            card.appendChild(art);
-            card.appendChild(info);
-
-            grid.appendChild(card);
-        });
-    }
-
-    function filterProducts() {
-
-        const search =
-            document.getElementById("searchInput")
-                .value
-                .trim()
-                .toLowerCase();
-
-        const category =
-            document.getElementById("categoryFilter").value;
-
-        const filtered = products.filter(product => {
-
-            const matchesSearch =
-                !search ||
-                product.name.toLowerCase().includes(search) ||
-                product.short.toLowerCase().includes(search) ||
-                product.sku.toLowerCase().includes(search);
-
-            const matchesCategory =
-                category === "all" ||
-                product.category === category;
-
-            return matchesSearch && matchesCategory;
-        });
-
-        renderProducts(filtered);
-    }
-
-    /*
-     * ==========================================================
-     * ADD TO CART
-     * ==========================================================
-     */
-
-    function addToCart(sku) {
-
-        const product = products.find(
-            item => item.sku === sku
-        );
-
-        if (!product) {
-            return;
-        }
-
-        const existing = cart.find(
-            item =>
-                item.type !== "custom" &&
-                item.sku === sku
-        );
-
-        if (existing) {
-
-            if (existing.quantity >= product.stock) {
-                alert(
-                    "You cannot add more of this magnet. We only have " +
-                    product.stock +
-                    " in stock."
-                );
-
-                return;
-            }
-
-            existing.quantity += 1;
-
-        } else {
-
-            cart.push({
-                id: "product-" + sku,
-
-                type: "handmade",
-
-                sku: product.sku,
-
-                name: product.name,
-
-                quantity: 1
-            });
-        }
-
-        if (!saveCart()) {
-            return;
-        }
-
-        updateCartUI();
-        renderProducts();
-
-        /*
-         * Open the cart so the customer sees their addition.
-         */
-        openCart();
-    }
-
-    /*
-     * ==========================================================
-     * CHANGE QUANTITY
-     * ==========================================================
-     */
-
-    function changeQuantity(index, change) {
-
-        const item = cart[index];
-
-        if (!item) {
-            return;
-        }
-
-        /*
-         * Custom items are kept as one bundle.
-         *
-         * Their quantity represents how many custom magnets
-         * are in that specific custom order, so we don't let
-         * the customer change it from the handmade cart drawer.
-         */
-        if (item.type === "custom") {
-            return;
-        }
-
-        const product = products.find(
-            p => p.sku === item.sku
-        );
-
-        if (!product) {
-            return;
-        }
-
-        const newQuantity =
-            Number(item.quantity) + change;
-
-        if (newQuantity <= 0) {
-            cart.splice(index, 1);
-        } else if (newQuantity > product.stock) {
-            alert(
-                "Only " +
-                product.stock +
-                " of this magnet are currently in stock."
-            );
-
-            return;
-        } else {
-            item.quantity = newQuantity;
-        }
-
-        saveCart();
-
-        updateCartUI();
-        renderProducts();
-    }
-
-    function removeFromCart(index) {
-
-        if (!cart[index]) {
-            return;
-        }
-
-        cart.splice(index, 1);
-
-        saveCart();
-
-        updateCartUI();
-        renderProducts();
-    }
-
-    /*
-     * ==========================================================
-     * CART DISPLAY
-     * ==========================================================
-     */
-
-    function updateCartUI() {
-
-        const cartItems = document.getElementById("cartItems");
-        const cartTotal = document.getElementById("cartTotal");
-        const cartCount = document.getElementById("cartCount");
-
-        const quantity = getCartQuantity();
-
-        cartCount.textContent = quantity;
-
-        if (cart.length === 0) {
-
-            cartItems.innerHTML = `
-                <div class="cart-empty">
-                    <h3>Your cart is empty.</h3>
-                    <p>
-                        Add a few tiny memories and they'll show up here.
-                    </p>
-                </div>
-            `;
-
-            cartTotal.textContent = "$0.00";
-
-            return;
-        }
-
-        cartItems.innerHTML = "";
-
-        cart.forEach((item, index) => {
-
-            const wrapper = document.createElement("div");
-            wrapper.className = "cart-item";
-
-            const left = document.createElement("div");
-
-            const name = document.createElement("div");
-            name.className = "cart-item-name";
-            name.textContent = item.name;
-
-            const sku = document.createElement("div");
-            sku.className = "cart-item-sku";
-
-            if (item.type === "custom") {
-                sku.textContent =
-                    "Custom photo order • " +
-                    item.quantity +
-                    " magnets";
-            } else {
-                sku.textContent =
-                    "SKU: " +
-                    item.sku;
-            }
-
-            const itemPrice = document.createElement("div");
-            itemPrice.className = "cart-item-price";
-
-            /*
-             * The bundle price applies to the whole cart,
-             * so we don't display a separate exact line price
-             * for each item.
-             */
-            itemPrice.textContent =
-                item.quantity +
-                (item.quantity === 1
-                    ? " magnet"
-                    : " magnets");
-
-            left.appendChild(name);
-            left.appendChild(sku);
-            left.appendChild(itemPrice);
-
-            /*
-             * Custom item
-             */
-            if (item.type === "custom") {
-
-                const photoInfo =
-                    document.createElement("div");
-
-                photoInfo.style.fontSize = "12px";
-                photoInfo.style.color =
-                    "var(--text-light)";
-                photoInfo.style.marginTop = "5px";
-
-                photoInfo.textContent =
-                    item.photos
-                        ? item.photos.length +
-                          " photo(s) uploaded"
-                        : "Photos uploaded";
-
-                left.appendChild(photoInfo);
-
-                if (item.instructions) {
-
-                    const instructionInfo =
-                        document.createElement("div");
-
-                    instructionInfo.style.fontSize = "12px";
-                    instructionInfo.style.color =
-                        "var(--text-light)";
-                    instructionInfo.style.marginTop = "4px";
-
-                    instructionInfo.textContent =
-                        "Special instructions included";
-
-                    left.appendChild(instructionInfo);
-                }
-
-            } else {
-
-                /*
-                 * Handmade item quantity controls.
-                 */
-                const controls =
-                    document.createElement("div");
-
-                controls.className =
-                    "quantity-controls";
-
-                const minus =
-                    document.createElement("button");
-
-                minus.type = "button";
-                minus.textContent = "−";
-
-                minus.addEventListener("click", function() {
-                    changeQuantity(index, -1);
-                });
-
-                const quantityDisplay =
-                    document.createElement("span");
-
-                quantityDisplay.textContent =
-                    item.quantity;
-
-                const plus =
-                    document.createElement("button");
-
-                plus.type = "button";
-                plus.textContent = "+";
-
-                plus.addEventListener("click", function() {
-                    changeQuantity(index, 1);
-                });
-
-                const remove =
-                    document.createElement("button");
-
-                remove.type = "button";
-                remove.className =
-                    "remove-button";
-
-                remove.textContent = "Remove";
-
-                remove.addEventListener("click", function() {
-                    removeFromCart(index);
-                });
-
-                controls.appendChild(minus);
-                controls.appendChild(quantityDisplay);
-                controls.appendChild(plus);
-                controls.appendChild(remove);
-
-                left.appendChild(controls);
-            }
-
-            wrapper.appendChild(left);
-
-            cartItems.appendChild(wrapper);
-        });
-
-        const total =
-            getBundlePrice(quantity);
-
-        cartTotal.textContent =
-            "$" + total.toFixed(2);
-    }
-
-    /*
-     * ==========================================================
-     * CART OPEN / CLOSE
-     * ==========================================================
-     */
-
-    function openCart() {
-
-        document
-            .getElementById("cartOverlay")
-            .classList.add("open");
-
-        document
-            .getElementById("cartDrawer")
-            .classList.add("open");
-
-        updateCartUI();
-    }
-
-    function closeCart() {
-
-        document
-            .getElementById("cartOverlay")
-            .classList.remove("open");
-
-        document
-            .getElementById("cartDrawer")
-            .classList.remove("open");
-    }
-
-    /*
-     * ==========================================================
-     * CHECKOUT
-     * ==========================================================
-     */
-
-    function checkout() {
-
-        if (cart.length === 0) {
-
-            alert(
-                "Your cart is empty. Add some magnets first!"
-            );
-
-            return;
-        }
-
-        /*
-         * Make absolutely sure the latest cart is saved.
-         */
-        if (!saveCart()) {
-            return;
-        }
-
-        window.location.href =
-            "checkout.html";
-    }
-
-    /*
-     * ==========================================================
-     * ESC KEY CLOSES CART
-     * ==========================================================
-     */
-
-    document.addEventListener("keydown", function(event) {
-
-        if (event.key === "Escape") {
-            closeCart();
-        }
-
+    existing.quantity = Number(existing.quantity) + 1;
+  } else {
+    cart.push({
+      id:"product-" + sku,
+      type:"handmade",
+      sku:product.sku,
+      name:product.name,
+      quantity:1
     });
+  }
 
-    /*
-     * ==========================================================
-     * INITIAL LOAD
-     * ==========================================================
-     */
+  if(!saveCart()) return;
+  updateCartUI();
+  refreshProducts();
+  openCart();
+}
 
-    renderProducts();
-    updateCartUI();
+function changeQuantity(index,change) {
+  const item = cart[index];
+  if(!item || item.type === "custom") return;
 
+  const product = products.find(p => p.sku === item.sku);
+  if(!product) return;
+
+  const quantity = Number(item.quantity) + change;
+
+  if(quantity <= 0) {
+    cart.splice(index,1);
+  } else if(quantity > product.stock) {
+    alert("Only " + product.stock + " available.");
+    return;
+  } else {
+    item.quantity = quantity;
+  }
+
+  saveCart();
+  updateCartUI();
+  refreshProducts();
+}
+
+function removeFromCart(index) {
+  if(!cart[index]) return;
+  cart.splice(index,1);
+  saveCart();
+  updateCartUI();
+  refreshProducts();
+}
+
+function updateCartUI() {
+  const cartItems = document.getElementById("cartItems");
+  const cartTotal = document.getElementById("cartTotal");
+  const cartCount = document.getElementById("cartCount");
+  const quantity = getCartQuantity();
+
+  cartCount.textContent = quantity;
+  cartItems.replaceChildren();
+
+  if(cart.length === 0) {
+    cartItems.innerHTML =
+      '<div class="cart-empty"><h3>Your cart is empty.</h3>' +
+      '<p>Add a few tiny memories and they will show up here.</p></div>';
+    cartTotal.textContent = "$0.00";
+    return;
+  }
+
+  cart.forEach((item,index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "cart-item";
+
+    const name = document.createElement("div");
+    name.className = "cart-item-name";
+    name.textContent = item.name;
+
+    const sku = document.createElement("div");
+    sku.className = "cart-item-sku";
+    sku.textContent = item.type === "custom"
+      ? "Custom photo order • " + item.quantity + " magnets"
+      : "SKU: " + item.sku;
+
+    const count = document.createElement("div");
+    count.className = "cart-item-price";
+    count.textContent = item.quantity +
+      (Number(item.quantity) === 1 ? " magnet" : " magnets");
+
+    wrapper.append(name,sku,count);
+
+    if(item.type === "custom") {
+      const details = document.createElement("div");
+      details.className = "cart-item-sku";
+      details.textContent = item.photos
+        ? item.photos.length + " photo(s) uploaded"
+        : "Photos uploaded";
+      wrapper.appendChild(details);
+
+      if(item.instructions) {
+        const instructions = document.createElement("div");
+        instructions.className = "cart-item-sku";
+        instructions.textContent = "Special instructions included";
+        wrapper.appendChild(instructions);
+      }
+    } else {
+      const controls = document.createElement("div");
+      controls.className = "quantity-controls";
+
+      const minus = document.createElement("button");
+      minus.textContent = "−";
+      minus.onclick = () => changeQuantity(index,-1);
+
+      const amount = document.createElement("span");
+      amount.textContent = item.quantity;
+
+      const plus = document.createElement("button");
+      plus.textContent = "+";
+      plus.onclick = () => changeQuantity(index,1);
+
+      const remove = document.createElement("button");
+      remove.className = "remove-button";
+      remove.textContent = "Remove";
+      remove.onclick = () => removeFromCart(index);
+
+      controls.append(minus,amount,plus,remove);
+      wrapper.appendChild(controls);
+    }
+
+    cartItems.appendChild(wrapper);
+  });
+
+  cartTotal.textContent = "$" + getBundlePrice(quantity).toFixed(2);
+}
+
+function openCart() {
+  document.getElementById("cartOverlay").classList.add("open");
+  document.getElementById("cartDrawer").classList.add("open");
+  updateCartUI();
+}
+
+function closeCart() {
+  document.getElementById("cartOverlay").classList.remove("open");
+  document.getElementById("cartDrawer").classList.remove("open");
+}
+
+function checkout() {
+  if(cart.length === 0) {
+    alert("Your cart is empty. Add some magnets first!");
+    return;
+  }
+  if(!saveCart()) return;
+  window.location.href = "checkout.html";
+}
+
+document.addEventListener("keydown",event => {
+  if(event.key === "Escape") closeCart();
+});
+
+renderProducts();
+updateCartUI();
 </script>
-
 </body>
 </html>
