@@ -34,7 +34,8 @@ p{line-height:1.6}
 .price{font-weight:bold;font-size:24px;color:#a96858}
 .btn{background:var(--rose);border:0;border-radius:9px;color:white;padding:14px 22px;font:inherit;font-weight:bold;cursor:pointer}
 .btn:hover{background:#a96858}
-.custom,.individual{margin-top:55px}
+.custom{margin-top:55px}
+.custom-photo{display:block;width:min(100%,540px);height:auto;border-radius:14px;margin:0 auto 30px}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 label{display:block;font-weight:bold;margin-bottom:7px}
 input,select{width:100%;padding:12px;border:1px solid #ccc0b2;border-radius:8px;background:white;font:inherit}
@@ -100,31 +101,18 @@ footer{text-align:center;background:var(--white);padding:36px;border-top:1px sol
 
   </div>
 
-  <section class="individual">
-    <h2>Look at What I Made Magnets</h2>
-
-    <div class="grid">
-      <article class="card">
-        <img class="product-photo"
-             src="MAG-LOOKATWHT.png"
-             alt="Look at What I Made personalized children's artwork magnets">
-        <h3>Look at What I Made — Individual Magnet</h3>
-        <p>A colorful magnet for displaying your little one's creations.</p>
-        <p class="price">$3.00 each</p>
-        <button class="btn" onclick="addSet('Look at What I Made — Individual Magnet','SPECIAL-LOOKATWHT',3)">
-          Add Magnet to Cart
-        </button>
-      </article>
-    </div>
-  </section>
-
   <section class="custom">
-    <h2>Custom Name Magnets</h2>
+    <h2>Look at What I Made — Custom Name Magnets</h2>
 
     <div class="card">
-      <p>Personalize your magnets with any color and the name of your choice.</p>
+      <img class="custom-photo"
+           src="MAG-LOOKATWHT.png"
+           alt="Look at What I Made personalized name magnets">
+
+      <p>Personalize your magnets with the name and color of your choice.</p>
 
       <div class="form-grid">
+
         <div class="field">
           <label for="customName">Name to print</label>
           <input id="customName" maxlength="80" placeholder="Enter the name" required>
@@ -150,6 +138,7 @@ footer{text-align:center;background:var(--white);padding:36px;border-top:1px sol
             <option value="9|24">9 magnets — $24</option>
           </select>
         </div>
+
       </div>
 
       <button class="btn" onclick="addCustom()">
@@ -169,11 +158,12 @@ footer{text-align:center;background:var(--white);padding:36px;border-top:1px sol
 </footer>
 
 <script>
+// Draft cart only. Specialty pricing must be integrated into
+// the live checkout backend before customer purchases are enabled.
 const CART_KEY = "tinyMemoriesSpecialtyDraftCart";
 
 function addItem(item) {
   let cart;
-
   try {
     cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
     if (!Array.isArray(cart)) cart = [];
@@ -211,7 +201,7 @@ function addCustom() {
     document.getElementById("bundle").value.split("|").map(Number);
 
   addItem({
-    name: "Custom Name Magnets",
+    name: "Look at What I Made — Custom Name Magnets",
     sku: "SPECIAL-CUSTOM-NAME",
     price,
     quantity: 1,
