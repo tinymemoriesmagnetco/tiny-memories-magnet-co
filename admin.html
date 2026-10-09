@@ -1,664 +1,1075 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Tiny Memories Magnet Co.</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin | Tiny Memories Magnet Co.</title>
 
-  <style>
-    :root {
-      --cream: #faf7f0;
-      --cream-dark: #f1ebe1;
-      --white: #fffdf9;
-      --charcoal: #383432;
-      --text-light: #68615c;
-      --rose: #b97968;
-      --rose-dark: #a96858;
-      --sage: #899780;
-      --border: #e5ddd1;
-      --gold: #c6a36a;
-    }
+<style>
+:root {
+  --cream:#faf7f0;
+  --cream-dark:#f1ebe1;
+  --white:#fffdf9;
+  --ink:#383432;
+  --muted:#68615c;
+  --rose:#b97968;
+  --rose-dark:#a96858;
+  --sage:#899780;
+  --border:#e5ddd1;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;
+  line-height:1.5;
+}
+button,input { font:inherit; }
+button { cursor:pointer; }
+button:disabled { opacity:.55; cursor:not-allowed; }
+.hidden { display:none!important; }
 
-    * {
-      box-sizing: border-box;
-    }
+.login-box {
+  max-width:430px;
+  margin:80px auto;
+  padding:32px;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  text-align:center;
+  box-shadow:0 8px 30px #38343212;
+}
+.login-box h2 { margin:0 0 10px; }
+.login-box p { color:var(--muted); }
+.login-box input {
+  display:block;
+  width:100%;
+  padding:13px;
+  margin:18px 0 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+.primary-button {
+  background:var(--rose);
+  border:0;
+  color:white;
+  border-radius:8px;
+  padding:12px 18px;
+}
+.primary-button:hover { background:var(--rose-dark); }
+.login-box .primary-button { width:100%; }
+.error { color:#a33; margin-top:12px; }
 
-    body {
-      margin: 0;
-      background: var(--cream);
-      color: var(--charcoal);
-      font-family: Georgia, "Times New Roman", serif;
-    }
+.topbar {
+  background:var(--ink);
+  color:white;
+  padding:18px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  flex-wrap:wrap;
+}
+.topbar h1 { margin:0; font-size:24px; }
+.topbar-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.topbar button {
+  color:white;
+  background:transparent;
+  border:1px solid #ffffff66;
+  border-radius:8px;
+  padding:9px 14px;
+}
+.topbar button:hover { background:#ffffff20; }
 
-    .topbar {
-      background: var(--charcoal);
-      color: white;
-      padding: 18px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
+.container {
+  max-width:1150px;
+  margin:auto;
+  padding:30px 20px 65px;
+}
+.stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:24px;
+}
+.stat {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.stat-label { color:var(--muted); font-size:14px; }
+.stat-value { font-size:28px; font-weight:bold; }
 
-    .topbar h1 {
-      margin: 0;
-      font-size: 24px;
-    }
+.dashboard-note {
+  margin:0 0 20px;
+  color:var(--muted);
+  font-size:14px;
+}
+.tabs {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:20px 0;
+}
+.tab {
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:11px 16px;
+  background:var(--white);
+  color:var(--ink);
+}
+.tab.active {
+  background:var(--rose);
+  border-color:var(--rose);
+  color:white;
+}
 
-    .topbar button {
-      border: 1px solid rgba(255,255,255,.4);
-      background: transparent;
-      color: white;
-      padding: 9px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .topbar button:hover {
-      background: rgba(255,255,255,.1);
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 30px 20px 60px;
-    }
-
-    .login-box {
-      max-width: 430px;
-      margin: 80px auto;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 8px 30px rgba(56,52,50,.08);
-      text-align: center;
-    }
-
-    .login-box h2 {
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .login-box p {
-      color: var(--text-light);
-      line-height: 1.5;
-    }
-
-    .login-box input {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 16px;
-      margin: 12px 0;
-    }
-
-    .login-box button {
-      width: 100%;
-      padding: 13px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--rose);
-      color: white;
-      font-family: inherit;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .login-box button:hover {
-      background: var(--rose-dark);
-    }
-
-    .error {
-      color: #a33;
-      margin-top: 12px;
-      min-height: 20px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-
-    .stat {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .stat-label {
-      color: var(--text-light);
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .order-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 24px;
-      overflow: hidden;
-    }
-
-    .order-header {
-      background: var(--cream-dark);
-      padding: 18px 20px;
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .order-header h2 {
-      margin: 0 0 5px;
-      font-size: 19px;
-    }
-
-    .order-date {
-      color: var(--text-light);
-      font-size: 14px;
-    }
-
-    .status {
-      background: var(--sage);
-      color: white;
-      padding: 7px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      height: fit-content;
-    }
-
-    .order-body {
-      padding: 20px;
-    }
-
-    .section {
-      margin-bottom: 25px;
-    }
-
-    .section:last-child {
-      margin-bottom: 0;
-    }
-
-    .section h3 {
-      margin: 0 0 10px;
-      font-size: 17px;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px 25px;
-    }
-
-    .info-row {
-      line-height: 1.5;
-    }
-
-    .label {
-      color: var(--text-light);
-      font-size: 13px;
-    }
-
-    .items {
-      display: grid;
-      gap: 10px;
-    }
-
-    .item {
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-    }
-
-    .item-name {
-      font-weight: bold;
-    }
-
-    .item-details {
-      color: var(--text-light);
-      font-size: 14px;
-      margin-top: 4px;
-    }
-
-    .custom-photo {
-      max-width: 130px;
-      max-height: 130px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-top: 10px;
-      display: block;
-    }
-
-    .totals {
-      max-width: 350px;
-      margin-left: auto;
-    }
-
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-    }
-
-    .grand-total {
-      border-top: 1px solid var(--border);
-      margin-top: 8px;
-      padding-top: 12px;
-      font-size: 19px;
-      font-weight: bold;
-    }
-
-    .notes {
-      background: var(--cream-dark);
-      border-radius: 8px;
-      padding: 12px;
-      white-space: pre-wrap;
-    }
-
-    .empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-light);
-    }
-
-    .loading {
-      text-align: center;
-      padding: 50px;
-    }
-
-    @media (max-width: 700px) {
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-    }
-  </style>
+.order-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:25px;
+}
+.order-header {
+  background:var(--cream-dark);
+  padding:18px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+  flex-wrap:wrap;
+}
+.order-header h2 {
+  margin:0 0 5px;
+  font-size:19px;
+  overflow-wrap:anywhere;
+}
+.order-date { color:var(--muted); font-size:14px; }
+.status {
+  display:inline-block;
+  padding:7px 12px;
+  border-radius:20px;
+  font-size:13px;
+  background:var(--sage);
+  color:white;
+}
+.status.pending { background:#ad915c; }
+.status.archived { background:#777; }
+.order-body { padding:20px; }
+.section { margin-bottom:25px; }
+.section:last-child { margin-bottom:0; }
+.section h3 { margin:0 0 12px; font-size:18px; }
+.info-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px 25px;
+}
+.label { font-size:13px; color:var(--muted); }
+.info-value { overflow-wrap:anywhere; }
+.items { display:grid; gap:15px; }
+.item {
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+}
+.item-top {
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  flex-wrap:wrap;
+}
+.item-name { font-weight:bold; font-size:17px; }
+.item-details {
+  color:var(--muted);
+  font-size:14px;
+  margin-top:7px;
+  overflow-wrap:anywhere;
+}
+.item-details div { margin:3px 0; }
+.photo-section {
+  margin-top:18px;
+  border-top:1px solid var(--border);
+  padding-top:15px;
+}
+.photo-section h4 { margin:0 0 10px; }
+.photo-gallery {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:14px;
+}
+.photo-card {
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  background:var(--cream);
+  min-width:0;
+}
+.photo-card img {
+  display:block;
+  width:100%;
+  height:155px;
+  object-fit:contain;
+  background:white;
+  border-radius:7px;
+}
+.photo-name {
+  font-size:12px;
+  color:var(--muted);
+  margin:8px 0;
+  overflow-wrap:anywhere;
+}
+.download-button {
+  display:block;
+  width:100%;
+  text-align:center;
+  padding:9px 6px;
+  border:0;
+  border-radius:7px;
+  background:var(--sage);
+  color:white;
+  font-size:13px;
+}
+.download-button:hover { background:#72836b; }
+.photo-warning {
+  font-size:13px;
+  color:#a33;
+  margin-top:7px;
+}
+.totals { max-width:350px; margin-left:auto; }
+.total-row {
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:6px 0;
+}
+.grand-total {
+  border-top:1px solid var(--border);
+  margin-top:8px;
+  padding-top:12px;
+  font-size:19px;
+  font-weight:bold;
+}
+.notes {
+  background:var(--cream-dark);
+  border-radius:8px;
+  padding:12px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.order-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+}
+.action-button {
+  border:0;
+  border-radius:8px;
+  padding:11px 15px;
+  color:white;
+  background:var(--sage);
+}
+.action-button.archive { background:var(--rose); }
+.action-button.restore { background:var(--ink); }
+.action-button:hover { filter:brightness(.94); }
+.empty,.loading {
+  text-align:center;
+  padding:55px 20px;
+  color:var(--muted);
+}
+@media(max-width:700px) {
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .info-grid { grid-template-columns:1fr; }
+  .topbar { align-items:flex-start; }
+  .photo-gallery {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:380px) {
+  .stats,.photo-gallery { grid-template-columns:1fr; }
+}
+</style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <div id="loginScreen" class="login-box">
-    <h2>Admin Login</h2>
-    <p>Enter your admin password to view orders.</p>
+<div id="loginScreen" class="login-box">
+  <h2>Admin Login</h2>
+  <p>Enter your admin password to view customer orders.</p>
+  <form id="loginForm">
+    <input
+      id="passwordInput"
+      type="password"
+      placeholder="Admin password"
+      autocomplete="current-password"
+      required
+    >
+    <button class="primary-button" type="submit">
+      Sign In
+    </button>
+    <div id="loginError" class="error" role="alert"></div>
+  </form>
+</div>
 
-    <form id="loginForm">
-      <input
-        type="password"
-        id="passwordInput"
-        placeholder="Admin password"
-        autocomplete="current-password"
-        required
-      >
+<div id="dashboard" class="hidden">
+  <header class="topbar">
+    <h1>Tiny Memories Magnet Co. — Admin</h1>
+    <div class="topbar-actions">
+      <button id="refreshButton" type="button">
+        Refresh
+      </button>
+      <button id="logoutButton" type="button">
+        Log Out
+      </button>
+    </div>
+  </header>
 
-      <button type="submit">Sign In</button>
-
-      <div id="loginError" class="error"></div>
-    </form>
-  </div>
-
-
-  <!-- ADMIN DASHBOARD -->
-  <div id="dashboard" class="hidden">
-
-    <div class="topbar">
-      <h1>Tiny Memories Magnet Co. — Admin</h1>
-      <button id="logoutButton">Log Out</button>
+  <main class="container">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Total Website Views</div>
+        <div class="stat-value" id="totalViews">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Views Today (UTC)</div>
+        <div class="stat-value" id="todayViews">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="orderCount">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Paid Orders</div>
+        <div class="stat-value" id="paidCount">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Sales</div>
+        <div class="stat-value" id="salesTotal">$0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Archived Orders</div>
+        <div class="stat-value" id="archivedCount">0</div>
+      </div>
     </div>
 
-    <div class="container">
+    <p class="dashboard-note">
+      Website views begin counting once tracking is added to
+      your public pages. Archiving keeps your orders and
+      uploaded customer photos safely in your database.
+    </p>
 
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-label">Orders</div>
-          <div class="stat-value" id="orderCount">0</div>
-        </div>
-
-        <div class="stat">
-          <div class="stat-label">Paid Orders</div>
-          <div class="stat-value" id="paidCount">0</div>
-        </div>
-
-        <div class="stat">
-          <div class="stat-label">Sales</div>
-          <div class="stat-value" id="salesTotal">$0.00</div>
-        </div>
-      </div>
-
-      <div id="ordersContainer">
-        <div class="loading">Loading orders...</div>
-      </div>
-
+    <div class="tabs">
+      <button class="tab active" id="activeTab" type="button">
+        Active Orders
+      </button>
+      <button class="tab" id="archivedTab" type="button">
+        Archived Orders
+      </button>
     </div>
-  </div>
 
+    <div id="ordersContainer">
+      <div class="loading">Loading orders...</div>
+    </div>
+  </main>
+</div>
 
-  <script>
-    const loginScreen = document.getElementById("loginScreen");
-    const dashboard = document.getElementById("dashboard");
-    const loginForm = document.getElementById("loginForm");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginError = document.getElementById("loginError");
-    const logoutButton = document.getElementById("logoutButton");
+<script>
+"use strict";
 
-    let adminPassword = "";
+const loginScreen = document.getElementById("loginScreen");
+const dashboard = document.getElementById("dashboard");
+const loginForm = document.getElementById("loginForm");
+const passwordInput = document.getElementById("passwordInput");
+const loginError = document.getElementById("loginError");
+const logoutButton = document.getElementById("logoutButton");
+const refreshButton = document.getElementById("refreshButton");
+const ordersContainer = document.getElementById("ordersContainer");
+const activeTab = document.getElementById("activeTab");
+const archivedTab = document.getElementById("archivedTab");
 
-    loginForm.addEventListener("submit", async function(event) {
-      event.preventDefault();
+let adminPassword = "";
+let allOrders = [];
+let currentTab = "active";
 
-      const password = passwordInput.value.trim();
+function money(value) {
+  return "$" + Number(value || 0).toFixed(2);
+}
 
-      if (!password) {
-        loginError.textContent = "Please enter your password.";
-        return;
-      }
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-      loginError.textContent = "Checking password...";
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString();
+}
 
-      try {
-        const response = await fetch("/api/admin/orders", {
-          headers: {
-            "x-admin-password": password
-          }
-        });
+function safeFilename(value) {
+  return String(value || "customer-photo")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .slice(0, 100);
+}
 
-        if (response.status === 401) {
-          loginError.textContent = "Incorrect password.";
-          passwordInput.value = "";
-          passwordInput.focus();
-          return;
-        }
+function getPhotoData(photo) {
+  if (typeof photo === "string") return photo;
+  if (photo && typeof photo === "object") {
+    return photo.dataUrl || "";
+  }
+  return "";
+}
 
-        if (!response.ok) {
-          throw new Error("Unable to access admin orders.");
-        }
+function isSupportedPhoto(dataUrl) {
+  return typeof dataUrl === "string" &&
+    /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(dataUrl);
+}
 
-        const orders = await response.json();
+function getPhotoExtension(dataUrl) {
+  const match = dataUrl.match(
+    /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i
+  );
+  if (!match) return "png";
+  return match[1].toLowerCase() === "jpeg"
+    ? "jpg"
+    : match[1].toLowerCase();
+}
 
-        adminPassword = password;
+async function downloadPhoto(dataUrl, filename, button) {
+  if (!isSupportedPhoto(dataUrl)) {
+    alert("This photo cannot be downloaded.");
+    return;
+  }
 
-        loginScreen.classList.add("hidden");
-        dashboard.classList.remove("hidden");
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Preparing...";
 
-        renderOrders(orders);
+  let objectUrl = null;
 
-      } catch (error) {
-        console.error(error);
-        loginError.textContent =
-          "Could not connect to the server. Make sure it is running.";
-      }
-    });
+  try {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    objectUrl = URL.createObjectURL(blob);
 
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-    logoutButton.addEventListener("click", function() {
-      adminPassword = "";
+  } catch (error) {
+    console.error("Photo download error:", error);
+    alert("Could not download this photo.");
 
-      dashboard.classList.add("hidden");
-      loginScreen.classList.remove("hidden");
+  } finally {
+    if (objectUrl) {
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 3000);
+    }
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
 
-      passwordInput.value = "";
-      loginError.textContent = "";
-      passwordInput.focus();
-    });
+function createPhotoGallery(item, order, itemIndex) {
+  const photos = Array.isArray(item.photos)
+    ? item.photos
+    : [];
 
+  const section = document.createElement("div");
+  section.className = "photo-section";
 
-    function money(value) {
-      return "$" + Number(value || 0).toFixed(2);
+  const heading = document.createElement("h4");
+  heading.textContent =
+    "Customer Uploaded Photos (" + photos.length + ")";
+
+  section.appendChild(heading);
+
+  if (!photos.length) {
+    const note = document.createElement("p");
+    note.className = "dashboard-note";
+    note.textContent =
+      "No uploaded photos were saved with this item.";
+    section.appendChild(note);
+    return section;
+  }
+
+  const gallery = document.createElement("div");
+  gallery.className = "photo-gallery";
+
+  photos.forEach((photo, photoIndex) => {
+    const dataUrl = getPhotoData(photo);
+    const card = document.createElement("div");
+    card.className = "photo-card";
+
+    const name = document.createElement("div");
+    name.className = "photo-name";
+
+    const originalName =
+      photo && typeof photo === "object"
+        ? photo.name
+        : "";
+
+    name.textContent =
+      "Photo " + (photoIndex + 1) +
+      (originalName ? " — " + originalName : "");
+
+    if (isSupportedPhoto(dataUrl)) {
+      const img = document.createElement("img");
+      img.src = dataUrl;
+      img.alt = "Customer photo " + (photoIndex + 1);
+      img.loading = "lazy";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "download-button";
+      button.textContent = "Download Photo";
+
+      const extension = getPhotoExtension(dataUrl);
+      const filename = safeFilename(
+        "TinyMemories_" +
+        (order.id || "order") +
+        "_item" + (itemIndex + 1) +
+        "_photo" + (photoIndex + 1)
+      ) + "." + extension;
+
+      button.addEventListener("click", () => {
+        downloadPhoto(dataUrl, filename, button);
+      });
+
+      card.append(img, name, button);
+
+    } else {
+      const warning = document.createElement("div");
+      warning.className = "photo-warning";
+      warning.textContent =
+        "Photo data is missing or unsupported.";
+      card.append(name, warning);
     }
 
+    gallery.appendChild(card);
+  });
 
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+  section.appendChild(gallery);
+  return section;
+}
 
+function itemDetailsHtml(item) {
+  const sku = String(item.sku || "").toUpperCase();
+  const quantity = Number(item.quantity || 1);
 
-    function formatDate(value) {
-      if (!value) return "";
+  let details = `
+    <div>SKU: ${escapeHtml(sku)}</div>
+    <div>Quantity: ${escapeHtml(quantity)}</div>
+  `;
 
-      const date = new Date(value);
+  if (sku === "SPECIAL-CUSTOM-NAME") {
+    const name =
+      item.customName ||
+      item.personalizedName ||
+      item.nameText ||
+      "";
 
-      if (Number.isNaN(date.getTime())) {
-        return value;
+    details += `
+      <div>Personalized Name:
+        <strong>${escapeHtml(name || "Not provided")}</strong>
+      </div>
+      <div>Color:
+        <strong>${escapeHtml(item.color || "Not provided")}</strong>
+      </div>
+      <div>Magnets per Set:
+        <strong>${escapeHtml(item.magnetCount || "")}</strong>
+      </div>
+    `;
+  }
+
+  if (sku === "SPECIAL-WESTERN") {
+    details += "<div>Western Collection — Complete Set</div>";
+  }
+
+  if (sku === "SPECIAL-ALPHABET") {
+    details += "<div>Alphabet Collection — Complete Set</div>";
+  }
+
+  if (sku === "CUSTOM-PHOTO" || item.type === "custom") {
+    details += `
+      <div>Custom Photo Magnets</div>
+      ${
+        item.customerName
+          ? "<div>Submitted Name: " +
+            escapeHtml(item.customerName) + "</div>"
+          : ""
       }
+      ${
+        item.customerEmail
+          ? "<div>Submitted Email: " +
+            escapeHtml(item.customerEmail) + "</div>"
+          : ""
+      }
+      ${
+        item.customerPhone
+          ? "<div>Submitted Phone: " +
+            escapeHtml(item.customerPhone) + "</div>"
+          : ""
+      }
+      ${
+        item.instructions
+          ? "<div>Instructions: " +
+            escapeHtml(item.instructions) + "</div>"
+          : ""
+      }
+    `;
+  }
 
-      return date.toLocaleString();
-    }
+  return details;
+}
 
+function createOrderItem(item, order, itemIndex) {
+  const container = document.createElement("div");
+  container.className = "item";
 
-    function renderOrders(orders) {
-      const container = document.getElementById("ordersContainer");
+  const sku = String(item.sku || "").toUpperCase();
 
-      const paidOrders = orders.filter(order => order.status === "PAID");
+  const top = document.createElement("div");
+  top.className = "item-top";
 
-      const salesTotal = paidOrders.reduce(
-        (sum, order) => sum + Number(order.total || 0),
-        0
+  const information = document.createElement("div");
+
+  const name = document.createElement("div");
+  name.className = "item-name";
+  name.textContent = item.name || "Magnet";
+
+  const details = document.createElement("div");
+  details.className = "item-details";
+  details.innerHTML = itemDetailsHtml(item);
+
+  information.append(name, details);
+
+  const price = document.createElement("strong");
+  price.textContent = money(item.lineTotal);
+
+  top.append(information, price);
+  container.appendChild(top);
+
+  if (
+    sku === "CUSTOM-PHOTO" ||
+    item.type === "custom" ||
+    (Array.isArray(item.photos) && item.photos.length)
+  ) {
+    container.appendChild(
+      createPhotoGallery(item, order, itemIndex)
+    );
+  }
+
+  return container;
+}
+
+function infoRow(label, value) {
+  return `
+    <div class="info-row">
+      <div class="label">${escapeHtml(label)}</div>
+      <div class="info-value">${escapeHtml(value || "—")}</div>
+    </div>
+  `;
+}
+
+function createOrderCard(order) {
+  const card = document.createElement("article");
+  card.className = "order-card";
+
+  const customer = order.customer || {};
+  const shipping = order.shipping || {};
+
+  const address = [
+    shipping.address,
+    shipping.address2,
+    shipping.city,
+    shipping.state,
+    shipping.zip,
+    shipping.country
+  ].filter(Boolean).join(", ");
+
+  const status = String(order.status || "PENDING");
+  const archived = Boolean(order.archivedAt);
+  const shipped = Boolean(order.shippedAt);
+
+  const header = document.createElement("div");
+  header.className = "order-header";
+
+  const heading = document.createElement("div");
+  const title = document.createElement("h2");
+  title.textContent =
+    "Order " + (order.paypalOrderId || order.id || "");
+
+  const date = document.createElement("div");
+  date.className = "order-date";
+  date.textContent = formatDate(order.createdAt);
+
+  heading.append(title, date);
+
+  const badges = document.createElement("div");
+  badges.style.display = "flex";
+  badges.style.gap = "8px";
+  badges.style.flexWrap = "wrap";
+
+  const paymentBadge = document.createElement("span");
+  paymentBadge.className =
+    "status " + (status === "PAID" ? "" : "pending");
+  paymentBadge.textContent = status;
+  badges.appendChild(paymentBadge);
+
+  if (archived || shipped) {
+    const fulfillmentBadge = document.createElement("span");
+    fulfillmentBadge.className =
+      "status " + (archived ? "archived" : "");
+    fulfillmentBadge.textContent =
+      archived ? "ARCHIVED" : "SHIPPED";
+    badges.appendChild(fulfillmentBadge);
+  }
+
+  header.append(heading, badges);
+  card.appendChild(header);
+
+  const body = document.createElement("div");
+  body.className = "order-body";
+
+  const customerSection = document.createElement("section");
+  customerSection.className = "section";
+  customerSection.innerHTML = `
+    <h3>Customer Information</h3>
+    <div class="info-grid">
+      ${infoRow(
+        "Name",
+        [customer.firstName, customer.lastName]
+          .filter(Boolean).join(" ")
+      )}
+      ${infoRow("Email", customer.email)}
+      ${infoRow("Phone", customer.phone)}
+      ${infoRow("Shipping Address", address)}
+    </div>
+  `;
+  body.appendChild(customerSection);
+
+  const itemSection = document.createElement("section");
+  itemSection.className = "section";
+
+  const itemHeading = document.createElement("h3");
+  itemHeading.textContent = "Order Items";
+
+  const items = document.createElement("div");
+  items.className = "items";
+
+  (order.items || []).forEach((item, index) => {
+    items.appendChild(createOrderItem(item, order, index));
+  });
+
+  itemSection.append(itemHeading, items);
+  body.appendChild(itemSection);
+
+  if (order.orderNotes) {
+    const notesSection = document.createElement("section");
+    notesSection.className = "section";
+
+    const notesHeading = document.createElement("h3");
+    notesHeading.textContent = "Order Notes";
+
+    const notes = document.createElement("div");
+    notes.className = "notes";
+    notes.textContent = order.orderNotes;
+
+    notesSection.append(notesHeading, notes);
+    body.appendChild(notesSection);
+  }
+
+  if (shipped) {
+    const shippedSection = document.createElement("section");
+    shippedSection.className = "section";
+
+    const note = document.createElement("div");
+    note.className = "dashboard-note";
+    note.textContent =
+      "Marked as shipped: " + formatDate(order.shippedAt);
+
+    shippedSection.appendChild(note);
+    body.appendChild(shippedSection);
+  }
+
+  const totalsSection = document.createElement("section");
+  totalsSection.className = "section";
+
+  totalsSection.innerHTML = `
+    <div class="totals">
+      <div class="total-row">
+        <span>Merchandise</span>
+        <span>${money(order.merchandiseTotal)}</span>
+      </div>
+      <div class="total-row">
+        <span>Shipping</span>
+        <span>${money(order.shippingTotal)}</span>
+      </div>
+      <div class="total-row grand-total">
+        <span>Total</span>
+        <span>${money(order.total)}</span>
+      </div>
+    </div>
+  `;
+
+  body.appendChild(totalsSection);
+
+  const actions = document.createElement("div");
+  actions.className = "order-actions";
+
+  if (archived) {
+    const restoreButton = document.createElement("button");
+    restoreButton.className = "action-button restore";
+    restoreButton.textContent = "Restore Order";
+
+    restoreButton.addEventListener("click", () => {
+      performOrderAction(
+        order,
+        "restore",
+        "Restore this order to the active list?"
       );
+    });
 
-      document.getElementById("orderCount").textContent = orders.length;
-      document.getElementById("paidCount").textContent = paidOrders.length;
-      document.getElementById("salesTotal").textContent = money(salesTotal);
+    actions.appendChild(restoreButton);
 
-      if (!orders.length) {
-        container.innerHTML = `
-          <div class="empty">
-            <h2>No orders yet</h2>
-            <p>Completed orders will appear here.</p>
-          </div>
-        `;
-        return;
-      }
+  } else if (status === "PAID") {
+    if (!shipped) {
+      const shipButton = document.createElement("button");
+      shipButton.className = "action-button";
+      shipButton.textContent = "Mark as Shipped";
 
-      container.innerHTML = orders.map(order => {
+      shipButton.addEventListener("click", () => {
+        performOrderAction(
+          order,
+          "ship",
+          "Confirm this order has been shipped?"
+        );
+      });
 
-        const customer = order.customer || {};
-        const shipping = order.shipping || {};
+      actions.appendChild(shipButton);
 
-        const itemsHtml = (order.items || []).map(item => {
+    } else {
+      const archiveButton = document.createElement("button");
+      archiveButton.className =
+        "action-button archive";
+      archiveButton.textContent = "Archive Order";
 
-          const itemName = escapeHtml(item.name || "Item");
-          const quantity = Number(item.quantity || 1);
+      archiveButton.addEventListener("click", () => {
+        performOrderAction(
+          order,
+          "archive",
+          "Archive this shipped order? It will remain saved."
+        );
+      });
 
-          let photoHtml = "";
-
-          if (
-            item.type === "custom" &&
-            item.photos &&
-            item.photos.length &&
-            item.photos[0].dataUrl
-          ) {
-            photoHtml = `
-              <img
-                class="custom-photo"
-                src="${item.photos[0].dataUrl}"
-                alt="Customer photo"
-              >
-            `;
-          }
-
-          let details = "";
-
-          if (item.type === "custom") {
-            details = `
-              <div>Custom photo magnets</div>
-              <div>Quantity: ${quantity}</div>
-              ${item.customerName ? `<div>Name: ${escapeHtml(item.customerName)}</div>` : ""}
-              ${item.customerEmail ? `<div>Email: ${escapeHtml(item.customerEmail)}</div>` : ""}
-              ${item.customerPhone ? `<div>Phone: ${escapeHtml(item.customerPhone)}</div>` : ""}
-              ${item.instructions ? `<div>Instructions: ${escapeHtml(item.instructions)}</div>` : ""}
-              ${photoHtml}
-            `;
-          } else {
-            details = `
-              <div>SKU: ${escapeHtml(item.sku || "")}</div>
-              <div>Quantity: ${quantity}</div>
-            `;
-          }
-
-          return `
-            <div class="item">
-              <div>
-                <div class="item-name">${itemName}</div>
-                <div class="item-details">${details}</div>
-              </div>
-
-              <strong>${money(item.lineTotal || 0)}</strong>
-            </div>
-          `;
-
-        }).join("");
-
-
-        const address = [
-          shipping.address,
-          shipping.address2,
-          shipping.city,
-          shipping.state,
-          shipping.zip,
-          shipping.country
-        ]
-        .filter(Boolean)
-        .map(escapeHtml)
-        .join("<br>");
-
-
-        return `
-          <div class="order-card">
-
-            <div class="order-header">
-              <div>
-                <h2>Order ${escapeHtml(order.paypalOrderId || order.id || "")}</h2>
-                <div class="order-date">
-                  ${escapeHtml(formatDate(order.createdAt))}
-                </div>
-              </div>
-
-              <div class="status">
-                ${escapeHtml(order.status || "PENDING")}
-              </div>
-            </div>
-
-
-            <div class="order-body">
-
-              <div class="section">
-                <h3>Customer</h3>
-
-                <div class="info-grid">
-
-                  <div class="info-row">
-                    <div class="label">Name</div>
-                    ${escapeHtml(
-                      [customer.firstName, customer.lastName]
-                        .filter(Boolean)
-                        .join(" ")
-                    )}
-                  </div>
-
-                  <div class="info-row">
-                    <div class="label">Email</div>
-                    ${escapeHtml(customer.email || "")}
-                  </div>
-
-                  <div class="info-row">
-                    <div class="label">Phone</div>
-                    ${escapeHtml(customer.phone || "")}
-                  </div>
-
-                  <div class="info-row">
-                    <div class="label">Shipping Address</div>
-                    ${address}
-                  </div>
-
-                </div>
-              </div>
-
-
-              <div class="section">
-                <h3>Items</h3>
-
-                <div class="items">
-                  ${itemsHtml}
-                </div>
-              </div>
-
-
-              ${
-                order.orderNotes
-                  ? `
-                    <div class="section">
-                      <h3>Order Notes</h3>
-                      <div class="notes">
-                        ${escapeHtml(order.orderNotes)}
-                      </div>
-                    </div>
-                  `
-                  : ""
-              }
-
-
-              <div class="section">
-
-                <div class="totals">
-
-                  <div class="total-row">
-                    <span>Merchandise</span>
-                    <span>${money(order.merchandiseTotal)}</span>
-                  </div>
-
-                  <div class="total-row">
-                    <span>Shipping</span>
-                    <span>${money(order.shippingTotal)}</span>
-                  </div>
-
-                  <div class="total-row grand-total">
-                    <span>Total</span>
-                    <span>${money(order.total)}</span>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-          </div>
-        `;
-
-      }).join("");
+      actions.appendChild(archiveButton);
     }
-  </script>
+  }
 
+  if (actions.children.length) {
+    body.appendChild(actions);
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+function updateTabs() {
+  activeTab.classList.toggle(
+    "active",
+    currentTab === "active"
+  );
+  archivedTab.classList.toggle(
+    "active",
+    currentTab === "archived"
+  );
+}
+
+function renderOrders() {
+  updateTabs();
+
+  ordersContainer.replaceChildren();
+
+  const visibleOrders = allOrders.filter(order =>
+    currentTab === "archived"
+      ? Boolean(order.archivedAt)
+      : !order.archivedAt
+  );
+
+  if (!visibleOrders.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent =
+      currentTab === "archived"
+        ? "No archived orders yet."
+        : "No active orders.";
+    ordersContainer.appendChild(empty);
+    return;
+  }
+
+  visibleOrders.forEach(order => {
+    ordersContainer.appendChild(createOrderCard(order));
+  });
+}
+
+function updateStats(stats) {
+  document.getElementById("totalViews").textContent =
+    Number(stats.totalViews || 0).toLocaleString();
+
+  document.getElementById("todayViews").textContent =
+    Number(stats.todayViews || 0).toLocaleString();
+
+  document.getElementById("orderCount").textContent =
+    Number(stats.totalOrders || 0).toLocaleString();
+
+  document.getElementById("paidCount").textContent =
+    Number(stats.paidOrders || 0).toLocaleString();
+
+  document.getElementById("salesTotal").textContent =
+    money(stats.totalSales);
+
+  document.getElementById("archivedCount").textContent =
+    allOrders.filter(order => Boolean(order.archivedAt)).length;
+}
+
+async function apiGet(path) {
+  const response = await fetch(path, {
+    method: "GET",
+    headers: {
+      "x-admin-password": adminPassword
+    },
+    cache: "no-store"
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed.");
+  }
+
+  return data;
+}
+
+async function loadDashboard() {
+  const [orders, stats] = await Promise.all([
+    apiGet("/api/admin/orders"),
+    apiGet("/api/admin/stats")
+  ]);
+
+  allOrders = orders;
+  updateStats(stats);
+  renderOrders();
+}
+
+async function performOrderAction(order, action, message) {
+  if (!confirm(message)) return;
+
+  const path =
+    "/api/admin/orders/" +
+    encodeURIComponent(order.id) +
+    "/" + action;
+
+  try {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: {
+        "x-admin-password": adminPassword
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Update failed.");
+    }
+
+    await loadDashboard();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+loginForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const password = passwordInput.value.trim();
+
+  if (!password) {
+    loginError.textContent = "Enter your admin password.";
+    return;
+  }
+
+  adminPassword = password;
+  loginError.textContent = "Loading dashboard...";
+
+  try {
+    await loadDashboard();
+
+    passwordInput.value = "";
+    loginError.textContent = "";
+
+    loginScreen.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+
+  } catch (error) {
+    adminPassword = "";
+    loginError.textContent = error.message;
+    passwordInput.value = "";
+  }
+});
+
+refreshButton.addEventListener("click", async () => {
+  refreshButton.disabled = true;
+  refreshButton.textContent = "Refreshing...";
+
+  try {
+    await loadDashboard();
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.textContent = "Refresh";
+  }
+});
+
+activeTab.addEventListener("click", () => {
+  currentTab = "active";
+  renderOrders();
+});
+
+archivedTab.addEventListener("click", () => {
+  currentTab = "archived";
+  renderOrders();
+});
+
+logoutButton.addEventListener("click", () => {
+  adminPassword = "";
+  allOrders = [];
+
+  ordersContainer.replaceChildren();
+
+  dashboard.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+
+  passwordInput.value = "";
+  loginError.textContent = "";
+  passwordInput.focus();
+});
+</script>
 </body>
 </html>
