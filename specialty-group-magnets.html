@@ -735,5 +735,26 @@ window.addEventListener(
 );
 </script>
 
+<script>
+(function () {
+  var key = "tm_specialty_group_view_counted";
+  try {
+    if (sessionStorage.getItem(key)) return;
+  } catch (error) {}
+
+  fetch("/api/track-view", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ page: window.location.pathname })
+  }).then(function (response) {
+    if (response.ok) {
+      try { sessionStorage.setItem(key, "yes"); } catch (error) {}
+    }
+  }).catch(function (error) {
+    console.log("View tracking unavailable:", error);
+  });
+})();
+</script>
+
 </body>
 </html>
