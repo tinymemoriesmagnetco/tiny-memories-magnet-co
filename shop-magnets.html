@@ -4,7 +4,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Shop Handmade Magnets | Tiny Memories Magnet Co.</title>
 
 <style>
@@ -18,9 +17,7 @@
   --border: #e5ddd1;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -30,18 +27,9 @@ body {
   line-height: 1.6;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button, input, select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
 
 header {
   background: var(--white);
@@ -58,27 +46,20 @@ header {
   gap: 24px;
 }
 
-.logo {
-  width: 150px;
-  height: auto;
-  display: block;
-}
+.logo { width: 150px; height: auto; }
 
 nav {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
   gap: 22px;
   font-size: 15px;
 }
 
-nav a:hover {
-  color: var(--rose);
-}
+nav a:hover { color: var(--rose); }
 
-.cart-button,
-.checkout-button {
-  border: 0;
+.cart-button, .checkout-button {
+  border: none;
   background: var(--rose);
   color: white;
   border-radius: 25px;
@@ -113,13 +94,8 @@ nav a:hover {
   text-align: center;
 }
 
-.bundle-section h2 {
-  margin-bottom: 5px;
-}
-
-.bundle-section p {
-  color: var(--muted);
-}
+.bundle-section h2 { margin-bottom: 5px; }
+.bundle-section p { color: var(--muted); }
 
 .bundles {
   display: grid;
@@ -158,8 +134,7 @@ nav a:hover {
   margin-bottom: 25px;
 }
 
-.controls input,
-.controls select {
+.controls input, .controls select {
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -172,9 +147,7 @@ nav a:hover {
   min-width: 220px;
 }
 
-.controls select {
-  width: 220px;
-}
+.controls select { width: 220px; }
 
 .product-grid {
   display: grid;
@@ -288,9 +261,7 @@ nav a:hover {
   z-index: 100;
 }
 
-.cart-overlay.open {
-  display: block;
-}
+.cart-overlay.open { display: block; }
 
 .cart-drawer {
   position: fixed;
@@ -307,9 +278,7 @@ nav a:hover {
   flex-direction: column;
 }
 
-.cart-drawer.open {
-  right: 0;
-}
+.cart-drawer.open { right: 0; }
 
 .cart-header {
   padding: 20px;
@@ -319,9 +288,7 @@ nav a:hover {
   border-bottom: 1px solid var(--border);
 }
 
-.cart-header h2 {
-  margin: 0;
-}
+.cart-header h2 { margin: 0; }
 
 .close-cart {
   border: 0;
@@ -340,9 +307,7 @@ nav a:hover {
   border-bottom: 1px solid var(--border);
 }
 
-.cart-item-name {
-  font-weight: bold;
-}
+.cart-item-name { font-weight: bold; }
 
 .cart-item-sku {
   font-size: 12px;
@@ -368,9 +333,7 @@ nav a:hover {
   padding: 4px 10px;
 }
 
-.remove-button {
-  color: #a96858;
-}
+.remove-button { color: #a96858; }
 
 .cart-empty {
   text-align: center;
@@ -411,44 +374,22 @@ footer {
   padding: 35px 20px;
 }
 
-footer p {
-  margin: 5px;
-}
+footer p { margin: 5px; }
 
 @media(max-width:1000px) {
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .product-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media(max-width:750px) {
-  .nav {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  nav {
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .bundles {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .nav { flex-direction: column; gap: 12px; }
+  nav { justify-content: center; gap: 12px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .bundles { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media(max-width:480px) {
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .controls select {
-    width: 100%;
-  }
+  .product-grid { grid-template-columns: 1fr; }
+  .controls select { width: 100%; }
 }
 </style>
 </head>
@@ -458,11 +399,8 @@ footer p {
 <header>
   <div class="nav">
     <a href="index.html">
-      <img
-        class="logo"
-        src="logo.png.png"
-        alt="Tiny Memories Magnet Co."
-      >
+      <img class="logo" src="/logo.png.png"
+           alt="Tiny Memories Magnet Co.">
     </a>
 
     <nav>
@@ -471,10 +409,7 @@ footer p {
       <a href="shop-magnets.html">Shop Magnets</a>
       <a href="index.html#about">About</a>
 
-      <button
-        class="cart-button"
-        onclick="openCart()"
-      >
+      <button class="cart-button" onclick="openCart()">
         Cart (<span id="cartCount">0</span>)
       </button>
     </nav>
@@ -496,42 +431,20 @@ footer p {
   <p>Mix and match any handmade magnets.</p>
 
   <div class="bundles">
-    <div class="bundle">
-      <strong>1 Magnet</strong>
-      <span>$3</span>
-    </div>
-
-    <div class="bundle">
-      <strong>3 Magnets</strong>
-      <span>$9</span>
-    </div>
-
-    <div class="bundle">
-      <strong>6 Magnets</strong>
-      <span>$18</span>
-    </div>
-
-    <div class="bundle">
-      <strong>9 Magnets</strong>
-      <span>$24</span>
-    </div>
+    <div class="bundle"><strong>1 Magnet</strong><span>$3</span></div>
+    <div class="bundle"><strong>3 Magnets</strong><span>$9</span></div>
+    <div class="bundle"><strong>6 Magnets</strong><span>$18</span></div>
+    <div class="bundle"><strong>9 Magnets</strong><span>$24</span></div>
   </div>
 </section>
 
 <main class="shop-area">
-
   <div class="controls">
-    <input
-      type="search"
-      id="searchInput"
-      placeholder="Search magnets..."
-      oninput="filterProducts()"
-    >
+    <input type="search" id="searchInput"
+           placeholder="Search magnets..."
+           oninput="filterProducts()">
 
-    <select
-      id="categoryFilter"
-      onchange="filterProducts()"
-    >
+    <select id="categoryFilter" onchange="filterProducts()">
       <option value="all">All Magnets</option>
       <option value="encouragement">Encouragement</option>
       <option value="funny">Funny</option>
@@ -547,29 +460,19 @@ footer p {
     <h2>No magnets found</h2>
     <p>Try another search or category.</p>
   </div>
-
 </main>
 
-<div
-  class="cart-overlay"
-  id="cartOverlay"
-  onclick="closeCart()"
-></div>
+<div class="cart-overlay" id="cartOverlay"
+     onclick="closeCart()"></div>
 
-<aside
-  class="cart-drawer"
-  id="cartDrawer"
-  role="dialog"
-  aria-modal="true"
-  aria-label="Shopping cart"
->
+<aside class="cart-drawer" id="cartDrawer"
+       role="dialog" aria-modal="true"
+       aria-label="Shopping cart">
+
   <div class="cart-header">
     <h2>Your Cart</h2>
-    <button
-      class="close-cart"
-      onclick="closeCart()"
-      aria-label="Close cart"
-    >×</button>
+    <button class="close-cart" onclick="closeCart()"
+            aria-label="Close cart">×</button>
   </div>
 
   <div class="cart-items" id="cartItems"></div>
@@ -582,14 +485,10 @@ footer p {
 
     <div class="cart-note">
       Shipping is calculated at checkout.
-      Handmade magnet bundle pricing is
-      automatically applied.
+      Handmade magnet bundle pricing is automatically applied.
     </div>
 
-    <button
-      class="checkout-button"
-      onclick="checkout()"
-    >
+    <button class="checkout-button" onclick="checkout()">
       Continue to Checkout
     </button>
   </div>
@@ -602,16 +501,10 @@ footer p {
 </footer>
 
 <script>
-
 /*
-  ALL 44 MAGNETS
-
-  Photos are stored in the ROOT of the website.
-
-  Example:
-  https://tinymemoriesmagnetco.com/MAG-ALEXA.png
-
-  Photo filename = SKU + .png
+  MAGNET INVENTORY
+  Photo filenames: /MAG-SKU.png
+  Photos are in the MAIN website folder.
 */
 
 const inventory = [
@@ -661,31 +554,22 @@ const inventory = [
   ["I Have Big Emotions","MAG-BIGEMT",24,"life"]
 ];
 
-const products = inventory.map(
-  ([name,sku,stock,category]) => ({
-    name,
-    short: name,
-    sku,
-    stock,
-    category,
-    price: 3,
-
-    // IMPORTANT: Root folder, PNG files.
-    image: "/" + sku + ".png"
-  })
-);
+const products = inventory.map(([name,sku,stock,category]) => ({
+  name,
+  sku,
+  stock,
+  category,
+  price: 3,
+  image: "/" + sku + ".png"
+}));
 
 const CART_KEY = "tinyMemoriesCart";
 
 function loadCart() {
   try {
-    const saved = JSON.parse(
-      localStorage.getItem(CART_KEY)
-    );
-
+    const saved = JSON.parse(localStorage.getItem(CART_KEY));
     return Array.isArray(saved) ? saved : [];
-  } catch(error) {
-    console.error(error);
+  } catch (error) {
     return [];
   }
 }
@@ -694,110 +578,77 @@ let cart = loadCart();
 
 function saveCart() {
   try {
-    localStorage.setItem(
-      CART_KEY,
-      JSON.stringify(cart)
-    );
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
     return true;
-  } catch(error) {
+  } catch (error) {
     alert("Unable to save your cart.");
     return false;
   }
 }
 
-/*
-  BUNDLE PRICING
-
-  1 = $3
-  3 = $9
-  6 = $18
-  9 = $24
-*/
-
 function getBundlePrice(quantity) {
-  let remaining = Math.max(
-    0,
-    Math.floor(Number(quantity) || 0)
-  );
-
+  let remaining = Math.max(0, Math.floor(Number(quantity) || 0));
   let total = 0;
 
-  while(remaining >= 9) {
+  while (remaining >= 9) {
     total += 24;
     remaining -= 9;
   }
 
-  if(remaining >= 6) {
+  if (remaining >= 6) {
     total += 18;
     remaining -= 6;
   }
 
-  if(remaining >= 3) {
+  if (remaining >= 3) {
     total += 9;
     remaining -= 3;
   }
 
   total += remaining * 3;
-
   return total;
 }
 
 function getHandmadeQuantity() {
   return cart
     .filter(item => item.type !== "custom")
-    .reduce(
-      (total,item) =>
-        total + (Number(item.quantity) || 0),
-      0
-    );
+    .reduce((sum,item) => sum + (Number(item.quantity) || 0), 0);
 }
 
 function getCartQuantity() {
   return cart.reduce(
-    (total,item) =>
-      total + (Number(item.quantity) || 0),
-    0
+    (sum,item) => sum + (Number(item.quantity) || 0), 0
   );
 }
 
 function getCustomTotal() {
   return cart
     .filter(item => item.type === "custom")
-    .reduce((total,item) => {
+    .reduce((sum,item) => {
       const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unitPrice ?? item.price);
+      const lineTotal = Number(item.totalPrice ?? item.total);
 
-      const unitPrice = Number(
-        item.unitPrice ?? item.price
-      );
-
-      const lineTotal = Number(
-        item.totalPrice ?? item.total
-      );
-
-      if(Number.isFinite(lineTotal) &&
-         lineTotal >= 0) {
-        return total + lineTotal;
+      if (Number.isFinite(lineTotal) && lineTotal >= 0) {
+        return sum + lineTotal;
       }
 
-      if(Number.isFinite(unitPrice) &&
-         unitPrice >= 0) {
-        return total + unitPrice * quantity;
+      if (Number.isFinite(unitPrice) && unitPrice >= 0) {
+        return sum + unitPrice * quantity;
       }
 
-      return total;
-    },0);
+      return sum;
+    }, 0);
 }
 
 function getCartTotal() {
-  return getBundlePrice(
-    getHandmadeQuantity()
-  ) + getCustomTotal();
+  return getBundlePrice(getHandmadeQuantity()) + getCustomTotal();
 }
 
 function createPlaceholder(product) {
   const preview = document.createElement("div");
   preview.className = "magnet-preview";
-  preview.textContent = product.short;
+  preview.textContent = product.name;
   return preview;
 }
 
@@ -806,20 +657,15 @@ function renderProducts(list = products) {
   const noResults = document.getElementById("noResults");
 
   grid.replaceChildren();
-
-  noResults.style.display =
-    list.length ? "none" : "block";
+  noResults.style.display = list.length ? "none" : "block";
 
   list.forEach(product => {
-    const inCart = cart.find(
-      item =>
-        item.type !== "custom" &&
-        item.sku === product.sku
+    const existing = cart.find(
+      item => item.type !== "custom" && item.sku === product.sku
     );
 
     const available =
-      product.stock -
-      (Number(inCart?.quantity) || 0);
+      product.stock - (Number(existing?.quantity) || 0);
 
     const card = document.createElement("article");
     card.className = "product-card";
@@ -827,6 +673,7 @@ function renderProducts(list = products) {
     const art = document.createElement("div");
     art.className = "product-art";
 
+    // Photo loads directly from the website root.
     const img = document.createElement("img");
     img.className = "product-photo";
     img.src = product.image;
@@ -835,9 +682,7 @@ function renderProducts(list = products) {
 
     img.onerror = () => {
       img.remove();
-      art.appendChild(
-        createPlaceholder(product)
-      );
+      art.appendChild(createPlaceholder(product));
     };
 
     art.appendChild(img);
@@ -862,70 +707,50 @@ function renderProducts(list = products) {
 
     const add = document.createElement("button");
     add.className = "add-button";
-    add.type = "button";
-    add.textContent =
-      available > 0 ? "Add" : "Sold Out";
+    add.textContent = available > 0 ? "Add" : "Sold Out";
     add.disabled = available <= 0;
     add.onclick = () => addToCart(product.sku);
 
-    bottom.append(price,add);
-    info.append(name,sku,bottom);
-    card.append(art,info);
+    bottom.append(price, add);
+    info.append(name, sku, bottom);
+    card.append(art, info);
     grid.appendChild(card);
   });
 }
 
 function filterProducts() {
-  const search = document.getElementById(
-    "searchInput"
-  ).value.trim().toLowerCase();
+  const search = document.getElementById("searchInput")
+    .value.trim().toLowerCase();
 
-  const category = document.getElementById(
-    "categoryFilter"
-  ).value;
+  const category = document.getElementById("categoryFilter").value;
 
-  const filtered = products.filter(product => {
+  renderProducts(products.filter(product => {
     const matchesSearch =
       product.name.toLowerCase().includes(search) ||
       product.sku.toLowerCase().includes(search);
 
     const matchesCategory =
-      category === "all" ||
-      product.category === category;
+      category === "all" || product.category === category;
 
     return matchesSearch && matchesCategory;
-  });
-
-  renderProducts(filtered);
-}
-
-function refreshProducts() {
-  filterProducts();
+  }));
 }
 
 function addToCart(sku) {
-  const product = products.find(
-    p => p.sku === sku
-  );
-
-  if(!product) return;
+  const product = products.find(item => item.sku === sku);
+  if (!product) return;
 
   const existing = cart.find(
-    item =>
-      item.type !== "custom" &&
-      item.sku === sku
+    item => item.type !== "custom" && item.sku === sku
   );
 
-  if(existing) {
-    if(Number(existing.quantity) >= product.stock) {
-      alert(
-        "Only " + product.stock + " available."
-      );
+  if (existing) {
+    if (Number(existing.quantity) >= product.stock) {
+      alert("Only " + product.stock + " available.");
       return;
     }
 
-    existing.quantity =
-      Number(existing.quantity) + 1;
+    existing.quantity = Number(existing.quantity) + 1;
   } else {
     cart.push({
       id: "product-" + sku,
@@ -937,33 +762,26 @@ function addToCart(sku) {
     });
   }
 
-  if(!saveCart()) return;
+  if (!saveCart()) return;
 
   updateCartUI();
-  refreshProducts();
+  filterProducts();
   openCart();
 }
 
 function changeQuantity(index,change) {
   const item = cart[index];
+  if (!item || item.type === "custom") return;
 
-  if(!item || item.type === "custom") return;
+  const product = products.find(p => p.sku === item.sku);
+  if (!product) return;
 
-  const product = products.find(
-    p => p.sku === item.sku
-  );
+  const quantity = Number(item.quantity) + change;
 
-  if(!product) return;
-
-  const quantity =
-    Number(item.quantity) + change;
-
-  if(quantity <= 0) {
+  if (quantity <= 0) {
     cart.splice(index,1);
-  } else if(quantity > product.stock) {
-    alert(
-      "Only " + product.stock + " available."
-    );
+  } else if (quantity > product.stock) {
+    alert("Only " + product.stock + " available.");
     return;
   } else {
     item.quantity = quantity;
@@ -971,42 +789,30 @@ function changeQuantity(index,change) {
 
   saveCart();
   updateCartUI();
-  refreshProducts();
+  filterProducts();
 }
 
 function removeFromCart(index) {
-  if(!cart[index]) return;
-
+  if (!cart[index]) return;
   cart.splice(index,1);
-
   saveCart();
   updateCartUI();
-  refreshProducts();
+  filterProducts();
 }
 
 function updateCartUI() {
-  const cartItems = document.getElementById(
-    "cartItems"
-  );
-
-  const cartTotal = document.getElementById(
-    "cartTotal"
-  );
-
-  const cartCount = document.getElementById(
-    "cartCount"
-  );
+  const cartItems = document.getElementById("cartItems");
+  const cartTotal = document.getElementById("cartTotal");
+  const cartCount = document.getElementById("cartCount");
 
   cartCount.textContent = getCartQuantity();
   cartItems.replaceChildren();
 
-  if(cart.length === 0) {
-    cartItems.innerHTML =
-      '<div class="cart-empty">' +
-      '<h3>Your cart is empty.</h3>' +
-      '<p>Add a few tiny memories and they will show up here.</p>' +
-      '</div>';
-
+  if (cart.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "cart-empty";
+    empty.textContent = "Your cart is empty.";
+    cartItems.appendChild(empty);
     cartTotal.textContent = "$0.00";
     return;
   }
@@ -1021,38 +827,21 @@ function updateCartUI() {
 
     const sku = document.createElement("div");
     sku.className = "cart-item-sku";
-
-    sku.textContent =
-      item.type === "custom"
-        ? "Custom photo order"
-        : "SKU: " + item.sku;
+    sku.textContent = item.type === "custom"
+      ? "Custom photo order"
+      : "SKU: " + item.sku;
 
     const count = document.createElement("div");
     count.className = "cart-item-price";
-
-    count.textContent =
-      item.quantity +
-      (Number(item.quantity) === 1
-        ? " magnet"
-        : " magnets");
+    count.textContent = item.quantity + " magnet(s)";
 
     wrapper.append(name,sku,count);
 
-    if(item.type === "custom") {
-      const details = document.createElement("div");
-      details.className = "cart-item-sku";
-
-      details.textContent = item.photos
-        ? item.photos.length + " photo(s) uploaded"
-        : "Custom photo magnets";
-
-      wrapper.appendChild(details);
-
+    if (item.type === "custom") {
       const remove = document.createElement("button");
       remove.className = "remove-button";
       remove.textContent = "Remove";
       remove.onclick = () => removeFromCart(index);
-
       wrapper.appendChild(remove);
     } else {
       const controls = document.createElement("div");
@@ -1081,54 +870,37 @@ function updateCartUI() {
     cartItems.appendChild(wrapper);
   });
 
-  cartTotal.textContent =
-    "$" + getCartTotal().toFixed(2);
+  cartTotal.textContent = "$" + getCartTotal().toFixed(2);
 }
 
 function openCart() {
-  document.getElementById(
-    "cartOverlay"
-  ).classList.add("open");
-
-  document.getElementById(
-    "cartDrawer"
-  ).classList.add("open");
-
+  document.getElementById("cartOverlay").classList.add("open");
+  document.getElementById("cartDrawer").classList.add("open");
   updateCartUI();
 }
 
 function closeCart() {
-  document.getElementById(
-    "cartOverlay"
-  ).classList.remove("open");
-
-  document.getElementById(
-    "cartDrawer"
-  ).classList.remove("open");
+  document.getElementById("cartOverlay").classList.remove("open");
+  document.getElementById("cartDrawer").classList.remove("open");
 }
 
 function checkout() {
-  if(cart.length === 0) {
-    alert(
-      "Your cart is empty. Add some magnets first!"
-    );
+  if (cart.length === 0) {
+    alert("Your cart is empty. Add some magnets first!");
     return;
   }
 
-  if(!saveCart()) return;
-
+  if (!saveCart()) return;
   window.location.href = "checkout.html";
 }
 
-document.addEventListener("keydown",event => {
-  if(event.key === "Escape") {
-    closeCart();
-  }
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeCart();
 });
 
 renderProducts();
 updateCartUI();
-
 </script>
+
 </body>
 </html>
