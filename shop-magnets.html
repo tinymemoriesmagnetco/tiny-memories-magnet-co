@@ -902,5 +902,27 @@ renderProducts();
 updateCartUI();
 </script>
 
+<!-- Anonymous shop page view tracking: once per browser session -->
+<script>
+(function () {
+  const key = "tm_shop_magnets_view_counted";
+  try {
+    if (sessionStorage.getItem(key)) return;
+  } catch (error) {}
+
+  fetch("/api/track-view", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ page: window.location.pathname })
+  }).then(function (response) {
+    if (response.ok) {
+      try { sessionStorage.setItem(key, "yes"); } catch (error) {}
+    }
+  }).catch(function () {
+    // Analytics must never interfere with shopping.
+  });
+})();
+</script>
+
 </body>
 </html>
