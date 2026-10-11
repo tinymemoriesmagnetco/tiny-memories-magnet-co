@@ -880,12 +880,68 @@ function createOrderCard(order) {
     }
   }
 
+  const printButton = document.createElement("button");
+  printButton.type = "button";
+  printButton.className = "action-button";
+  printButton.textContent = "View / Print Order";
+  printButton.addEventListener("click", () => openPrintableOrder(order));
+  actions.prepend(printButton);
+
   if (actions.children.length) {
     body.appendChild(actions);
   }
 
   card.appendChild(body);
   return card;
+}
+
+function openPrintableOrder(order) {
+  // Reuse the same order rendering as the dashboard; no extra API or
+  // admin password is sent to the new window.
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("Please allow pop-ups for this website to view and print orders.");
+    return;
+  }
+
+  const card = createOrderCard(order);
+  card.querySelector(".order-actions")?.remove();
+  // Remove download controls from the print view, but retain photo previews.
+  card.querySelectorAll(".download-button").forEach(button => button.remove());
+  const style = document.querySelector("head style")?.textContent || "";
+  const orderNumber = String(order.paypalOrderId || order.id || "");
+
+  printWindow.document.open();
+  printWindow.document.write(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order ${escapeHtml(orderNumber)} | Tiny Memories Magnet Co.</title>
+<style>${style}
+  body { background: #fff; }
+  .print-toolbar { padding: 16px 20px; display: flex; gap: 12px;
+    justify-content: space-between; align-items: center; }
+  .print-wrapper { max-width: 850px; margin: 15px auto 40px; padding: 0 16px; }
+  .print-brand { font-size: 22px; margin: 0; }
+  .order-card { break-inside: auto; }
+  .item, .section, .photo-card { break-inside: avoid; }
+  @media print {
+    @page { margin: 0.5in; }
+    .print-toolbar { display: none !important; }
+    .print-wrapper { max-width: none; margin: 0; padding: 0; }
+    .order-card { border: 0; margin: 0; }
+    .order-header, .notes { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .photo-gallery { grid-template-columns: repeat(3, 1fr); }
+  }
+</style></head><body>
+<div class="print-toolbar">
+  <h1 class="print-brand">Tiny Memories Magnet Co.</h1>
+  <button type="button" class="primary-button" id="printOrderButton">Print Order</button>
+</div>
+<main class="print-wrapper">${card.outerHTML}</main>
+</body></html>`);
+  printWindow.document.close();
+  printWindow.document.getElementById("printOrderButton")
+    ?.addEventListener("click", () => printWindow.print());
 }
 
 function updateTabs() {
