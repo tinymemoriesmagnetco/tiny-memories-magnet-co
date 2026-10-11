@@ -276,6 +276,7 @@ button:disabled { opacity:.55; cursor:not-allowed; }
 }
 .action-button.archive { background:var(--rose); }
 .action-button.restore { background:var(--ink); }
+.action-button.delete { background:#a33; }
 .action-button:hover { filter:brightness(.94); }
 .empty,.loading {
   text-align:center;
@@ -878,6 +879,24 @@ function createOrderCard(order) {
 
       actions.appendChild(archiveButton);
     }
+  }
+
+  // Only show delete for unpaid, non-archived orders.
+  // The server independently verifies the current PayPal payment status.
+  if (!archived && status === "PENDING") {
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "action-button delete";
+    deleteButton.textContent = "Delete Unpaid Order";
+    deleteButton.addEventListener("click", () => {
+      performOrderAction(
+        order,
+        "delete",
+        "Permanently delete this unpaid order? This cannot be undone. " +
+          "The server will verify that PayPal has not approved or completed payment."
+      );
+    });
+    actions.appendChild(deleteButton);
   }
 
   const printButton = document.createElement("button");
