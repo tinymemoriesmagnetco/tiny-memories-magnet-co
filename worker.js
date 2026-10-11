@@ -304,9 +304,17 @@ const credentials =
     }
   );
 
-  if (!response.ok) {
-    throw new Error("PayPal authentication failed.");
-  }
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+
+  console.error("PayPal authentication error:", {
+    status: response.status,
+    error: errorData.error || "unknown",
+    description: errorData.error_description || ""
+  });
+
+  throw new Error("PayPal authentication failed.");
+}
 
   const data = await response.json();
   return data.access_token;
