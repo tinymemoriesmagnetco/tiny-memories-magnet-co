@@ -19,6 +19,7 @@ export default {
           500
         );
       }
+
       return json({
         clientId: env.PAYPAL_CLIENT_ID,
         environment: env.PAYPAL_ENV || "sandbox"
@@ -37,6 +38,14 @@ export default {
     // WEBSITE TRACKING
     if (path === "/api/track-view" && method === "POST") {
       return trackPageView(request, env);
+    }
+
+    // DISCOUNT VALIDATION
+    if (
+      path === "/api/discount/validate" &&
+      method === "POST"
+    ) {
+      return validateDiscount(request, env);
     }
 
     // PAYPAL
@@ -101,6 +110,7 @@ function json(data, status = 200) {
 
 function validQuantity(value, max = 500) {
   const number = Number(value);
+
   return Number.isSafeInteger(number) &&
     number >= 1 &&
     number <= max
@@ -350,7 +360,8 @@ async function createOrder(request, env) {
     // Existing flat shipping charge.
     const shippingTotal = 5;
 
-    // Discount not active until checkout is updated.
+    // TINY10 payment discount is not active yet.
+    // Normal PayPal checkout remains unchanged.
     const total = Number(
       (merchandiseTotal + shippingTotal).toFixed(2)
     );
@@ -922,6 +933,9 @@ async function updateFulfillment(
 // ============================================
 
 const FIRST_ORDER_CODE = "TINY10";
+const FIRST_ORDER_MINIMUM = 20;
+const FIRST_ORDER_PERCENT = 10;
+const FIRST_ORDER_MAX_SAVINGS = 5;
 
 const EMAIL_FROM =
   "Tiny Memories Magnet Co. <hello@tinymemoriesmagnetco.com>";
@@ -1026,7 +1040,6 @@ async function subscribeToEmails(request, env) {
   try {
     const body = await request.json();
 
-    // Hidden field used to discourage automated signups.
     if (body.website) {
       return json({ success: true });
     }
@@ -1107,12 +1120,8 @@ async function subscribeToEmails(request, env) {
         .run();
     }
 
-    // IMPORTANT:
-    // Welcome discount email is disabled until
-    // checkout can apply and validate the code.
-    //
-    // Do not enable WELCOME_DISCOUNT_READY yet.
-
+    // Keep welcome emails disabled until the
+    // actual PayPal discount has been tested.
     if (
       env.WELCOME_DISCOUNT_READY === "true" &&
       !existing?.welcome_sent_at
@@ -1146,8 +1155,9 @@ async function subscribeToEmails(request, env) {
           </p>
 
           <p>
-            Enjoy <strong>10% off your first order,
-            up to $5</strong> with code:
+            Enjoy <strong>10% off your first order
+            of $20 or more, up to $5</strong>
+            with code:
           </p>
 
           <p style="
@@ -1156,6 +1166,12 @@ async function subscribeToEmails(request, env) {
             color:#a96858;
           ">
             ${FIRST_ORDER_CODE}
+          </p>
+
+          <p>
+            Minimum $20 merchandise purchase.
+            Shipping does not count toward
+            the minimum. One use per customer.
           </p>
 
           <p>
@@ -1185,7 +1201,9 @@ async function subscribeToEmails(request, env) {
       const text =
         "Welcome to Tiny Memories Magnet Co.! " +
         "Use TINY10 for 10% off your first order " +
-        "(up to $5). " +
+        "of $20 or more, up to $5 savings. " +
+        "Minimum $20 merchandise purchase, " +
+        "excluding shipping. One use per customer. " +
         `Shop: ${site}/shop-magnets.html. ` +
         `Unsubscribe: ${unsubscribeUrl}`;
 
@@ -1273,5 +1291,172 @@ async function unsubscribeFromEmails(request, env) {
       "Could not process unsubscribe request.",
       { status: 500 }
     );
+  }
+}
+
+// ============================================
+// VALIDATE TINY10 DISCOUNT
+// ============================================
+
+async function validateDiscount(request, env) {
+  if (!isSameSiteRequest(request)) {
+    return json({ error: "Invalid origin." }, 403);
+  }
+
+  if (!env.DB) {
+    return json({ error: "Database unavailable." }, 500);
+  }
+
+  try {
+    const body = await request.json();
+
+    const code = String(body.discountCode || "")
+      .trim()
+      .toUpperCase();
+
+    const email = normalizedEmail(body.email);
+
+    if (code !== FIRST_ORDER_CODE) {
+      return json({
+        valid: false,
+        error: "Invalid discount code."
+      }, 400);
+    }
+
+    if (!email) {
+      return json({
+        valid: false,
+        error: "Enter your email address first."
+      }, 400);
+    }
+
+    // Recalculate merchandise pricing from the
+    // actual cart. Never trust a subtotal supplied
+    // by the customer's browser.
+    const items = Array.isArray(body.cart)
+      ? body.cart
+      : Array.isArray(body.items)
+        ? body.items
+        : [];
+
+    if (items.length === 0) {
+      return json({
+        valid: false,
+        error: "Add products to your cart first."
+      }, 400);
+    }
+
+    let priced;
+
+    try {
+      priced = priceCart(items);
+    } catch (error) {
+      return json({
+        valid: false,
+        error: error.message
+      }, 400);
+    }
+
+    const merchandiseTotal = priced.merchandiseTotal;
+
+    // $20 minimum applies to merchandise only.
+    // Shipping is excluded.
+    if (merchandiseTotal < FIRST_ORDER_MINIMUM) {
+      return json({
+        valid: false,
+        minimumPurchase: FIRST_ORDER_MINIMUM,
+        merchandiseTotal,
+        amountNeeded: Number(
+          (FIRST_ORDER_MINIMUM - merchandiseTotal).toFixed(2)
+        ),
+        error:
+          "Spend at least $20 on merchandise to use TINY10."
+      }, 400);
+    }
+
+    const subscriber = await env.DB.prepare(`
+      SELECT email
+      FROM email_subscribers
+      WHERE email = ?
+        AND status = 'subscribed'
+      LIMIT 1
+    `).bind(email).first();
+
+    if (!subscriber) {
+      return json({
+        valid: false,
+        error: "This offer is for email subscribers."
+      }, 400);
+    }
+
+    const previousOrder = await env.DB.prepare(`
+      SELECT id
+      FROM orders
+      WHERE status = 'PAID'
+        AND LOWER(
+          json_extract(customer_json, '$.email')
+        ) = ?
+      LIMIT 1
+    `).bind(email).first();
+
+    if (previousOrder) {
+      return json({
+        valid: false,
+        error: "This offer is for first-time customers."
+      }, 400);
+    }
+
+    const redemption = await env.DB.prepare(`
+      SELECT id
+      FROM discount_redemptions
+      WHERE LOWER(email) = ?
+        AND UPPER(discount_code) = 'TINY10'
+      LIMIT 1
+    `).bind(email).first();
+
+    if (redemption) {
+      return json({
+        valid: false,
+        error: "This discount has already been used."
+      }, 400);
+    }
+
+    const discountAmount = Number(
+      Math.min(
+        merchandiseTotal * (FIRST_ORDER_PERCENT / 100),
+        FIRST_ORDER_MAX_SAVINGS
+      ).toFixed(2)
+    );
+
+    const shippingTotal = 5;
+
+    const estimatedTotal = Number(
+      (
+        merchandiseTotal -
+        discountAmount +
+        shippingTotal
+      ).toFixed(2)
+    );
+
+    return json({
+      valid: true,
+      discountCode: FIRST_ORDER_CODE,
+      percentage: FIRST_ORDER_PERCENT,
+      minimumPurchase: FIRST_ORDER_MINIMUM,
+      maximumDiscount: FIRST_ORDER_MAX_SAVINGS,
+      merchandiseTotal,
+      discountAmount,
+      shippingTotal,
+      estimatedTotal,
+      message:
+        "TINY10 is eligible for this cart and email."
+    });
+
+  } catch (error) {
+    console.error("Discount validation error:", error);
+
+    return json({
+      error: "Unable to validate discount."
+    }, 500);
   }
 }
