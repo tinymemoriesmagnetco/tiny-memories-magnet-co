@@ -19,19 +19,27 @@ export default {
           500
         );
       }
-
       return json({
         clientId: env.PAYPAL_CLIENT_ID,
         environment: env.PAYPAL_ENV || "sandbox"
       });
     }
 
-    // Website page-view tracking.
+    // EMAIL MARKETING
+    if (path === "/api/subscribe" && method === "POST") {
+      return subscribeToEmails(request, env);
+    }
+
+    if (path === "/api/unsubscribe" && method === "GET") {
+      return unsubscribeFromEmails(request, env);
+    }
+
+    // WEBSITE TRACKING
     if (path === "/api/track-view" && method === "POST") {
       return trackPageView(request, env);
     }
 
-    // Existing PayPal order endpoints.
+    // PAYPAL
     if (path === "/api/orders" && method === "POST") {
       return createOrder(request, env);
     }
@@ -47,59 +55,28 @@ export default {
       );
     }
 
-    // Admin order list.
+    // ADMIN
     if (path === "/api/admin/orders" && method === "GET") {
       return getAdminOrders(request, env);
     }
 
-    // Admin dashboard statistics.
     if (path === "/api/admin/stats" && method === "GET") {
       return getAdminStats(request, env);
     }
 
-    // Mark a paid order as shipped.
-    const shipMatch = path.match(
-      /^\/api\/admin\/orders\/([^/]+)\/ship$/
+    const fulfillmentMatch = path.match(
+      /^\/api\/admin\/orders\/([^/]+)\/(ship|archive|restore)$/
     );
 
-    if (shipMatch && method === "POST") {
+    if (fulfillmentMatch && method === "POST") {
       return updateFulfillment(
         request,
         env,
-        decodeURIComponent(shipMatch[1]),
-        "ship"
+        decodeURIComponent(fulfillmentMatch[1]),
+        fulfillmentMatch[2]
       );
     }
 
-    // Archive a shipped order.
-    const archiveMatch = path.match(
-      /^\/api\/admin\/orders\/([^/]+)\/archive$/
-    );
-
-    if (archiveMatch && method === "POST") {
-      return updateFulfillment(
-        request,
-        env,
-        decodeURIComponent(archiveMatch[1]),
-        "archive"
-      );
-    }
-
-    // Restore an archived order.
-    const restoreMatch = path.match(
-      /^\/api\/admin\/orders\/([^/]+)\/restore$/
-    );
-
-    if (restoreMatch && method === "POST") {
-      return updateFulfillment(
-        request,
-        env,
-        decodeURIComponent(restoreMatch[1]),
-        "restore"
-      );
-    }
-
-    // Never serve unknown API paths as website files.
     if (path.startsWith("/api/")) {
       return json({ error: "API endpoint not found." }, 404);
     }
@@ -107,6 +84,10 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+// ============================================
+// RESPONSE HELPERS
+// ============================================
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -117,6 +98,19 @@ function json(data, status = 200) {
     }
   });
 }
+
+function validQuantity(value, max = 500) {
+  const number = Number(value);
+  return Number.isSafeInteger(number) &&
+    number >= 1 &&
+    number <= max
+      ? number
+      : null;
+}
+
+// ============================================
+// PRODUCT PRICING
+// ============================================
 
 function calculateMerchandiseTotal(quantity) {
   quantity = Number(quantity) || 0;
@@ -143,16 +137,6 @@ function calculateMerchandiseTotal(quantity) {
   total += quantity * 3;
 
   return Number(total.toFixed(2));
-}
-
-function validQuantity(value, max = 500) {
-  const number = Number(value);
-
-  return Number.isSafeInteger(number) &&
-    number >= 1 &&
-    number <= max
-      ? number
-      : null;
 }
 
 function priceCart(items) {
@@ -282,6 +266,10 @@ function priceCart(items) {
   };
 }
 
+// ============================================
+// PAYPAL AUTHENTICATION
+// ============================================
+
 function getPayPalBaseUrl(env) {
   return env.PAYPAL_ENV === "production"
     ? "https://api-m.paypal.com"
@@ -313,6 +301,10 @@ async function getPayPalAccessToken(env) {
   return data.access_token;
 }
 
+// ============================================
+// CREATE PAYPAL ORDER
+// ============================================
+
 async function createOrder(request, env) {
   try {
     if (
@@ -338,10 +330,7 @@ async function createOrder(request, env) {
     const orderNotes = body.orderNotes || "";
 
     if (items.length === 0) {
-      return json(
-        { error: "Your cart is empty." },
-        400
-      );
+      return json({ error: "Your cart is empty." }, 400);
     }
 
     let priced;
@@ -358,8 +347,10 @@ async function createOrder(request, env) {
       merchandiseTotal
     } = priced;
 
+    // Existing flat shipping charge.
     const shippingTotal = 5;
 
+    // Discount not active until checkout is updated.
     const total = Number(
       (merchandiseTotal + shippingTotal).toFixed(2)
     );
@@ -479,6 +470,10 @@ async function createOrder(request, env) {
   }
 }
 
+// ============================================
+// CAPTURE PAYPAL PAYMENT
+// ============================================
+
 async function captureOrder(orderID, env) {
   try {
     if (
@@ -491,7 +486,6 @@ async function captureOrder(orderID, env) {
       );
     }
 
-    // Only capture orders that belong to this store.
     const existingOrder = await env.DB.prepare(`
       SELECT id, status
       FROM orders
@@ -577,7 +571,10 @@ async function captureOrder(orderID, env) {
   }
 }
 
-// Admin authentication is required for every admin API.
+// ============================================
+// ADMIN AUTHENTICATION
+// ============================================
+
 function isAdmin(request, env) {
   if (!env.ADMIN_PASSWORD) return false;
 
@@ -602,8 +599,10 @@ function adminError(request, env) {
   return null;
 }
 
-// Store anonymous page-view counts.
-// This does not collect visitor names, emails or IP addresses.
+// ============================================
+// WEBSITE VIEW TRACKING
+// ============================================
+
 async function trackPageView(request, env) {
   try {
     const origin = request.headers.get("Origin");
@@ -619,11 +618,7 @@ async function trackPageView(request, env) {
       .split("?")[0]
       .split("#")[0];
 
-    if (!page.startsWith("/")) {
-      return json({ error: "Invalid page." }, 400);
-    }
-
-    if (page.length > 200) {
+    if (!page.startsWith("/") || page.length > 200) {
       return json({ error: "Invalid page." }, 400);
     }
 
@@ -639,7 +634,6 @@ async function trackPageView(request, env) {
       page = "/index.html";
     }
 
-    // Count page views by UTC date and page.
     const day = new Date().toISOString().slice(0, 10);
 
     await env.DB.prepare(`
@@ -660,6 +654,10 @@ async function trackPageView(request, env) {
     );
   }
 }
+
+// ============================================
+// ADMIN DASHBOARD STATISTICS
+// ============================================
 
 async function getAdminStats(request, env) {
   const authError = adminError(request, env);
@@ -710,6 +708,10 @@ async function getAdminStats(request, env) {
     );
   }
 }
+
+// ============================================
+// ADMIN ORDER LIST
+// ============================================
 
 async function getAdminOrders(request, env) {
   const authError = adminError(request, env);
@@ -764,6 +766,10 @@ async function getAdminOrders(request, env) {
     );
   }
 }
+
+// ============================================
+// SHIP / ARCHIVE / RESTORE ORDERS
+// ============================================
 
 async function updateFulfillment(
   request,
@@ -907,6 +913,365 @@ async function updateFulfillment(
     return json(
       { error: "Unable to update order." },
       500
+    );
+  }
+}
+
+// ============================================
+// EMAIL MARKETING SETTINGS
+// ============================================
+
+const FIRST_ORDER_CODE = "TINY10";
+
+const EMAIL_FROM =
+  "Tiny Memories Magnet Co. <hello@tinymemoriesmagnetco.com>";
+
+function isSameSiteRequest(request) {
+  const origin = request.headers.get("Origin");
+
+  return !origin ||
+    origin === new URL(request.url).origin;
+}
+
+function normalizedEmail(value) {
+  const email = String(value || "")
+    .trim()
+    .toLowerCase();
+
+  if (
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    return null;
+  }
+
+  return email;
+}
+
+function escapeEmailHtml(value) {
+  return String(value).replace(
+    /[&<>"']/g,
+    char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]
+  );
+}
+
+// ============================================
+// SEND EMAIL THROUGH RESEND
+// ============================================
+
+async function sendResendEmail(
+  env,
+  { to, subject, html, text, unsubscribeUrl }
+) {
+  if (!env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not configured.");
+  }
+
+  const response = await fetch(
+    "https://api.resend.com/emails",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: EMAIL_FROM,
+        to: [to],
+        subject,
+        html,
+        text,
+        ...(unsubscribeUrl
+          ? {
+              headers: {
+                "List-Unsubscribe": `<${unsubscribeUrl}>`
+              }
+            }
+          : {})
+      })
+    }
+  );
+
+  if (!response.ok) {
+    console.error(
+      "Resend email delivery failed:",
+      response.status
+    );
+
+    throw new Error("Email delivery failed.");
+  }
+
+  return response.json();
+}
+
+// ============================================
+// EMAIL SIGNUP
+// ============================================
+
+async function subscribeToEmails(request, env) {
+  if (!isSameSiteRequest(request)) {
+    return json({ error: "Invalid origin." }, 403);
+  }
+
+  if (!env.DB) {
+    return json({ error: "Database unavailable." }, 500);
+  }
+
+  try {
+    const body = await request.json();
+
+    // Hidden field used to discourage automated signups.
+    if (body.website) {
+      return json({ success: true });
+    }
+
+    const email = normalizedEmail(body.email);
+
+    const firstName = String(
+      body.firstName || ""
+    ).trim().slice(0, 80);
+
+    if (!email) {
+      return json(
+        { error: "Enter a valid email address." },
+        400
+      );
+    }
+
+    if (body.consent !== true) {
+      return json(
+        {
+          error:
+            "Please agree to receive marketing emails."
+        },
+        400
+      );
+    }
+
+    const existing = await env.DB.prepare(`
+      SELECT
+        email,
+        status,
+        unsubscribe_token,
+        welcome_sent_at
+      FROM email_subscribers
+      WHERE email = ?
+    `).bind(email).first();
+
+    const now = new Date().toISOString();
+
+    const token =
+      existing?.unsubscribe_token ||
+      crypto.randomUUID();
+
+    if (existing) {
+      if (existing.status !== "subscribed") {
+        await env.DB.prepare(`
+          UPDATE email_subscribers
+          SET
+            first_name = ?,
+            consent_at = ?,
+            subscribed_at = ?,
+            status = 'subscribed'
+          WHERE email = ?
+        `)
+          .bind(firstName, now, now, email)
+          .run();
+      }
+    } else {
+      await env.DB.prepare(`
+        INSERT INTO email_subscribers (
+          email,
+          first_name,
+          subscribed_at,
+          consent_at,
+          status,
+          unsubscribe_token,
+          welcome_sent_at
+        )
+        VALUES (?, ?, ?, ?, 'subscribed', ?, NULL)
+      `)
+        .bind(
+          email,
+          firstName,
+          now,
+          now,
+          token
+        )
+        .run();
+    }
+
+    // IMPORTANT:
+    // Welcome discount email is disabled until
+    // checkout can apply and validate the code.
+    //
+    // Do not enable WELCOME_DISCOUNT_READY yet.
+
+    if (
+      env.WELCOME_DISCOUNT_READY === "true" &&
+      !existing?.welcome_sent_at
+    ) {
+      const site = new URL(request.url).origin;
+
+      const unsubscribeUrl =
+        `${site}/api/unsubscribe?token=` +
+        encodeURIComponent(token);
+
+      const greeting = firstName
+        ? `Hi ${escapeEmailHtml(firstName)},`
+        : "Hello!";
+
+      const html = `
+        <div style="
+          font-family: Georgia, serif;
+          max-width: 580px;
+          margin: auto;
+          color: #383432;
+          line-height: 1.7;
+        ">
+          <h1 style="color:#a96858">
+            Welcome to Tiny Memories Magnet Co.!
+          </h1>
+
+          <p>${greeting}</p>
+
+          <p>
+            Thank you for joining our little community!
+          </p>
+
+          <p>
+            Enjoy <strong>10% off your first order,
+            up to $5</strong> with code:
+          </p>
+
+          <p style="
+            font-size:28px;
+            font-weight:bold;
+            color:#a96858;
+          ">
+            ${FIRST_ORDER_CODE}
+          </p>
+
+          <p>
+            <a href="${site}/shop-magnets.html">
+              Shop Handmade Magnets
+            </a>
+          </p>
+
+          <p>
+            <a href="${site}/custom-magnets.html">
+              Create Custom Photo Magnets
+            </a>
+          </p>
+
+          <p>
+            Tiny memories. Big feelings.
+          </p>
+
+          <p style="font-size:12px">
+            <a href="${unsubscribeUrl}">
+              Unsubscribe
+            </a>
+          </p>
+        </div>
+      `;
+
+      const text =
+        "Welcome to Tiny Memories Magnet Co.! " +
+        "Use TINY10 for 10% off your first order " +
+        "(up to $5). " +
+        `Shop: ${site}/shop-magnets.html. ` +
+        `Unsubscribe: ${unsubscribeUrl}`;
+
+      try {
+        await sendResendEmail(env, {
+          to: email,
+          subject:
+            "Welcome to Tiny Memories — your first-order gift",
+          html,
+          text,
+          unsubscribeUrl
+        });
+
+        await env.DB.prepare(`
+          UPDATE email_subscribers
+          SET welcome_sent_at = ?
+          WHERE email = ?
+            AND welcome_sent_at IS NULL
+            AND status = 'subscribed'
+        `)
+          .bind(new Date().toISOString(), email)
+          .run();
+
+      } catch (error) {
+        console.error(
+          "Welcome email could not be sent:",
+          error
+        );
+      }
+    }
+
+    return json({
+      success: true,
+      message:
+        "Thank you for joining our email list!"
+    });
+
+  } catch (error) {
+    console.error("Email signup error:", error);
+
+    return json(
+      { error: "Unable to save your subscription." },
+      500
+    );
+  }
+}
+
+// ============================================
+// UNSUBSCRIBE FROM MARKETING EMAILS
+// ============================================
+
+async function unsubscribeFromEmails(request, env) {
+  const token =
+    new URL(request.url).searchParams.get("token") || "";
+
+  if (!/^[0-9a-f-]{36}$/i.test(token)) {
+    return new Response(
+      "Invalid unsubscribe link.",
+      { status: 400 }
+    );
+  }
+
+  try {
+    await env.DB.prepare(`
+      UPDATE email_subscribers
+      SET status = 'unsubscribed'
+      WHERE unsubscribe_token = ?
+    `).bind(token).run();
+
+    return new Response(
+      "You have been unsubscribed from " +
+      "Tiny Memories Magnet Co. emails.",
+      {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store"
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error("Unsubscribe error:", error);
+
+    return new Response(
+      "Could not process unsubscribe request.",
+      { status: 500 }
     );
   }
 }
