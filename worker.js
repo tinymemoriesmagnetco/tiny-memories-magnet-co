@@ -281,7 +281,9 @@ function priceCart(items) {
 // ============================================
 
 function getPayPalBaseUrl(env) {
-  return env.PAYPAL_ENV === "production"
+  return ["live", "production"].includes(
+    String(env.PAYPAL_ENV || "").trim().toLowerCase()
+  )
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
