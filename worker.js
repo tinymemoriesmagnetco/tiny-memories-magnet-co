@@ -86,6 +86,19 @@ export default {
       );
     }
 
+    // ADMIN: delete an unpaid, unapproved order only after checking PayPal.
+    const deleteOrderMatch = path.match(
+      /^\/api\/admin\/orders\/([^/]+)\/delete$/
+    );
+
+    if (deleteOrderMatch && method === "POST") {
+      return deleteUnpaidOrder(
+        request,
+        env,
+        decodeURIComponent(deleteOrderMatch[1])
+      );
+    }
+
     if (path.startsWith("/api/")) {
       return json({ error: "API endpoint not found." }, 404);
     }
@@ -1057,6 +1070,92 @@ async function updateFulfillment(
       { error: "Unable to update order." },
       500
     );
+  }
+}
+
+// ============================================
+// DELETE UNPAID TEST ORDERS (ADMIN ONLY)
+// ============================================
+
+async function deleteUnpaidOrder(request, env, orderId) {
+  const authError = adminError(request, env);
+  if (authError) return authError;
+
+  if (!orderId || orderId.length > 150) {
+    return json({ error: "Invalid order ID." }, 400);
+  }
+
+  if (!env.DB || !env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
+    return json({ error: "Payment verification is unavailable." }, 503);
+  }
+
+  try {
+    const order = await env.DB.prepare(`
+      SELECT id, status, paypal_order_id
+      FROM orders WHERE id = ? LIMIT 1
+    `).bind(orderId).first();
+
+    if (!order) return json({ error: "Order not found." }, 404);
+    if (order.status !== "PENDING" || !order.paypal_order_id) {
+      return json({ error: "Only unpaid pending orders can be deleted." }, 409);
+    }
+
+    // A reserved TINY10 discount must not be orphaned by deletion.
+    // Keep the order so the existing discount reconciliation can verify it.
+    const claim = await env.DB.prepare(`
+      SELECT paypal_order_id FROM discount_redemptions
+      WHERE paypal_order_id = ? LIMIT 1
+    `).bind(order.paypal_order_id).first();
+    if (claim) {
+      return json({
+        error: "This order has a discount reservation. Contact support before deleting it."
+      }, 409);
+    }
+
+    const token = await getPayPalAccessToken(env);
+    const paypalResponse = await fetch(
+      `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!paypalResponse.ok) {
+      return json({ error: "PayPal status could not be verified. Order was not deleted." }, 502);
+    }
+
+    const paypalOrder = await paypalResponse.json();
+    // APPROVED might still be captured; COMPLETED is a real payment.
+    // Unknown states must be treated as unsafe.
+    const safeStatuses = ["CREATED", "PAYER_ACTION_REQUIRED", "VOIDED"];
+    if (!safeStatuses.includes(paypalOrder.status)) {
+      return json({
+        error: "PayPal status is " + String(paypalOrder.status || "unknown") +
+          ". This order cannot be safely deleted."
+      }, 409);
+    }
+
+    // Recheck the local state in the DELETE itself so a concurrent capture
+    // that has already marked the order PAID cannot be erased.
+    const deleted = await env.DB.prepare(`
+      DELETE FROM orders
+      WHERE id = ? AND status = 'PENDING' AND paypal_order_id = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM discount_redemptions
+          WHERE paypal_order_id = ?
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM order_fulfillment
+          WHERE order_id = ?
+        )
+    `).bind(orderId, order.paypal_order_id, order.paypal_order_id, orderId).run();
+
+    if (deleted.meta?.changes !== 1) {
+      return json({ error: "Order changed or has related records. Nothing was deleted." }, 409);
+    }
+
+    return json({ success: true });
+  } catch (error) {
+    console.error("Delete unpaid order error:", error);
+    return json({ error: "Unable to safely delete this order." }, 500);
   }
 }
 
