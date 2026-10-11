@@ -15,5 +15,8 @@
       "database_name": "tiny-memories-orders",
       "database_id": "9569e832-66c9-4708-b6b5-57ff4da3735e"
     }
-  ]
+  ],
+  "vars": {
+    "PAYPAL_ENV": "live"
+  }
 }
