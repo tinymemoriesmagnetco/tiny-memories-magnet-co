@@ -533,104 +533,175 @@ async function createOrder(request, env) {
   }
 }
 
+// A reservation may be released ONLY after PayPal confirms its order is VOIDED.
+// Unknown/network-error states stay reserved to avoid a second discounted capture.
+async function findActiveTiny10Claim(env, email) {
+  const claim = await env.DB.prepare(`
+    SELECT paypal_order_id, redeemed_at
+    FROM discount_redemptions
+    WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10'
+    LIMIT 1
+  `).bind(email).first();
+  if (!claim) return null;
+
+  // Completed discounts must never be released, including legacy records.
+  const owner = await env.DB.prepare(`
+    SELECT status FROM orders WHERE paypal_order_id = ? LIMIT 1
+  `).bind(claim.paypal_order_id).first();
+  if (!owner || owner.status === 'PAID') return claim;
+
+  // Do not mistake a capture timeout for a failed payment.
+  // Only PayPal's explicit VOIDED state authorizes releasing a reservation.
+  try {
+    const token = await getPayPalAccessToken(env);
+    const response = await fetch(
+      `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(claim.paypal_order_id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) return claim;
+    const paypalOrder = await response.json();
+    if (paypalOrder.status !== 'VOIDED') return claim;
+
+    // Conditional delete avoids removing a paid redemption if another
+    // request has updated the local order while this check was in flight.
+    await env.DB.prepare(`
+      DELETE FROM discount_redemptions
+      WHERE LOWER(TRIM(email)) = ?
+        AND UPPER(TRIM(discount_code)) = 'TINY10'
+        AND paypal_order_id = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM orders
+          WHERE paypal_order_id = ? AND status = 'PAID'
+        )
+    `).bind(email, claim.paypal_order_id, claim.paypal_order_id).run();
+    return await env.DB.prepare(`
+      SELECT paypal_order_id FROM discount_redemptions
+      WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10'
+      LIMIT 1
+    `).bind(email).first();
+  } catch (error) {
+    console.error('TINY10 reservation reconciliation failed:', error);
+    return claim;
+  }
+}
+
 // ============================================
 // CAPTURE PAYPAL PAYMENT
 // ============================================
 
 async function captureOrder(orderID, env) {
   try {
-    if (
-      !env.PAYPAL_CLIENT_ID ||
-      !env.PAYPAL_CLIENT_SECRET
-    ) {
-      return json(
-        { error: "PayPal credentials are not configured." },
-        500
-      );
+    if (!env.DB || !env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
+      return json({ error: "Payment configuration is unavailable." }, 500);
     }
 
-    const existingOrder = await env.DB.prepare(`
-      SELECT id, status
-      FROM orders
-      WHERE paypal_order_id = ?
-      LIMIT 1
+    const order = await env.DB.prepare(`
+      SELECT id, status, customer_json, discount_code, discount_amount
+      FROM orders WHERE paypal_order_id = ? LIMIT 1
     `).bind(orderID).first();
-
-    if (!existingOrder) {
-      return json({ error: "Order not found." }, 404);
+    if (!order) return json({ error: "Order not found." }, 404);
+    if (order.status === "PAID") {
+      return json({ success: true, status: "COMPLETED" });
     }
 
-    if (existingOrder.status === "PAID") {
-      return json({
-        success: true,
-        status: "COMPLETED"
-      });
+    const token = await getPayPalAccessToken(env);
+    const base = getPayPalBaseUrl(env);
+    const endpoint = `${base}/v2/checkout/orders/${encodeURIComponent(orderID)}`;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    // Reconcile a previous successful capture whose database update failed.
+    const checkResponse = await fetch(endpoint, { method: "GET", headers });
+    if (!checkResponse.ok) {
+      return json({ error: "Could not verify PayPal payment status. Please retry this order." }, 502);
+    }
+    const paypalOrder = await checkResponse.json();
+    const usesTiny10 = order.discount_code === "TINY10" && Number(order.discount_amount) > 0;
+    const customer = JSON.parse(order.customer_json || "{}");
+    const email = usesTiny10 ? normalizedEmail(customer.email) : null;
+
+    // A completed payment must be recorded even if discount checks have changed.
+    if (paypalOrder.status === "COMPLETED") {
+      const paidAt = new Date().toISOString();
+      await env.DB.prepare(`
+        UPDATE orders SET status = 'PAID', paypal_capture_json = ?, paid_at = ?
+        WHERE paypal_order_id = ?
+      `).bind(JSON.stringify(paypalOrder), paidAt, orderID).run();
+      if (usesTiny10 && email) {
+        await env.DB.prepare(`
+          UPDATE discount_redemptions SET redeemed_at = ?
+          WHERE LOWER(email) = ? AND UPPER(discount_code) = 'TINY10'
+            AND paypal_order_id = ?
+        `).bind(paidAt, email, orderID).run();
+      }
+      return json({ success: true, status: "COMPLETED", paypal: paypalOrder });
     }
 
-    const accessToken = await getPayPalAccessToken(env);
+    if (paypalOrder.status !== "APPROVED") {
+      return json({ error: "PayPal payment has not been approved.", status: paypalOrder.status }, 400);
+    }
 
-    const paypalResponse = await fetch(
-      `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
+    if (usesTiny10) {
+      if (!email) return json({ error: "Invalid customer email for TINY10." }, 400);
+      const priorPaid = await env.DB.prepare(`
+        SELECT id FROM orders WHERE status = 'PAID' AND id != ?
+          AND LOWER(TRIM(json_extract(customer_json, '$.email'))) = ? LIMIT 1
+      `).bind(order.id, email).first();
+      if (priorPaid) return json({ error: "TINY10 is for first-time customers only." }, 400);
+
+      // Database UNIQUE index on normalized email + code is mandatory.
+      const existingClaim = await findActiveTiny10Claim(env, email);
+      if (existingClaim && existingClaim.paypal_order_id !== orderID) {
+        return json({ error: "TINY10 is already reserved or used." }, 409);
+      }
+      const reservation = await env.DB.prepare(`
+        INSERT INTO discount_redemptions
+          (email, discount_code, paypal_order_id, discount_amount, redeemed_at)
+        VALUES (?, 'TINY10', ?, ?, NULL)
+        ON CONFLICT DO NOTHING
+      `).bind(email, orderID, Number(order.discount_amount)).run();
+      if (reservation.meta?.changes !== 1) {
+        const owner = await env.DB.prepare(`
+          SELECT paypal_order_id FROM discount_redemptions
+          WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10' LIMIT 1
+        `).bind(email).first();
+        if (!owner || owner.paypal_order_id !== orderID) {
+          return json({ error: "TINY10 has already been reserved or used." }, 409);
         }
       }
-    );
-
-    const paypalData = await paypalResponse.json();
-
-    if (!paypalResponse.ok) {
-      return json(
-        {
-          error: "PayPal could not capture the payment.",
-          details: paypalData
-        },
-        500
-      );
     }
 
-    const status =
-      paypalData.status === "COMPLETED"
-        ? "PAID"
-        : "PENDING";
-
-    const paidAt =
-      paypalData.status === "COMPLETED"
-        ? new Date().toISOString()
-        : null;
-
-    await env.DB.prepare(`
-      UPDATE orders
-      SET
-        status = ?,
-        paypal_capture_json = ?,
-        paid_at = ?
-      WHERE paypal_order_id = ?
-    `)
-      .bind(
-        status,
-        JSON.stringify(paypalData),
-        paidAt,
-        orderID
-      )
-      .run();
-
-    return json({
-      success: paypalData.status === "COMPLETED",
-      status: paypalData.status,
-      paypal: paypalData
+    // Stable request ID makes retries of this specific PayPal capture idempotent.
+    const captureResponse = await fetch(`${endpoint}/capture`, {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+        "PayPal-Request-Id": `capture-${order.id}`.slice(0, 108)
+      }
     });
+    const captureData = await captureResponse.json();
+    if (!captureResponse.ok) {
+      console.error("PayPal capture not confirmed:", captureData);
+      return json({ error: "Payment could not be confirmed. Retry this same order; do not place a second order yet." }, 502);
+    }
 
+    const paid = captureData.status === "COMPLETED";
+    const paidAt = paid ? new Date().toISOString() : null;
+    await env.DB.prepare(`
+      UPDATE orders SET status = ?, paypal_capture_json = ?, paid_at = ?
+      WHERE paypal_order_id = ?
+    `).bind(paid ? "PAID" : "PENDING", JSON.stringify(captureData), paidAt, orderID).run();
+    if (paid && usesTiny10 && email) {
+      await env.DB.prepare(`
+        UPDATE discount_redemptions SET redeemed_at = ?
+        WHERE LOWER(email) = ? AND UPPER(discount_code) = 'TINY10'
+          AND paypal_order_id = ?
+      `).bind(paidAt, email, orderID).run();
+    }
+    return json({ success: paid, status: captureData.status, paypal: captureData });
   } catch (error) {
     console.error("Capture order error:", error);
-
-    return json(
-      { error: "Unable to capture PayPal order." },
-      500
-    );
+    return json({ error: "Unable to confirm payment. Retry the same order or contact us." }, 500);
   }
 }
 
@@ -1446,7 +1517,7 @@ async function validateDiscount(request, env) {
       FROM orders
       WHERE status = 'PAID'
         AND LOWER(
-          json_extract(customer_json, '$.email')
+          TRIM(json_extract(customer_json, '$.email'))
         ) = ?
       LIMIT 1
     `).bind(email).first();
@@ -1458,13 +1529,7 @@ async function validateDiscount(request, env) {
       }, 400);
     }
 
-    const redemption = await env.DB.prepare(`
-      SELECT id
-      FROM discount_redemptions
-      WHERE LOWER(email) = ?
-        AND UPPER(discount_code) = 'TINY10'
-      LIMIT 1
-    `).bind(email).first();
+    const redemption = await findActiveTiny10Claim(env, email);
 
     if (redemption) {
       return json({
@@ -1556,13 +1621,7 @@ async function calculateTiny10Discount(env, email, merchandiseTotal) {
     );
   }
 
-  const alreadyUsed = await env.DB.prepare(`
-    SELECT id
-    FROM discount_redemptions
-    WHERE LOWER(email) = ?
-      AND UPPER(discount_code) = 'TINY10'
-    LIMIT 1
-  `).bind(normalized).first();
+  const alreadyUsed = await findActiveTiny10Claim(env, normalized);
 
   if (alreadyUsed) {
     throw new Error(
