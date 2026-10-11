@@ -287,10 +287,9 @@ function getPayPalBaseUrl(env) {
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
-
 async function getPayPalAccessToken(env) {
-  const credentials =
-    `${env.BAAuhVWdB6ybLBaXEIARV6D9GtE6enYEx6ZK4for6SmxhrkDq7RmpeBMpV4fV4hfs3AMJkd-UpmF4xo7n0}:${env.EBvVpzgF5IeTiIr1fVZUGIdl9BfGsj5wrjRVZ9hVyUnNuFlVmU40L9s-BKIS6bZpngW0rIKyvU9zOQzm}`;
+const credentials =
+  `${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`;
 
   const response = await fetch(
     `${getPayPalBaseUrl(env)}/v1/oauth2/token`,
