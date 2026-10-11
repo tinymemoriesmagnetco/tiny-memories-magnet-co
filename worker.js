@@ -360,11 +360,47 @@ async function createOrder(request, env) {
     // Existing flat shipping charge.
     const shippingTotal = 5;
 
-    // TINY10 payment discount is not active yet.
-    // Normal PayPal checkout remains unchanged.
+ 
+    // Apply TINY10 to eligible first-time customers.
+    const requestedDiscountCode = String(
+      body.discountCode || ""
+    ).trim().toUpperCase();
+
+    let discountCode = "";
+    let discountAmount = 0;
+
+    if (requestedDiscountCode) {
+      if (requestedDiscountCode !== "TINY10") {
+        return json(
+          { error: "Invalid discount code." },
+          400
+        );
+      }
+
+      try {
+        discountAmount = await calculateTiny10Discount(
+          env,
+          customer.email,
+          merchandiseTotal
+        );
+
+        discountCode = "TINY10";
+      } catch (error) {
+        return json(
+          { error: error.message },
+          400
+        );
+      }
+    }
+
     const total = Number(
-      (merchandiseTotal + shippingTotal).toFixed(2)
+      (
+        merchandiseTotal +
+        shippingTotal -
+        discountAmount
+      ).toFixed(2)
     );
+
 
     const accessToken = await getPayPalAccessToken(env);
 
@@ -388,10 +424,20 @@ async function createOrder(request, env) {
                     currency_code: "USD",
                     value: merchandiseTotal.toFixed(2)
                   },
+                 
                   shipping: {
                     currency_code: "USD",
                     value: shippingTotal.toFixed(2)
-                  }
+                  },
+                  ...(discountAmount > 0
+                    ? {
+                        discount: {
+                          currency_code: "USD",
+                          value: discountAmount.toFixed(2)
+                        }
+                      }
+                    : {})
+
                 }
               },
               description:
@@ -417,6 +463,7 @@ async function createOrder(request, env) {
       "-" +
       Math.random().toString(36).slice(2, 8);
 
+   
     await env.DB.prepare(`
       INSERT INTO orders (
         id,
@@ -431,10 +478,12 @@ async function createOrder(request, env) {
         merchandise_total,
         shipping_total,
         total,
+        discount_code,
+        discount_amount,
         paypal_capture_json,
         paid_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .bind(
         orderId,
@@ -461,10 +510,13 @@ async function createOrder(request, env) {
         merchandiseTotal,
         shippingTotal,
         total,
+        discountCode || null,
+        discountAmount,
         null,
         null
       )
       .run();
+
 
     return json({
       id: paypalData.id,
@@ -1459,4 +1511,69 @@ async function validateDiscount(request, env) {
       error: "Unable to validate discount."
     }, 500);
   }
+}
+
+async function calculateTiny10Discount(env, email, merchandiseTotal) {
+  const normalized = normalizedEmail(email);
+
+  if (!normalized) {
+    throw new Error("Enter a valid email address to use TINY10.");
+  }
+
+  if (merchandiseTotal < 20) {
+    throw new Error(
+      "Spend at least $20 on merchandise to use TINY10."
+    );
+  }
+
+  const subscriber = await env.DB.prepare(`
+    SELECT email
+    FROM email_subscribers
+    WHERE LOWER(email) = ?
+      AND status = 'subscribed'
+    LIMIT 1
+  `).bind(normalized).first();
+
+  if (!subscriber) {
+    throw new Error(
+      "TINY10 is available to email subscribers only."
+    );
+  }
+
+  const previousOrder = await env.DB.prepare(`
+    SELECT id
+    FROM orders
+    WHERE status = 'PAID'
+      AND LOWER(
+        TRIM(json_extract(customer_json, '$.email'))
+      ) = ?
+    LIMIT 1
+  `).bind(normalized).first();
+
+  if (previousOrder) {
+    throw new Error(
+      "TINY10 is for first-time customers only."
+    );
+  }
+
+  const alreadyUsed = await env.DB.prepare(`
+    SELECT id
+    FROM discount_redemptions
+    WHERE LOWER(email) = ?
+      AND UPPER(discount_code) = 'TINY10'
+    LIMIT 1
+  `).bind(normalized).first();
+
+  if (alreadyUsed) {
+    throw new Error(
+      "TINY10 has already been used."
+    );
+  }
+
+  const discountCents = Math.min(
+    500,
+    Math.round(merchandiseTotal * 100 * 0.10)
+  );
+
+  return discountCents / 100;
 }
