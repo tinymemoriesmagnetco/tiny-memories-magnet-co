@@ -283,6 +283,9 @@ button:disabled { opacity:.55; cursor:not-allowed; }
   padding:55px 20px;
   color:var(--muted);
 }
+ .subscriber-table { width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--border); border-radius:10px; }
+ .subscriber-table th, .subscriber-table td { text-align:left; padding:13px 15px; border-bottom:1px solid var(--border); overflow-wrap:anywhere; }
+ .subscriber-table th { background:var(--cream-dark); }
 @media(max-width:700px) {
   .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .info-grid { grid-template-columns:1fr; }
@@ -371,7 +374,12 @@ button:disabled { opacity:.55; cursor:not-allowed; }
       <button class="tab" id="archivedTab" type="button">
         Archived Orders
       </button>
+      <button class="tab" id="subscribersTab" type="button">
+        Email Subscribers
+      </button>
     </div>
+
+    <div id="subscribersContainer" class="hidden" aria-live="polite"></div>
 
     <div id="ordersContainer">
       <div class="loading">Loading orders...</div>
@@ -392,10 +400,13 @@ const refreshButton = document.getElementById("refreshButton");
 const ordersContainer = document.getElementById("ordersContainer");
 const activeTab = document.getElementById("activeTab");
 const archivedTab = document.getElementById("archivedTab");
+const subscribersTab = document.getElementById("subscribersTab");
+const subscribersContainer = document.getElementById("subscribersContainer");
 
 let adminPassword = "";
 let allOrders = [];
 let currentTab = "active";
+let subscribersLoaded = false;
 
 function money(value) {
   return "$" + Number(value || 0).toFixed(2);
@@ -963,7 +974,58 @@ function openPrintableOrder(order) {
     ?.addEventListener("click", () => printWindow.print());
 }
 
+async function showSubscribers() {
+  currentTab = "subscribers";
+  updateTabs();
+  subscribersContainer.classList.remove("hidden");
+  ordersContainer.classList.add("hidden");
+  subscribersContainer.innerHTML = '<div class="loading">Loading email subscribers...</div>';
+  try {
+    const subscribers = await apiGet("/api/admin/subscribers");
+    subscribersLoaded = true;
+    const subscribed = subscribers.filter(s => s.status === "subscribed").length;
+    const title = document.createElement("h2");
+    title.textContent = `Email Subscribers (${subscribed} active, ${subscribers.length} total)`;
+    const note = document.createElement("p");
+    note.className = "dashboard-note";
+    note.textContent = "Only send marketing emails to people whose status is subscribed. Showing up to 1,000 newest subscribers.";
+    subscribersContainer.replaceChildren(title, note);
+    if (!subscribers.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No email subscribers yet.";
+      subscribersContainer.appendChild(empty);
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.overflowX = "auto";
+    const table = document.createElement("table");
+    table.className = "subscriber-table";
+    table.innerHTML = "<thead><tr><th>Email</th><th>First Name</th><th>Signed Up</th><th>Status</th></tr></thead>";
+    const tbody = document.createElement("tbody");
+    subscribers.forEach(subscriber => {
+      const tr = document.createElement("tr");
+      [subscriber.email, subscriber.firstName || "—", formatDate(subscriber.subscribedAt), subscriber.status].forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value || "—";
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    subscribersContainer.appendChild(wrapper);
+  } catch (error) {
+    subscribersContainer.replaceChildren();
+    const message = document.createElement("div");
+    message.className = "error";
+    message.textContent = error.message;
+    subscribersContainer.appendChild(message);
+  }
+}
+
 function updateTabs() {
+  subscribersTab.classList.toggle("active", currentTab === "subscribers");
   activeTab.classList.toggle(
     "active",
     currentTab === "active"
@@ -976,6 +1038,9 @@ function updateTabs() {
 
 function renderOrders() {
   updateTabs();
+  if (currentTab === "subscribers") return;
+  ordersContainer.classList.remove("hidden");
+  subscribersContainer.classList.add("hidden");
 
   ordersContainer.replaceChildren();
 
@@ -1047,7 +1112,11 @@ async function loadDashboard() {
 
   allOrders = orders;
   updateStats(stats);
-  renderOrders();
+  if (currentTab === "subscribers") {
+    await showSubscribers();
+  } else {
+    renderOrders();
+  }
 }
 
 async function performOrderAction(order, action, message) {
@@ -1132,9 +1201,16 @@ archivedTab.addEventListener("click", () => {
   renderOrders();
 });
 
+subscribersTab.addEventListener("click", showSubscribers);
+
 logoutButton.addEventListener("click", () => {
   adminPassword = "";
   allOrders = [];
+  currentTab = "active";
+  subscribersLoaded = false;
+  subscribersContainer.replaceChildren();
+  subscribersContainer.classList.add("hidden");
+  ordersContainer.classList.remove("hidden");
 
   ordersContainer.replaceChildren();
 
