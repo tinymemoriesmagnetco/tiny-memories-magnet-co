@@ -617,7 +617,7 @@
       Specialty Group Magnets
     </a>
     <a href="#about">About</a>
-    <a href="#newsletter">Join & Save</a>
+    <a href="#signup" id="openSignupLink">Join & Save</a>
   </nav>
 </header>
 
@@ -758,124 +758,6 @@
   </p>
 </section>
 
-<!-- EMAIL NEWSLETTER SIGNUP -->
-
-<section class="newsletter" id="newsletter">
-  <div class="newsletter-card">
-
-    <div class="newsletter-flower" aria-hidden="true">
-      ✿
-    </div>
-
-    <h2>A Little Something Just for You ♡</h2>
-
-    <p class="newsletter-intro">
-      Join our Tiny Memories family for
-      new magnet designs, special offers,
-      and a little happiness in your inbox.
-    </p>
-
-    <div class="newsletter-offer">
-      10% Off Your First Order
-    </div>
-
-    <p class="newsletter-intro">
-      Sign up now to join our list!
-      Use code TINY10 for 10% off your first order
-      of $20 or more. Maximum discount: $5.
-    </p>
-
-    <form
-      class="newsletter-form"
-      id="newsletterForm"
-    >
-
-      <label
-        class="field-label"
-        for="subscriberFirstName"
-      >
-        First Name
-      </label>
-
-      <input
-        type="text"
-        id="subscriberFirstName"
-        name="firstName"
-        placeholder="Your first name"
-        autocomplete="given-name"
-        maxlength="80"
-      >
-
-      <label
-        class="field-label"
-        for="subscriberEmail"
-      >
-        Email Address
-      </label>
-
-      <input
-        type="email"
-        id="subscriberEmail"
-        name="email"
-        placeholder="you@example.com"
-        autocomplete="email"
-        maxlength="254"
-        required
-      >
-
-      <div class="honeypot" aria-hidden="true">
-        <label for="subscriberWebsite">
-          Leave this field empty
-        </label>
-        <input
-          type="text"
-          id="subscriberWebsite"
-          name="website"
-          tabindex="-1"
-          autocomplete="off"
-        >
-      </div>
-
-      <label class="newsletter-consent">
-        <input
-          type="checkbox"
-          id="subscriberConsent"
-          required
-        >
-
-        <span>
-          Yes, I'd like to receive promotional emails,
-          new product updates, and special offers
-          from Tiny Memories Magnet Co.
-          I understand I can unsubscribe at any time.
-        </span>
-      </label>
-
-      <button
-        type="submit"
-        class="button newsletter-submit"
-        id="newsletterButton"
-      >
-        Join the Tiny Memories Family ♡
-      </button>
-
-      <div
-        id="newsletterMessage"
-        role="status"
-        aria-live="polite"
-        hidden
-      ></div>
-
-    </form>
-
-    <p class="newsletter-note">
-      Just sweet updates and special offers.
-      Unsubscribe anytime.
-    </p>
-
-  </div>
-</section>
-
 <!-- SOCIAL MEDIA -->
 
 <section class="connect" id="connect">
@@ -989,8 +871,8 @@
     <div class="signup-offer">10% Off Your First Order</div>
     <p>Spend $20 or more on magnets and use code <strong>TINY10</strong> at checkout.</p>
     <form id="popupSignupForm">
-      <label class="signup-field" for="popupFirstName">First Name (optional)</label>
-      <input id="popupFirstName" name="firstName" type="text" maxlength="80" autocomplete="given-name" placeholder="Your first name">
+      <label class="signup-field" for="popupFirstName">First Name</label>
+      <input id="popupFirstName" name="firstName" type="text" maxlength="80" autocomplete="given-name" placeholder="Your first name" required>
       <label class="signup-field" for="popupEmail">Email Address</label>
       <input id="popupEmail" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required>
       <div class="honeypot" aria-hidden="true">
@@ -1013,105 +895,6 @@
   <p>Tiny memories. Big feelings.</p>
   <p>© 2026 Tiny Memories</p>
 </footer>
-
-<!-- NEWSLETTER SUBMISSION -->
-
-<script>
-(function () {
-  const form = document.getElementById("newsletterForm");
-  const button = document.getElementById("newsletterButton");
-  const message = document.getElementById("newsletterMessage");
-
-  if (!form || !button || !message) return;
-
-  form.addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    const firstName = document.getElementById(
-      "subscriberFirstName"
-    ).value.trim();
-
-    const email = document.getElementById(
-      "subscriberEmail"
-    ).value.trim();
-
-    const consent = document.getElementById(
-      "subscriberConsent"
-    ).checked;
-
-    const website = document.getElementById(
-      "subscriberWebsite"
-    ).value;
-
-    message.hidden = true;
-    message.textContent = "";
-    message.className = "newsletter-message";
-
-    if (!consent) {
-      showMessage(
-        "Please agree to receive our emails before subscribing.",
-        false
-      );
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = "Joining...";
-
-    try {
-      const response = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          firstName,
-          email,
-          consent,
-          website
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.error ||
-          "Something went wrong. Please try again."
-        );
-      }
-
-      showMessage(
-        "You're on the list! ♡ Thank you for joining the Tiny Memories family. Use code TINY10 at checkout on your first order of $20 or more!",
-        true
-      );
-
-      form.reset();
-
-    } catch (error) {
-      showMessage(
-        error.message ||
-        "Unable to subscribe. Please try again.",
-        false
-      );
-
-    } finally {
-      button.disabled = false;
-      button.textContent =
-        "Join the Tiny Memories Family ♡";
-    }
-  });
-
-  function showMessage(text, success) {
-    message.textContent = text;
-    message.className =
-      "newsletter-message " +
-      (success ? "success" : "error");
-
-    message.hidden = false;
-  }
-})();
-</script>
 
 <!-- EXISTING WEBSITE VIEW TRACKING -->
 
@@ -1164,6 +947,16 @@
   function writeStorage(key, value) {
     try { localStorage.setItem(key, value); } catch (e) {}
   }
+  function openPopup() {
+    previousFocus = document.activeElement;
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    closeButton.focus();
+  }
+  document.getElementById("openSignupLink").addEventListener("click", function (event) {
+    event.preventDefault();
+    openPopup();
+  });
   function closePopup() {
     overlay.hidden = true;
     document.body.style.overflow = "";
@@ -1187,15 +980,19 @@
   if (readStorage(subscribedKey) !== "yes" && Number(readStorage(dismissedKey) || 0) < Date.now()) {
     setTimeout(function () {
       if (readStorage(subscribedKey) === "yes" || Number(readStorage(dismissedKey) || 0) >= Date.now()) return;
-      previousFocus = document.activeElement;
-      overlay.hidden = false;
-      document.body.style.overflow = "hidden";
-      closeButton.focus();
+      openPopup();
     }, 5000);
   }
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
     result.hidden = true;
+    if (!form.reportValidity()) return;
+    if (!document.getElementById("popupFirstName").value.trim()) {
+      document.getElementById("popupFirstName").setCustomValidity("Please enter your first name.");
+      form.reportValidity();
+      document.getElementById("popupFirstName").setCustomValidity("");
+      return;
+    }
     if (!document.getElementById("popupConsent").checked) return;
     submitButton.disabled = true;
     submitButton.textContent = "Joining...";
