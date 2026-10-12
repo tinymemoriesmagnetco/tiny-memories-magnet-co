@@ -549,6 +549,53 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* WELCOME EMAIL SIGNUP POP-UP */
+    .signup-overlay[hidden] { display: none !important; }
+    .signup-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(35, 35, 32, .58);
+      display: flex; align-items: center; justify-content: center;
+      padding: 18px; overflow-y: auto;
+    }
+    .signup-dialog {
+      position: relative; width: 100%; max-width: 490px;
+      max-height: calc(100dvh - 36px); overflow-y: auto;
+      padding: 38px 32px 30px; text-align: center;
+      border-radius: 20px; border: 1px solid var(--border);
+      background: var(--white); color: var(--charcoal);
+      box-shadow: 0 20px 70px rgba(0,0,0,.23);
+    }
+    .signup-close {
+      position: absolute; top: 10px; right: 12px;
+      border: none; background: transparent; color: var(--charcoal);
+      font-size: 30px; line-height: 1; cursor: pointer;
+      padding: 5px 10px;
+    }
+    .signup-dialog .flower { font-size: 34px; color: var(--sage); }
+    .signup-dialog h2 { font-size: 31px; margin: 12px 0; }
+    .signup-dialog p { font-size: 16px; line-height: 1.55; }
+    .signup-offer {
+      display: inline-block; background: #f3e7e1; color: var(--rose-dark);
+      padding: 12px 20px; border-radius: 30px; font-size: 19px;
+      font-weight: bold; margin: 7px 0;
+    }
+    .signup-dialog form { text-align: left; margin-top: 18px; }
+    .signup-dialog .signup-field { display: block; font-weight: bold; margin: 12px 0 6px; }
+    .signup-dialog input[type="text"], .signup-dialog input[type="email"] {
+      display: block; width: 100%; padding: 13px; border-radius: 8px;
+      border: 1px solid #d8cfc5; font: 16px Georgia, serif;
+    }
+    .signup-dialog .newsletter-consent { margin: 16px 0; }
+    .signup-dialog .button { width: 100%; }
+    .signup-dialog .signup-note { font-size: 12px; color: #766e67; }
+    .signup-dialog .signup-result { padding: 12px; border-radius: 8px; margin-top: 12px; }
+    .signup-dialog .signup-result.success { background: #e9efe5; color: #3d6340; }
+    .signup-dialog .signup-result.error { background: #f8e8e4; color: #8c4135; }
+    @media (max-width: 500px) {
+      .signup-dialog { padding: 30px 20px 22px; }
+      .signup-dialog h2 { font-size: 26px; }
+    }
   </style>
 </head>
 
@@ -734,9 +781,8 @@
 
     <p class="newsletter-intro">
       Sign up now to join our list!
-      Your welcome discount will be available
-      once our new checkout offer launches.
-      Maximum discount: $5.
+      Use code TINY10 for 10% off your first order
+      of $20 or more. Maximum discount: $5.
     </p>
 
     <form
@@ -932,6 +978,36 @@
   </div>
 </section>
 
+
+<!-- WELCOME EMAIL SIGNUP POP-UP -->
+<div class="signup-overlay" id="signupOverlay" hidden>
+  <div class="signup-dialog" role="dialog" aria-modal="true" aria-labelledby="signupTitle" aria-describedby="signupDescription">
+    <button type="button" class="signup-close" id="signupClose" aria-label="Close signup pop-up">&times;</button>
+    <div class="flower" aria-hidden="true">✿</div>
+    <h2 id="signupTitle">A Little Gift Just for You ♡</h2>
+    <p id="signupDescription">Join the Tiny Memories family for new designs, special offers, and sweet updates!</p>
+    <div class="signup-offer">10% Off Your First Order</div>
+    <p>Spend $20 or more on magnets and use code <strong>TINY10</strong> at checkout.</p>
+    <form id="popupSignupForm">
+      <label class="signup-field" for="popupFirstName">First Name (optional)</label>
+      <input id="popupFirstName" name="firstName" type="text" maxlength="80" autocomplete="given-name" placeholder="Your first name">
+      <label class="signup-field" for="popupEmail">Email Address</label>
+      <input id="popupEmail" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required>
+      <div class="honeypot" aria-hidden="true">
+        <label for="popupWebsite">Leave this field empty</label>
+        <input id="popupWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <label class="newsletter-consent">
+        <input id="popupConsent" type="checkbox" required>
+        <span>Yes, I'd like to receive promotional emails and special offers from Tiny Memories Magnet Co. I can unsubscribe at any time.</span>
+      </label>
+      <button class="button" id="popupSignupButton" type="submit">Join & Save 10% ♡</button>
+      <div id="popupSignupResult" class="signup-result" role="status" aria-live="polite" hidden></div>
+    </form>
+    <p class="signup-note">First-time customers only. $20 minimum before shipping. Maximum $5 discount. One use per customer.</p>
+  </div>
+</div>
+
 <footer>
   <strong>Tiny Memories Magnet Co.</strong>
   <p>Tiny memories. Big feelings.</p>
@@ -1006,7 +1082,7 @@
       }
 
       showMessage(
-        "You're on the list! ♡ Thank you for joining the Tiny Memories family. Stay tuned for our welcome discount!",
+        "You're on the list! ♡ Thank you for joining the Tiny Memories family. Use code TINY10 at checkout on your first order of $20 or more!",
         true
       );
 
@@ -1065,6 +1141,90 @@
   })
   .catch(function (error) {
     console.log("View tracking unavailable:", error);
+  });
+})();
+</script>
+
+
+<script>
+(function () {
+  "use strict";
+  const overlay = document.getElementById("signupOverlay");
+  const closeButton = document.getElementById("signupClose");
+  const form = document.getElementById("popupSignupForm");
+  const submitButton = document.getElementById("popupSignupButton");
+  const result = document.getElementById("popupSignupResult");
+  const dismissedKey = "tm_signup_popup_dismissed_until";
+  const subscribedKey = "tm_signup_popup_subscribed";
+  let previousFocus = null;
+
+  function readStorage(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+  }
+  function closePopup() {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    writeStorage(dismissedKey, String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+  }
+  closeButton.addEventListener("click", closePopup);
+  overlay.addEventListener("click", function (event) {
+    if (event.target === overlay) closePopup();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (overlay.hidden) return;
+    if (event.key === "Escape") closePopup();
+    if (event.key === "Tab") {
+      const focusables = Array.from(overlay.querySelectorAll('button:not([disabled]), input:not([disabled]):not([tabindex="-1"])'));
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  if (readStorage(subscribedKey) !== "yes" && Number(readStorage(dismissedKey) || 0) < Date.now()) {
+    setTimeout(function () {
+      if (readStorage(subscribedKey) === "yes" || Number(readStorage(dismissedKey) || 0) >= Date.now()) return;
+      previousFocus = document.activeElement;
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      closeButton.focus();
+    }, 5000);
+  }
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    result.hidden = true;
+    if (!document.getElementById("popupConsent").checked) return;
+    submitButton.disabled = true;
+    submitButton.textContent = "Joining...";
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: document.getElementById("popupFirstName").value.trim(),
+          email: document.getElementById("popupEmail").value.trim(),
+          consent: true,
+          website: document.getElementById("popupWebsite").value
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Please try again.");
+      writeStorage(subscribedKey, "yes");
+      result.textContent = "You're on the list! ♡ Use TINY10 for 10% off your first order of $20 or more.";
+      result.className = "signup-result success";
+      result.hidden = false;
+      form.reset();
+      submitButton.textContent = "Subscribed ♡";
+    } catch (error) {
+      result.textContent = error.message || "Unable to subscribe. Please try again.";
+      result.className = "signup-result error";
+      result.hidden = false;
+      submitButton.disabled = false;
+      submitButton.textContent = "Join & Save 10% ♡";
+    }
   });
 })();
 </script>
