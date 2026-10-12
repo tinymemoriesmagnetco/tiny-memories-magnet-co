@@ -69,6 +69,10 @@ export default {
       return getAdminOrders(request, env);
     }
 
+    if (path === "/api/admin/subscribers" && method === "GET") {
+      return getAdminSubscribers(request, env);
+    }
+
     if (path === "/api/admin/stats" && method === "GET") {
       return getAdminStats(request, env);
     }
@@ -862,6 +866,34 @@ async function getAdminStats(request, env) {
       { error: "Unable to load statistics." },
       500
     );
+  }
+}
+
+// ============================================
+// ADMIN EMAIL SUBSCRIBERS (READ ONLY)
+// ============================================
+
+async function getAdminSubscribers(request, env) {
+  const authError = adminError(request, env);
+  if (authError) return authError;
+
+  try {
+    const result = await env.DB.prepare(`
+      SELECT email, first_name, subscribed_at, status
+      FROM email_subscribers
+      ORDER BY subscribed_at DESC
+      LIMIT 1000
+    `).all();
+
+    return json((result.results || []).map(row => ({
+      email: row.email,
+      firstName: row.first_name || "",
+      subscribedAt: row.subscribed_at,
+      status: row.status
+    })));
+  } catch (error) {
+    console.error("Admin subscribers error:", error);
+    return json({ error: "Unable to load email subscribers." }, 500);
   }
 }
 
