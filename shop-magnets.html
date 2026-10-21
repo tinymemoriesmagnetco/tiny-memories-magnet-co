@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shop Handmade Magnets | Tiny Memories Magnet Co.</title>
+<meta name="description" content="Shop handmade magnets, encouraging quotes, funny designs, state and birth month magnets. Mix and match at Tiny Memories Magnet Co.">
 
 <style>
 :root {
@@ -388,9 +389,32 @@ footer p { margin: 5px; }
 }
 
 @media(max-width:480px) {
-  .product-grid { grid-template-columns: 1fr; }
-  .controls select { width: 100%; }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+  .controls select { width: calc(50% - 7px); }
+  .product-info { padding: 11px; }
+  .product-name { font-size: 14px; }
+  .product-sku { font-size: 11px; }
+  .product-bottom { flex-direction: column; align-items: stretch; }
+  .add-button { width: 100%; font-size: 12px; padding: 11px 5px; }
+  .price { font-size: 18px; }
+  .shop-area { padding: 0 12px; }
+  .hero { padding: 45px 16px 30px; }
 }
+@media(max-width:350px) { .product-grid { grid-template-columns: 1fr; } }
+.shop-heading { display:flex; justify-content:space-between; align-items:end; gap:15px; margin-bottom:20px; }
+.shop-heading h2 { margin:3px 0; font-size:clamp(24px,3vw,35px); }
+.shop-heading p { color:var(--muted); margin:0; }
+.eyebrow { font: bold 11px Arial,sans-serif; letter-spacing:2px; color:var(--rose); }
+.results-count { white-space:nowrap; color:var(--muted); font-size:14px; }
+.controls { background:#f1ebe1; padding:14px; border-radius:16px; }
+.controls select { width:auto; min-width:150px; flex:0 1 185px; }
+.product-card { transition: transform .2s ease, box-shadow .2s ease; }
+.product-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px #38343218; }
+.add-button:hover { background:#718368; }
+.add-button:focus-visible, .cart-button:focus-visible, .checkout-button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #b97968; outline-offset:2px; }
+.bundle-progress { padding:12px; background:#e7eee3; color:#465b43; border-radius:12px; font-size:13px; font-weight:bold; margin-bottom:12px; }
+@media(max-width:600px) { .shop-heading { align-items:start; flex-direction:column; } .controls input { min-width:100%; } }
+
 </style>
 </head>
 
@@ -428,7 +452,7 @@ footer p { margin: 5px; }
 
 <section class="bundle-section">
   <h2>Build Your Bundle</h2>
-  <p>Mix and match any handmade magnets.</p>
+  <p>Mix and match any handmade magnets. Bundle prices apply automatically in your cart.</p>
 
   <div class="bundles">
     <div class="bundle"><strong>1 Magnet</strong><span>$3</span></div>
@@ -439,6 +463,7 @@ footer p { margin: 5px; }
 </section>
 
 <main class="shop-area">
+  <div class="shop-heading"><div><span class="eyebrow">MADE WITH HEART</span><h2>Find your next little favorite</h2><p>Pick a few for yourself, then share the rest.</p></div><div class="results-count" id="resultsCount" aria-live="polite"></div></div>
   <div class="controls">
     <input type="search" id="searchInput"
            placeholder="Search magnets..."
@@ -451,6 +476,11 @@ footer p { margin: 5px; }
       <option value="life">Life &amp; Reminders</option>
       <option value="states">States</option>
       <option value="months">Months</option>
+    </select>
+    <select id="sortSelect" onchange="filterProducts()" aria-label="Sort magnets">
+      <option value="featured">Featured</option>
+      <option value="az">Name: A to Z</option>
+      <option value="za">Name: Z to A</option>
     </select>
   </div>
 
@@ -483,6 +513,7 @@ footer p { margin: 5px; }
       <span id="cartTotal">$0.00</span>
     </div>
 
+    <div class="bundle-progress" id="bundleProgress" aria-live="polite"></div>
     <div class="cart-note">
       Shipping is calculated at checkout.
       Handmade magnet bundle pricing is automatically applied.
@@ -498,6 +529,7 @@ footer p { margin: 5px; }
   <p><strong>Tiny Memories Magnet Co.</strong></p>
   <p>Little magnets. Big feelings.</p>
   <p>© 2026 Tiny Memories Magnet Co.</p>
+  <p><a href="index.html">Home</a> · <a href="custom-magnets.html">Custom Photo Magnets</a> · <a href="checkout.html">Checkout</a></p>
 </footer>
 
 <script>
@@ -696,7 +728,7 @@ function renderProducts(list = products) {
 
     const sku = document.createElement("div");
     sku.className = "product-sku";
-    sku.textContent = "SKU: " + product.sku;
+    sku.textContent = available > 0 ? "Ready to add to your bundle" : "Currently sold out";
 
     const bottom = document.createElement("div");
     bottom.className = "product-bottom";
@@ -707,7 +739,7 @@ function renderProducts(list = products) {
 
     const add = document.createElement("button");
     add.className = "add-button";
-    add.textContent = available > 0 ? "Add" : "Sold Out";
+    add.textContent = available > 0 ? "Add to Cart +" : "Sold Out";
     add.disabled = available <= 0;
     add.onclick = () => addToCart(product.sku);
 
@@ -724,7 +756,7 @@ function filterProducts() {
 
   const category = document.getElementById("categoryFilter").value;
 
-  renderProducts(products.filter(product => {
+  const filtered = products.filter(product => {
     const matchesSearch =
       product.name.toLowerCase().includes(search) ||
       product.sku.toLowerCase().includes(search);
@@ -733,7 +765,12 @@ function filterProducts() {
       category === "all" || product.category === category;
 
     return matchesSearch && matchesCategory;
-  }));
+  });
+  const sort = document.getElementById("sortSelect").value;
+  if (sort === "az") filtered.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === "za") filtered.sort((a,b) => b.name.localeCompare(a.name));
+  document.getElementById("resultsCount").textContent = filtered.length + " magnets";
+  renderProducts(filtered);
 }
 
 function addToCart(sku) {
@@ -762,7 +799,7 @@ function addToCart(sku) {
     });
   }
 
-  if (!saveCart()) return;
+  if (!saveCart()) { cart = loadCart(); return; }
 
   updateCartUI();
   filterProducts();
@@ -806,6 +843,17 @@ function updateCartUI() {
   const cartCount = document.getElementById("cartCount");
 
   cartCount.textContent = getCartQuantity();
+  const handmadeQty = getHandmadeQuantity();
+  const bundleProgress = document.getElementById("bundleProgress");
+  if (handmadeQty === 0) {
+    bundleProgress.textContent = "Add 9 handmade magnets for $24.";
+  } else {
+    const nextNine = Math.ceil(handmadeQty / 9) * 9;
+    const remainder = handmadeQty % 9;
+    bundleProgress.textContent = remainder === 0
+      ? "Bundle unlocked! " + handmadeQty + " handmade magnets in your cart."
+      : "Add " + (9 - remainder) + " more handmade magnet" + (9 - remainder === 1 ? "" : "s") + " to complete your next 9-for-$24 bundle.";
+  }
   cartItems.replaceChildren();
 
   if (cart.length === 0) {
@@ -898,7 +946,7 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape") closeCart();
 });
 
-renderProducts();
+filterProducts();
 updateCartUI();
 </script>
 
