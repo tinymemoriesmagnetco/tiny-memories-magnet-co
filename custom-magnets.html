@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Photo Magnets | Tiny Memories Magnet Co.</title>
+    <meta name="description" content="Create custom photo magnets from your favorite family, pet, and everyday memories. Upload your photos and choose a magnet bundle at Tiny Memories Magnet Co.">
 
     <style>
         :root {
@@ -451,6 +452,23 @@
                 padding: 22px 15px;
             }
         }
+        /* Shopping experience improvements */
+        .steps-intro { max-width:1050px; margin:25px auto 0; padding:0 20px; }
+        .steps-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .steps-bar span { background:var(--white); border:1px solid var(--border); border-radius:14px; padding:13px; text-align:center; font-size:14px; }
+        .steps-bar strong { color:var(--rose-dark); }
+        .quantity-option input:focus-visible + label { outline:3px solid var(--sage); outline-offset:3px; }
+        .quantity-option label { min-height:104px; }
+        .photo-item img { background:#e8e2d8; }
+        .photo-item { box-shadow:0 4px 14px #38343212; }
+        .photo-count { color:var(--text-light); }
+        .photo-progress { height:9px; background:#e6e5df; border-radius:10px; overflow:hidden; margin-top:12px; }
+        .photo-progress-fill { width:0%; height:100%; background:var(--sage); transition:width .2s; }
+        .summary { position:relative; }
+        .trust-line { text-align:center; color:var(--text-light); font-size:13px; margin-top:12px; }
+        .primary-button { min-width:250px; }
+        .primary-button:focus-visible,.upload-button:focus-visible { outline:3px solid var(--sage); outline-offset:3px; }
+        @media(max-width:600px) { .steps-bar {grid-template-columns:1fr;} .button-row {justify-content:stretch;} .primary-button {width:100%;} .photo-grid {grid-template-columns:repeat(2,minmax(0,1fr));} }
     </style>
 </head>
 
@@ -562,9 +580,10 @@
                 multiple
             >
 
-            <div class="photo-count" id="photoCount">
-                0 photos selected
+            <div class="photo-count" id="photoCount" aria-live="polite">
+                0 of 3 photos selected
             </div>
+            <div class="photo-progress" role="progressbar" aria-label="Photos uploaded" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="photoProgress"><div class="photo-progress-fill" id="photoProgressFill"></div></div>
         </div>
 
         <div class="photo-grid" id="photoGrid"></div>
@@ -656,6 +675,7 @@
                 Add Custom Magnets to Cart
             </button>
         </div>
+        <p class="trust-line">Shipping is calculated at checkout. Please review your photos before adding to cart.</p>
     </section>
 
 </main>
@@ -742,6 +762,9 @@
 
     function updatePhotoRequirement() {
         const quantity = getQuantity();
+        const percent = Math.min(100, Math.round(selectedPhotos.length / quantity * 100));
+        document.getElementById("photoProgressFill").style.width = percent + "%";
+        document.getElementById("photoProgress").setAttribute("aria-valuenow", percent);
 
         photoCount.textContent =
             selectedPhotos.length +
@@ -821,6 +844,8 @@
 
         for (const file of filesToAdd) {
             try {
+                if (!file.type.startsWith("image/")) throw new Error("Not an image");
+                if (file.size > 20 * 1024 * 1024) throw new Error("Image larger than 20 MB");
                 const compressed = await compressImage(file);
 
                 selectedPhotos.push({
@@ -1075,6 +1100,7 @@
 
         const cart = getCart();
 
+        const bundleTotal = getBundlePrice(quantity);
         const customItem = {
             id: "custom-" + Date.now() + "-" + Math.random()
                 .toString(36)
@@ -1087,6 +1113,10 @@
             name: "Custom Photo Magnets",
 
             quantity: quantity,
+            price: bundleTotal / quantity,
+            unitPrice: bundleTotal / quantity,
+            totalPrice: bundleTotal,
+            total: bundleTotal,
 
             instructions: instructions,
 
