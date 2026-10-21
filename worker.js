@@ -264,8 +264,8 @@ function priceCart(items) {
       customPhotoTotal += clean.lineTotal;
 
     } else if (
-      type === "handmade" &&
-      /^MAG-[A-Z0-9-]+$/.test(sku)
+      (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")) &&
+      /^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku)
     ) {
       handmadeQuantity += quantity;
       clean.lineTotal = quantity * 3;
