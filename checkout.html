@@ -553,7 +553,7 @@ footer {
           </div>
 
           <p class="hint">
-            Handmade bundle discounts are applied automatically.
+            Handmade and seasonal bundle discounts are applied automatically.
             Custom photo and specialty magnets are priced separately.
           </p>
 
@@ -595,6 +595,8 @@ footer {
 "use strict";
 
 const CART_KEY = "tinyMemoriesCart";
+// Handmade and seasonal magnets share one bundle-pricing pool.
+const STANDARD_MAGNET_SKU = /^(?:MAG|SEA)-[A-Z0-9-]+$/;
 const SHIPPING_COST = 5;
 
 const SET_PRICES = {
@@ -700,8 +702,8 @@ function cartPricing(cart) {
       customPhotoTotal += bundleTotal(quantity);
 
     } else if (
-      type === "handmade" &&
-      /^MAG-[A-Z0-9-]+$/.test(sku)
+      (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")) &&
+      STANDARD_MAGNET_SKU.test(sku)
     ) {
       handmadeQuantity += quantity;
 
@@ -872,7 +874,7 @@ function getItemImage(item) {
     return item.photos[0]?.dataUrl || null;
   }
 
-  if (/^MAG-[A-Z0-9-]+$/.test(sku)) {
+  if (STANDARD_MAGNET_SKU.test(sku)) {
     return "/" + sku + ".png";
   }
 
@@ -996,7 +998,7 @@ function renderOrder() {
         details.textContent = "Complete collection set";
 
       } else {
-        details.textContent = "Handmade magnet";
+        details.textContent = sku.startsWith("SEA-") ? "Seasonal magnet" : "Handmade magnet";
       }
 
       info.append(name, details);
@@ -1075,7 +1077,7 @@ function renderOrder() {
 
       note.className = "hint";
       note.textContent =
-        "* Handmade bundle discounts are included " +
+        "* Handmade and seasonal bundle discounts are included " +
         "in the merchandise subtotal.";
 
       list.appendChild(note);
