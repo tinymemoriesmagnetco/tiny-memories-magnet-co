@@ -379,6 +379,7 @@ footer {
       <a href="custom-magnets.html">Custom Photo Magnets</a>
       <a href="shop-magnets.html">Shop Magnets</a>
       <a href="specialty-group-magnets.html">Specialty Groups</a>
+      <a href="save-the-date-magnets.html">Save the Dates</a>
       <a href="index.html#about">About</a>
       <a href="checkout.html">Checkout</a>
     </nav>
@@ -554,7 +555,7 @@ footer {
 
           <p class="hint">
             Handmade and seasonal bundle discounts are applied automatically.
-            Custom photo and specialty magnets are priced separately.
+            Custom photo, specialty, and Save the Date sets are priced separately.
           </p>
 
           <a class="button" href="shop-magnets.html">
@@ -598,6 +599,7 @@ const CART_KEY = "tinyMemoriesCart";
 // Handmade and seasonal magnets share one bundle-pricing pool.
 const STANDARD_MAGNET_SKU = /^(?:MAG|SEA)-[A-Z0-9-]+$/;
 const SHIPPING_COST = 5;
+const SAVE_DATE_PRICES = {50:125,75:172.5,100:200,150:270,200:320};
 
 const SET_PRICES = {
   "SPECIAL-WESTERN": 20,
@@ -657,6 +659,7 @@ function cartPricing(cart) {
   let handmadeQuantity = 0;
   let customPhotoTotal = 0;
   let specialtyTotal = 0;
+  let saveDateTotal = 0;
 
   for (const item of cart) {
     const quantity = Number(item.quantity);
@@ -671,7 +674,12 @@ function cartPricing(cart) {
       throw Error("An item has an invalid quantity.");
     }
 
-    if (sku === "SPECIAL-WESTERN") {
+    if (sku === "SAVE-DATE-SET") {
+      if (!Object.prototype.hasOwnProperty.call(SAVE_DATE_PRICES, quantity)) {
+        throw Error("Choose an available Save the Date quantity.");
+      }
+      saveDateTotal += SAVE_DATE_PRICES[quantity];
+    } else if (sku === "SPECIAL-WESTERN") {
       specialtyTotal += 20 * quantity;
 
     } else if (sku === "SPECIAL-ALPHABET") {
@@ -717,13 +725,15 @@ function cartPricing(cart) {
   const subtotal =
     bundleTotal(handmadeQuantity) +
     customPhotoTotal +
-    specialtyTotal;
+    specialtyTotal +
+    saveDateTotal;
 
   return {
     subtotal,
     handmadeQuantity,
     customPhotoTotal,
-    specialtyTotal
+    specialtyTotal,
+    saveDateTotal
   };
 }
 
@@ -799,10 +809,9 @@ function changeQuantity(index, change) {
 
   // Custom photo orders contain an exact set of uploaded photos.
   // Quantity changes here must not add magnets without photos.
-  if (sku === "CUSTOM-PHOTO") {
+  if (sku === "CUSTOM-PHOTO" || sku === "SAVE-DATE-SET") {
     showStatus(
-      "To change a custom photo bundle, remove it and " +
-      "create a new bundle with the correct photos.",
+      "To change this custom order, remove it and create a new one with the correct details.",
       "error"
     );
     return;
@@ -868,7 +877,7 @@ function getItemImage(item) {
   }
 
   if (
-    sku === "CUSTOM-PHOTO" &&
+    (sku === "CUSTOM-PHOTO" || sku === "SAVE-DATE-SET") &&
     Array.isArray(item.photos)
   ) {
     return item.photos[0]?.dataUrl || null;
@@ -917,6 +926,8 @@ function getItemDisplayPrice(item) {
       NAME_PRICES[Number(item.magnetCount)] * quantity
     );
   }
+
+  if (sku === "SAVE-DATE-SET") return money(SAVE_DATE_PRICES[quantity]);
 
   if (sku === "CUSTOM-PHOTO") {
     return money(bundleTotal(quantity));
@@ -977,7 +988,14 @@ function renderOrder() {
 
       const quantity = Number(item.quantity);
 
-      if (sku === "SPECIAL-CUSTOM-NAME") {
+      if (sku === "SAVE-DATE-SET") {
+        const d = item.saveDateDetails || {};
+        details.textContent = quantity + " Save the Date sets · " + (d.names || "") +
+          " · Wedding: " + (d.date || "") + " · Style: " + (d.design || "") +
+          " · Colors: " + (d.colors || "Not specified") +
+          " · Design ideas: " + (d.ideas || "None") +
+          " · Wording: " + (d.wording || "None") + " · Photo attached";
+      } else if (sku === "SPECIAL-CUSTOM-NAME") {
         details.textContent =
           item.magnetCount +
           " magnets per set" +
@@ -1006,13 +1024,13 @@ function renderOrder() {
       const controls = document.createElement("div");
       controls.className = "item-controls";
 
-      if (sku === "CUSTOM-PHOTO") {
+      if (sku === "CUSTOM-PHOTO" || sku === "SAVE-DATE-SET") {
         const fixedQty = document.createElement("span");
 
         fixedQty.className = "hint";
         fixedQty.textContent =
           "Quantity: " + quantity +
-          " (change photos by creating a new bundle)";
+          " (edit by creating a new order)";
 
         controls.appendChild(fixedQty);
 
