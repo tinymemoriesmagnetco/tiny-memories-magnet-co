@@ -323,6 +323,21 @@ function priceCart(items) {
   };
 }
 
+// Save the Date shipping tiers. Regular orders remain $5.
+// For mixed carts or multiple Save the Date sets, use the highest tier,
+// matching the checkout page's displayed shipping calculation.
+const SAVE_DATE_SHIPPING = {50:10,75:12,100:15,150:18,200:22};
+
+function calculateShipping(items) {
+  const saveDateRates = items
+    .filter(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")
+    .map(item => SAVE_DATE_SHIPPING[Number(item.quantity)]);
+  if (saveDateRates.some(rate => !Number.isFinite(rate))) {
+    throw new Error("Invalid Save the Date shipping quantity.");
+  }
+  return saveDateRates.length ? Math.max(...saveDateRates) : 5;
+}
+
 // ============================================
 // PAYPAL AUTHENTICATION
 // ============================================
@@ -413,8 +428,8 @@ async function createOrder(request, env) {
       merchandiseTotal
     } = priced;
 
-    // Existing flat shipping charge.
-    const shippingTotal = 5;
+    // Shipping is calculated server-side to match checkout.
+    const shippingTotal = calculateShipping(items);
 
  
     // Apply TINY10 to eligible first-time customers.
@@ -1716,7 +1731,7 @@ async function validateDiscount(request, env) {
       ).toFixed(2)
     );
 
-    const shippingTotal = 5;
+    const shippingTotal = calculateShipping(items);
 
     const estimatedTotal = Number(
       (
