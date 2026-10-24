@@ -599,6 +599,13 @@ const CART_KEY = "tinyMemoriesCart";
 // Handmade and seasonal magnets share one bundle-pricing pool.
 const STANDARD_MAGNET_SKU = /^(?:MAG|SEA)-[A-Z0-9-]+$/;
 const SHIPPING_COST = 5;
+const SAVE_DATE_SHIPPING = {50:10,75:12,100:15,150:18,200:22};
+function calculateShipping(cart) {
+  const saveDateRates = cart.filter(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")
+    .map(item => SAVE_DATE_SHIPPING[Number(item.quantity)]);
+  if (saveDateRates.some(rate => !Number.isFinite(rate))) throw Error("Invalid Save the Date shipping quantity.");
+  return saveDateRates.length ? Math.max(...saveDateRates) : SHIPPING_COST;
+}
 const SAVE_DATE_PRICES = {50:125,75:172.5,100:200,150:270,200:320};
 
 const SET_PRICES = {
@@ -1105,10 +1112,10 @@ function renderOrder() {
       money(totals.subtotal);
 
     document.getElementById("shipping").textContent =
-      money(SHIPPING_COST);
+      money(calculateShipping(cart));
 
     document.getElementById("total").textContent =
-      money(totals.subtotal + SHIPPING_COST);
+      money(totals.subtotal + calculateShipping(cart));
 
     clearPaypalStatus();
     return true;
