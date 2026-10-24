@@ -48,6 +48,10 @@ export default {
       return validateDiscount(request, env);
     }
 
+    if (path === "/api/save-date-request" && method === "POST") {
+      return submitSaveDateRequest(request, env);
+    }
+
     // PAYPAL
     if (path === "/api/orders" && method === "POST") {
       return createOrder(request, env);
@@ -170,6 +174,7 @@ function priceCart(items) {
   let handmadeQuantity = 0;
   let customPhotoTotal = 0;
   let specialtyTotal = 0;
+  let saveDateTotal = 0;
   let totalQuantity = 0;
 
   const cleanItems = [];
@@ -211,7 +216,31 @@ function priceCart(items) {
         : []
     };
 
-    if (sku === "SPECIAL-WESTERN") {
+    if (sku === "SAVE-DATE-SET") {
+      const tiers = {50:125,75:172.5,100:200,150:270,200:320};
+      if (!Object.prototype.hasOwnProperty.call(tiers, quantity)) {
+        throw new Error("Choose an available Save the Date quantity.");
+      }
+      const details = item.saveDateDetails || {};
+      const names = String(details.names || "").trim().slice(0,200);
+      const date = String(details.date || "").trim().slice(0,100);
+      const colors = String(details.colors || "").trim().slice(0,500);
+      const design = String(details.design || "").trim().slice(0,100);
+      const ideas = String(details.ideas || "").trim().slice(0,2000);
+      const wording = String(details.wording || "").trim().slice(0,1000);
+      if (!names || !date || !design) throw new Error("Save the Date details are incomplete.");
+      if (details.envelopes !== "no") throw new Error("Envelope quotes must be requested before paying.");
+      if (!Array.isArray(item.photos) || item.photos.length !== 1 ||
+          !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(String(item.photos[0]?.dataUrl || "")) ||
+          String(item.photos[0].dataUrl).length > 450000) {
+        throw new Error("Please upload a valid Save the Date photo under 330 KB compressed.");
+      }
+      clean.type = "save-date";
+      clean.saveDateDetails = {names,date,colors,design,ideas,wording,envelopes:"no"};
+      clean.photos = [{name:"save-the-date-photo.jpg",dataUrl:item.photos[0].dataUrl}];
+      clean.lineTotal = tiers[quantity];
+      saveDateTotal += clean.lineTotal;
+    } else if (sku === "SPECIAL-WESTERN") {
       clean.type = "specialty";
       clean.lineTotal = quantity * 20;
       specialtyTotal += clean.lineTotal;
@@ -283,7 +312,8 @@ function priceCart(items) {
   const merchandiseTotal =
     calculateMerchandiseTotal(handmadeQuantity) +
     customPhotoTotal +
-    specialtyTotal;
+    specialtyTotal +
+    saveDateTotal;
 
   return {
     cleanItems,
@@ -1244,7 +1274,7 @@ function escapeEmailHtml(value) {
 
 async function sendResendEmail(
   env,
-  { to, subject, html, text, unsubscribeUrl }
+  { to, subject, html, text, unsubscribeUrl, attachments }
 ) {
   if (!env.RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not configured.");
@@ -1264,6 +1294,7 @@ async function sendResendEmail(
         subject,
         html,
         text,
+        ...(attachments ? { attachments } : {}),
         ...(unsubscribeUrl
           ? {
               headers: {
@@ -1775,4 +1806,41 @@ async function calculateTiny10Discount(env, email, merchandiseTotal) {
   );
 
   return discountCents / 100;
+}
+// Custom design requests are emailed to the shop, not charged.
+async function submitSaveDateRequest(request, env) {
+  if (!isSameSiteRequest(request)) return json({error:"Invalid origin."},403);
+  try {
+    const body = await request.json();
+    if (body.website) return json({success:true});
+    const email = normalizedEmail(body.email);
+    const name = String(body.name || "").trim().slice(0,150);
+    const details = body.details || {};
+    const names = String(details.names || "").trim().slice(0,200);
+    const date = String(details.date || "").trim().slice(0,100);
+    const colors = String(details.colors || "").trim().slice(0,500);
+    const design = String(details.design || "").trim().slice(0,100);
+    const ideas = String(details.ideas || "").trim().slice(0,2000);
+    const wording = String(details.wording || "").trim().slice(0,1000);
+    const quantity = Number(body.quantity);
+    if (!email || !name || !names || !date || !design || ![50,75,100,150,200].includes(quantity)) {
+      return json({error:"Please complete the required request details."},400);
+    }
+    const photo = String(body.photo || "");
+    const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo);
+    if (!match || photo.length > 450000) return json({error:"Please upload a valid compressed photo."},400);
+    const lines = ["New Save the Date custom design request",`Customer: ${name}`,`Email: ${email}`,`Sets: ${quantity}`,`Names: ${names}`,`Date: ${date}`,`Design: ${design}`,`Colors: ${colors}`,`Wording: ${wording}`,`Ideas: ${ideas}`,`Envelopes: ${details.envelopes === "quote" ? "Quote requested" : "Not needed"}`];
+    const message = lines.join("\n");
+    await sendResendEmail(env, {
+      to:"tinymemoriesmagnetco@outlook.com",
+      subject:"New Save the Date custom request",
+      html:"<pre style=\"white-space:pre-wrap;font-family:Arial,sans-serif\">"+escapeEmailHtml(message)+"</pre>",
+      text:message,
+      attachments:[{filename:"save-the-date-photo."+(match[1]==="jpeg"?"jpg":match[1]),content:match[2]}]
+    });
+    return json({success:true});
+  } catch(error) {
+    console.error("Save the Date request error:",error);
+    return json({error:"Could not send your request. Please email us directly."},500);
+  }
 }
