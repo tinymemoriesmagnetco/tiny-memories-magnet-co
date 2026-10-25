@@ -770,7 +770,35 @@ nav{gap:10px 24px;padding:14px 20px}nav a{font-size:11px;letter-spacing:.065em}
 @media(max-width:550px){.shop-cards{grid-template-columns:1fr;max-width:450px}.shop-card,.shop-card:nth-child(4),.shop-card:nth-child(5){grid-column:1;width:100%}.collection-art{height:245px}.shop-card-body{padding:20px}.hero-actions{flex-direction:column}.hero-actions .button{text-align:center;width:100%}.steps{grid-template-columns:repeat(2,1fr)}.step p{font-size:14px}.signup-banner .button{white-space:normal}.connect-links{grid-template-columns:1fr}}
 @media(max-width:370px){.steps{grid-template-columns:1fr}.hero-art{height:240px}.collection-art{height:210px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.shop-card,.button,.connect-link{transition:none}.shop-card:hover,.button:hover,.connect-link:hover{transform:none}}
-</style></head>
+</style><style>
+/* Compact centered boutique header: visual-only adjustment */
+.logo-link {
+  height: 184px;
+  min-height: 0;
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-link img {
+  display: block;
+  width: min(100%, 345px);
+  max-height: 172px;
+  height: auto;
+  object-fit: contain;
+}
+nav { padding-top: 13px; padding-bottom: 13px; }
+@media (max-width: 700px) {
+  .logo-link { height: 145px; min-height: 0; padding: 4px 12px; }
+  .logo-link img { width: min(100%, 275px); max-height: 137px; }
+  nav { padding-top: 12px; padding-bottom: 12px; }
+}
+@media (max-width: 420px) {
+  .logo-link { height: 130px; }
+  .logo-link img { width: min(100%, 245px); max-height: 122px; }
+}
+</style>
+</head>
 <body>
 <header>
 <a class="logo-link" href="index.html">
