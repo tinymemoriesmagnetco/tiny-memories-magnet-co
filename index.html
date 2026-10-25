@@ -798,6 +798,15 @@ nav { padding-top: 13px; padding-bottom: 13px; }
   .logo-link img { width: min(100%, 245px); max-height: 122px; }
 }
 </style>
+<style>
+/* Seamlessly fade the logo artwork into the ivory-white header.
+   The original logo file, proportions and navigation stay unchanged. */
+.logo-link { background: #fffefa; }
+.logo-link img {
+  -webkit-mask-image: radial-gradient(ellipse 70% 76% at center, #000 55%, rgba(0,0,0,.95) 68%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 76% at center, #000 55%, rgba(0,0,0,.95) 68%, transparent 100%);
+}
+</style>
 </head>
 <body>
 <header>
