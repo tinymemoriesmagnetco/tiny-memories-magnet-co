@@ -110,6 +110,10 @@ export default {
     // VENDOR MARKET: separate from PayPal and shipping checkout.
     if (path === "/api/vendor-orders" && method === "POST") return submitVendorOrder(request, env);
     if (path === "/api/admin/vendor-orders" && method === "GET") return listVendorOrders(request, env);
+    if (path === "/api/admin/vendor-orders/archive" && method === "POST") return archiveVendorOrders(request, env);
+    if (path === "/api/admin/vendor-orders/archived" && method === "GET") return listArchivedVendorOrders(request, env);
+    const vendorDelete = path.match(/^\/api\/admin\/vendor-orders\/([^/]+)\/delete$/);
+    if (vendorDelete && method === "POST") return deleteArchivedVendorOrder(request, env, vendorDelete[1]);
     const vendorPhoto = path.match(/^\/api\/admin\/vendor-orders\/([^/]+)\/photos\/(\d+)$/);
     if (vendorPhoto && method === "GET") return getVendorPhoto(request, env, vendorPhoto[1], Number(vendorPhoto[2]));
     const vendorStatus = path.match(/^\/api\/admin\/vendor-orders\/([^/]+)\/status$/);
@@ -120,6 +124,9 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(cleanupOldVendorPhotos(env));
   }
 };
 
@@ -1944,7 +1951,7 @@ async function listVendorOrders(request, env) {
   if (!env.DB) return json({error:"Database unavailable."},503);
   try {
     const rows = await env.DB.prepare(`SELECT id,created_at,customer_name,contact,notes,quantity,total,status,paid_at,ready_at,picked_up_at,photo_keys_json
-      FROM vendor_orders ORDER BY created_at DESC LIMIT 200`).all();
+      FROM vendor_orders WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 200`).all();
     return json((rows.results || []).map(r=>({id:r.id,createdAt:r.created_at,name:r.customer_name,
       contact:r.contact,notes:r.notes,quantity:r.quantity,total:r.total,status:r.status,
       paidAt:r.paid_at,readyAt:r.ready_at,pickedUpAt:r.picked_up_at,
@@ -1983,4 +1990,65 @@ async function setVendorStatus(request,env,id) {
     WHERE id=? AND status=?`).bind(status,status,now,status,now,status,now,id,row.status).run();
   if(result.meta?.changes!==1)return json({error:"Order changed; refresh and retry."},409);
   return json({success:true,status});
+}
+// ============================================
+// VENDOR EVENT ARCHIVE, HISTORY, DELETION
+// ============================================
+async function archiveVendorOrders(request, env) {
+  const auth = adminError(request, env); if (auth) return auth;
+  if (!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
+  try {
+    const now = new Date().toISOString();
+    const result = await env.DB.prepare(`UPDATE vendor_orders SET archived_at = ?
+      WHERE status = 'PICKED_UP' AND archived_at IS NULL`).bind(now).run();
+    return json({success:true, archived:Number(result.meta?.changes || 0)});
+  } catch(e) { console.error('Vendor archive failed',e); return json({error:'Could not archive orders.'},500); }
+}
+async function listArchivedVendorOrders(request, env) {
+  const auth = adminError(request, env); if (auth) return auth;
+  try {
+    const result = await env.DB.prepare(`SELECT id,created_at,archived_at,customer_name,contact,notes,
+      quantity,total,status,paid_at,ready_at,picked_up_at,photo_keys_json
+      FROM vendor_orders WHERE archived_at IS NOT NULL ORDER BY archived_at DESC LIMIT 1000`).all();
+    return json((result.results||[]).map(r=>({id:r.id,createdAt:r.created_at,archivedAt:r.archived_at,
+      name:r.customer_name,contact:r.contact,notes:r.notes,quantity:r.quantity,total:r.total,
+      status:r.status,paidAt:r.paid_at,readyAt:r.ready_at,pickedUpAt:r.picked_up_at,
+      photoCount:JSON.parse(r.photo_keys_json||'[]').length})));
+  } catch(e) {console.error('Vendor history failed',e);return json({error:'Could not load history.'},500);}
+}
+async function deleteArchivedVendorOrder(request,env,id) {
+  const auth=adminError(request,env);if(auth)return auth;
+  if(!vendorOriginOK(request))return json({error:'Invalid origin.'},403);
+  if(!/^VM-[0-9A-F]{8}$/.test(id))return json({error:'Invalid order ID.'},400);
+  try {
+    const row=await env.DB.prepare(`SELECT photo_keys_json FROM vendor_orders
+      WHERE id=? AND archived_at IS NOT NULL AND status='PICKED_UP'`).bind(id).first();
+    if(!row)return json({error:'Only archived, picked-up orders can be deleted.'},409);
+    const keys=JSON.parse(row.photo_keys_json||'[]');
+    // Delete R2 objects before deleting the database record. A failed deletion keeps the record retryable.
+    for(const key of keys) await env.VENDOR_PHOTOS.delete(key);
+    const deleted=await env.DB.prepare(`DELETE FROM vendor_orders WHERE id=? AND archived_at IS NOT NULL
+      AND status='PICKED_UP'`).bind(id).run();
+    if(deleted.meta?.changes!==1)return json({error:'Order changed. Refresh and retry.'},409);
+    return json({success:true});
+  }catch(e){console.error('Vendor delete failed',e);return json({error:'Could not delete order. Please retry.'},500);}
+}
+// Invoked by a Cloudflare Cron Trigger (configure separately).
+// Only remove photos for orders at least 30 days old AND already picked up.
+// Keep basic order and sales details in D1 for bookkeeping.
+async function cleanupOldVendorPhotos(env) {
+  if(!env.DB || !env.VENDOR_PHOTOS)return;
+  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+  const result=await env.DB.prepare(`SELECT id,photo_keys_json FROM vendor_orders
+    WHERE status='PICKED_UP' AND created_at < ? AND photo_keys_json != '[]'
+    ORDER BY created_at ASC LIMIT 100`).bind(cutoff).all();
+  for(const row of result.results||[]) {
+    try {
+      const keys=JSON.parse(row.photo_keys_json||'[]');
+      for(const key of keys)await env.VENDOR_PHOTOS.delete(key);
+      await env.DB.prepare(`UPDATE vendor_orders SET photo_keys_json='[]'
+        WHERE id=? AND status='PICKED_UP' AND photo_keys_json=?`)
+        .bind(row.id,row.photo_keys_json).run();
+    }catch(e){console.error('Vendor photo cleanup failed',row.id,e);}
+  }
 }
