@@ -1,3 +1,4 @@
+
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tiny-memories-magnet-co",
@@ -16,6 +17,14 @@
       "database_id": "9569e832-66c9-4708-b6b5-57ff4da3735e"
     }
   ],
+
+  "r2_buckets": [
+    {
+      "binding": "VENDOR_PHOTOS",
+      "bucket_name": "tiny-memories-vendor-photos"
+    }
+  ],
+
   "vars": {
     "PAYPAL_ENV": "live"
   }
