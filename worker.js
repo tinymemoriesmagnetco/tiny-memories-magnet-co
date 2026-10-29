@@ -107,6 +107,14 @@ export default {
       );
     }
 
+    // VENDOR MARKET: separate from PayPal and shipping checkout.
+    if (path === "/api/vendor-orders" && method === "POST") return submitVendorOrder(request, env);
+    if (path === "/api/admin/vendor-orders" && method === "GET") return listVendorOrders(request, env);
+    const vendorPhoto = path.match(/^\/api\/admin\/vendor-orders\/([^/]+)\/photos\/(\d+)$/);
+    if (vendorPhoto && method === "GET") return getVendorPhoto(request, env, vendorPhoto[1], Number(vendorPhoto[2]));
+    const vendorStatus = path.match(/^\/api\/admin\/vendor-orders\/([^/]+)\/status$/);
+    if (vendorStatus && method === "POST") return setVendorStatus(request, env, vendorStatus[1]);
+
     if (path.startsWith("/api/")) {
       return json({ error: "API endpoint not found." }, 404);
     }
@@ -1858,4 +1866,121 @@ async function submitSaveDateRequest(request, env) {
     console.error("Save the Date request error:",error);
     return json({error:"Could not send your request. Please email us directly."},500);
   }
+}
+
+// ============================================
+// VENDOR MARKET: separate D1 table and private R2 photos
+// Required bindings: DB (D1), VENDOR_PHOTOS (R2), ADMIN_PASSWORD (secret).
+// ============================================
+const VENDOR_PRICES = { 1: 3, 3: 9, 6: 18, 9: 24 };
+const VENDOR_MAX_PHOTO_BYTES = 15 * 1024 * 1024;
+const VENDOR_MAX_REQUEST_BYTES = 9 * VENDOR_MAX_PHOTO_BYTES + 1000000;
+function vendorOriginOK(request) {
+  const origin = request.headers.get("Origin");
+  return !origin || origin === new URL(request.url).origin;
+}
+function vendorFileType(bytes, filename) {
+  const a = new Uint8Array(bytes.slice(0, 16));
+  if (a[0] === 255 && a[1] === 216 && a[2] === 255) return "image/jpeg";
+  if (a[0] === 137 && a[1] === 80 && a[2] === 78 && a[3] === 71 && a[4] === 13 && a[5] === 10) return "image/png";
+  const boxType = String.fromCharCode(...a.slice(4, 8));
+  const heicBrand = String.fromCharCode(...a.slice(8, 12));
+  if (boxType === "ftyp" && /^(heic|heix|hevc|hevx|mif1|msf1)$/.test(heicBrand)) return "image/heic";
+  return null;
+}
+async function submitVendorOrder(request, env) {
+  if (!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
+  if (!env.DB || !env.VENDOR_PHOTOS) return json({error:"Vendor storage is not configured."},503);
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > VENDOR_MAX_REQUEST_BYTES) return json({error:"Photos exceed upload limit."},413);
+  let uploaded = [];
+  let saved = false;
+  try {
+    const form = await request.formData();
+    const name = String(form.get("customerName") || "").trim().slice(0,100);
+    const contact = String(form.get("contact") || "").trim().slice(0,160);
+    const notes = String(form.get("notes") || "").trim().slice(0,500);
+    const quantity = Number(form.get("bundle"));
+    const photos = form.getAll("photos");
+    if (!name || !Object.hasOwn(VENDOR_PRICES, quantity) || photos.length !== quantity) {
+      return json({error:"Enter your name and upload exactly one photo per magnet."},400);
+    }
+    const validated = [];
+    for (const photo of photos) {
+      if (typeof photo === "string" || !photo.size || photo.size > VENDOR_MAX_PHOTO_BYTES) {
+        return json({error:"Each photo must be between 1 byte and 15 MB."},400);
+      }
+      const bytes = await photo.arrayBuffer();
+      const type = vendorFileType(bytes, photo.name);
+      if (!type) return json({error:"Only JPG, PNG, or HEIC photos are supported."},400);
+      validated.push({bytes, type});
+    }
+    const orderId = "VM-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const photoKeys = [];
+    for (let i = 0; i < validated.length; i++) {
+      const file = validated[i];
+      const ext = file.type === "image/png" ? "png" : file.type === "image/heic" ? "heic" : "jpg";
+      const key = `vendor/${orderId}/${i + 1}.${ext}`;
+      await env.VENDOR_PHOTOS.put(key, file.bytes, {httpMetadata:{contentType:file.type}});
+      uploaded.push(key);
+      photoKeys.push(key);
+    }
+    await env.DB.prepare(`INSERT INTO vendor_orders
+      (id, created_at, customer_name, contact, notes, quantity, total, status, photo_keys_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'AWAITING_PAYMENT', ?)`)
+      .bind(orderId, new Date().toISOString(), name, contact, notes, quantity,
+        VENDOR_PRICES[quantity], JSON.stringify(photoKeys)).run();
+    saved = true;
+    return json({orderId, quantity, total:VENDOR_PRICES[quantity], status:"AWAITING_PAYMENT"},201);
+  } catch (err) {
+    console.error("Vendor order error:",err);
+    return json({error:"Unable to save order. Please ask for help at the booth."},500);
+  } finally {
+    if (!saved) for (const key of uploaded) { try { await env.VENDOR_PHOTOS.delete(key); } catch(e) { console.error("Orphan cleanup failed", e); } }
+  }
+}
+async function listVendorOrders(request, env) {
+  const auth = adminError(request,env); if (auth) return auth;
+  if (!env.DB) return json({error:"Database unavailable."},503);
+  try {
+    const rows = await env.DB.prepare(`SELECT id,created_at,customer_name,contact,notes,quantity,total,status,paid_at,ready_at,picked_up_at,photo_keys_json
+      FROM vendor_orders ORDER BY created_at DESC LIMIT 200`).all();
+    return json((rows.results || []).map(r=>({id:r.id,createdAt:r.created_at,name:r.customer_name,
+      contact:r.contact,notes:r.notes,quantity:r.quantity,total:r.total,status:r.status,
+      paidAt:r.paid_at,readyAt:r.ready_at,pickedUpAt:r.picked_up_at,
+      photoCount:JSON.parse(r.photo_keys_json).length})));
+  } catch(e) {console.error(e);return json({error:"Unable to load vendor orders."},500);}
+}
+async function getVendorPhoto(request,env,id,index) {
+  const auth = adminError(request,env); if(auth) return auth;
+  if(!env.DB || !env.VENDOR_PHOTOS) return json({error:"Storage unavailable."},503);
+  if(!/^VM-[0-9A-F]{8}$/.test(id) || !Number.isSafeInteger(index)) return json({error:"Invalid photo."},400);
+  const row = await env.DB.prepare("SELECT photo_keys_json FROM vendor_orders WHERE id=?").bind(id).first();
+  if(!row) return json({error:"Order not found."},404);
+  const keys = JSON.parse(row.photo_keys_json);
+  if(index < 1 || index > keys.length) return json({error:"Photo not found."},404);
+  const object = await env.VENDOR_PHOTOS.get(keys[index-1]);
+  if(!object) return json({error:"Photo missing from storage."},404);
+  return new Response(object.body,{headers:{"Content-Type":object.httpMetadata?.contentType || "application/octet-stream",
+    "Cache-Control":"private, no-store", "Content-Disposition":`attachment; filename="${id}-photo-${index}.${(keys[index-1].split('.').pop())}"`,
+    "X-Content-Type-Options":"nosniff"}});
+}
+async function setVendorStatus(request,env,id) {
+  const auth=adminError(request,env);if(auth)return auth;
+  if(!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
+  if(!/^VM-[0-9A-F]{8}$/.test(id))return json({error:"Invalid order ID."},400);
+  const {status}=await request.json();
+  const transitions={AWAITING_PAYMENT:["PAID"],PAID:["IN_PROGRESS"],IN_PROGRESS:["READY"],READY:["PICKED_UP"]};
+  if(!["PAID","IN_PROGRESS","READY","PICKED_UP"].includes(status))return json({error:"Invalid status."},400);
+  const now=new Date().toISOString();
+  const row=await env.DB.prepare("SELECT status FROM vendor_orders WHERE id=?").bind(id).first();
+  if(!row)return json({error:"Order not found."},404);
+  if(!transitions[row.status]?.includes(status))return json({error:"Invalid status transition."},409);
+  const result=await env.DB.prepare(`UPDATE vendor_orders SET status=?,
+    paid_at=CASE WHEN ?='PAID' THEN ? ELSE paid_at END,
+    ready_at=CASE WHEN ?='READY' THEN ? ELSE ready_at END,
+    picked_up_at=CASE WHEN ?='PICKED_UP' THEN ? ELSE picked_up_at END
+    WHERE id=? AND status=?`).bind(status,status,now,status,now,status,now,id,row.status).run();
+  if(result.meta?.changes!==1)return json({error:"Order changed; refresh and retry."},409);
+  return json({success:true,status});
 }
