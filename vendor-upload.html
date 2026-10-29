@@ -1,13 +1,215 @@
+
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vendor Market Photo Magnets | Tiny Memories Magnet Co.</title><style>
-:root{--sage:#75886d;--dark:#3e4c3a;--rose:#c9939b;--ivory:#fbf8f2;--line:#e3ded4}*{box-sizing:border-box}body{margin:0;background:var(--ivory);color:#343b33;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:660px;margin:auto;padding:28px 18px 60px}.eyebrow{text-align:center;letter-spacing:.13em;text-transform:uppercase;color:var(--sage);font-size:.72rem;font-weight:750}h1{font:normal 2.4rem/1.1 Georgia,serif;text-align:center;color:var(--dark);margin:10px 0}header p{text-align:center;color:#666}form,.success{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:25px;box-shadow:0 8px 30px #433c3010}label,.section{display:block;font-weight:650;margin:18px 0 7px}.hint{color:#6d706a;font-size:.86rem;margin:5px 0 12px}.bundles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bundle{border:1px solid var(--line);padding:14px 10px;border-radius:12px;cursor:pointer;text-align:center}.bundle:has(input:checked){border:2px solid var(--sage);background:#f2f6ef;padding:13px 9px}.bundle input{accent-color:var(--sage)}.bundle strong{display:block;font-size:1.08rem}.field{width:100%;border:1px solid #c9cfc6;border-radius:10px;padding:12px;font:inherit;background:#fff}.upload{border:2px dashed #abb8a6;border-radius:14px;background:#f8faf6;padding:22px 15px;text-align:center}.upload input{max-width:100%;margin-top:12px}.preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.photo{min-width:0}.photo img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}.photo small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.total{display:flex;justify-content:space-between;padding:18px 0;margin-top:12px;border-top:1px solid var(--line);font-size:1.15rem}.note{background:#f4f1eb;border-radius:10px;padding:12px;font-size:.9rem}.check{display:flex;gap:9px;align-items:start;font-weight:400}.check input{margin-top:5px;accent-color:var(--sage)}button{width:100%;border:0;border-radius:12px;background:var(--sage);color:white;font-size:1rem;font-weight:750;padding:16px;cursor:pointer;margin-top:18px}button:disabled{opacity:.5;cursor:not-allowed}.error{color:#9e3434;margin-top:12px}.success{text-align:center}.success h2{font:normal 2rem Georgia,serif;color:var(--dark)}.orderid{font-size:1.6rem;font-weight:800;letter-spacing:.05em}.hidden{display:none}footer{text-align:center;font-size:.8rem;color:#777;margin-top:25px}@media(max-width:400px){.wrap{padding:20px 12px}form{padding:16px}}
-</style></head><body><main class="wrap"><header><div class="eyebrow">Tiny Memories Magnet Co.</div><h1>Upload Your Memories ♡</h1><p>Ordering at our vendor booth? Upload your photos here and pay in person before we make your magnets.</p></header>
-<form id="orderForm"><label for="customerName">Your name *</label><input class="field" id="customerName" name="customerName" autocomplete="name" maxlength="100" required placeholder="First and last name"><label for="contact">Phone or email (optional)</label><input class="field" id="contact" name="contact" maxlength="160" placeholder="For pickup updates"><div class="section">Choose your magnet bundle *</div><div class="bundles" role="radiogroup" aria-label="Magnet bundle"><label class="bundle"><input type="radio" name="bundle" value="1" required checked><strong>1 magnet</strong>$3</label><label class="bundle"><input type="radio" name="bundle" value="3"><strong>3 magnets</strong>$9</label><label class="bundle"><input type="radio" name="bundle" value="6"><strong>6 magnets</strong>$18</label><label class="bundle"><input type="radio" name="bundle" value="9"><strong>9 magnets</strong>$24</label></div>
-<label for="photos">Upload your photos *</label><p class="hint" id="uploadHint">Select 1 photo. You can choose a different picture for each magnet.</p><div class="upload">📷<div><strong>Choose photos from your phone</strong></div><input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/heic,image/heif" multiple required aria-describedby="uploadHint"><div class="hint">JPG, PNG, HEIC. Maximum 15 MB per photo.</div></div><div id="preview" class="preview" aria-live="polite"></div><label for="notes">Order notes (optional)</label><textarea class="field" id="notes" name="notes" rows="3" maxlength="500" placeholder="Any special instructions?"></textarea><div class="total"><strong>Order total</strong><strong id="total">$3.00</strong></div><div class="note"><strong>Free pickup at our booth.</strong> No shipping charge. Pay with cash, Cash App, or PayPal at the booth. Your order will not be made until payment is confirmed.</div><label class="check"><input type="checkbox" id="consent" required><span>I confirm I have permission to submit these photos for printing into magnets.</span></label><button id="submitBtn" type="submit">Submit My Photos ♡</button><p class="error hidden" id="error" role="alert"></p></form>
-<section class="success hidden" id="success" aria-live="polite"><h2>You're all set! ♡</h2><p>Show this order number at our booth and pay before we begin making your magnets.</p><p class="orderid" id="orderId"></p><p id="successDetails"></p><p><strong>Pickup at booth • No shipping</strong></p></section><footer>Made with love by Tiny Memories Magnet Co.</footer></main><script>
-const prices={1:3,3:9,6:18,9:24};const form=document.getElementById('orderForm'),files=document.getElementById('photos'),hint=document.getElementById('uploadHint'),preview=document.getElementById('preview'),error=document.getElementById('error'),btn=document.getElementById('submitBtn');let urls=[];
-function bundle(){return Number(document.querySelector('input[name="bundle"]:checked').value)}function update(){const count=bundle();document.getElementById('total').textContent='$'+prices[count].toFixed(2);hint.textContent=`Select exactly ${count} photo${count===1?'':'s'}. You can choose a different picture for each magnet.`;render()}
-function render(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];preview.replaceChildren();Array.from(files.files).forEach((file,i)=>{const card=document.createElement('div');card.className='photo';const img=document.createElement('img');const url=URL.createObjectURL(file);urls.push(url);img.src=url;img.alt='Photo '+(i+1);const label=document.createElement('small');label.textContent=(i+1)+'. '+file.name;card.append(img,label);preview.append(card)})}
-document.querySelectorAll('input[name="bundle"]').forEach(x=>x.addEventListener('change',update));files.addEventListener('change',render);update();
-form.addEventListener('submit',async e=>{e.preventDefault();error.classList.add('hidden');const count=bundle(),selected=Array.from(files.files);if(selected.length!==count){error.textContent=`Please upload exactly ${count} photo${count===1?'':'s'} for your bundle.`;error.classList.remove('hidden');return}if(selected.some(f=>f.size>15*1024*1024)){error.textContent='Each photo must be 15 MB or smaller.';error.classList.remove('hidden');return}if(selected.some(f=>!['image/jpeg','image/png','image/heic','image/heif'].includes(f.type)&&! /\.(jpe?g|png|heic|heif)$/i.test(f.name))){error.textContent='Please upload JPG, PNG, or HEIC images only.';error.classList.remove('hidden');return}const data=new FormData();data.append('customerName',document.getElementById('customerName').value.trim());data.append('contact',document.getElementById('contact').value.trim());data.append('bundle',String(count));data.append('notes',document.getElementById('notes').value.trim());selected.forEach(f=>data.append('photos',f,f.name));btn.disabled=true;btn.textContent='Submitting photos…';try{const response=await fetch('/api/vendor-orders',{method:'POST',body:data});if(!response.ok)throw new Error('Unable to submit. Please ask us for help at the booth.');const result=await response.json();if(!result.orderId)throw new Error('Missing order confirmation. Please check with us at the booth.');document.getElementById('orderId').textContent=result.orderId;document.getElementById('successDetails').textContent=`${count} magnet${count===1?'':'s'} • $${prices[count].toFixed(2)} due at booth`;form.classList.add('hidden');document.getElementById('success').classList.remove('hidden');window.scrollTo(0,0)}catch(err){error.textContent=err.message||'Something went wrong. Please ask us for help at the booth.';error.classList.remove('hidden')}finally{btn.disabled=false;btn.textContent='Submit My Photos ♡'}});
-</script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vendor Market Photo Magnets | Tiny Memories Magnet Co.</title>
+<style>
+:root{--sage:#75886d;--dark:#3e4c3a;--rose:#c9939b;--ivory:#fbf8f2;--line:#e3ded4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:#343b33;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:660px;margin:auto;padding:28px 18px 60px}
+.eyebrow{text-align:center;letter-spacing:.13em;text-transform:uppercase;color:var(--sage);font-size:.72rem;font-weight:750}
+h1{font:normal 2.4rem/1.1 Georgia,serif;text-align:center;color:var(--dark);margin:10px 0}
+header p{text-align:center;color:#666}
+form,.success{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:25px;box-shadow:0 8px 30px #433c3010}
+label,.section{display:block;font-weight:650;margin:18px 0 7px}
+.hint{color:#6d706a;font-size:.86rem;margin:5px 0 12px}
+.bundles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bundle{border:1px solid var(--line);padding:14px 10px;border-radius:12px;cursor:pointer;text-align:center}
+.bundle:has(input:checked){border:2px solid var(--sage);background:#f2f6ef;padding:13px 9px}
+.bundle input{accent-color:var(--sage)}
+.bundle strong{display:block;font-size:1.08rem}
+.field{width:100%;border:1px solid #c9cfc6;border-radius:10px;padding:12px;font:inherit;background:#fff}
+.upload{border:2px dashed #abb8a6;border-radius:14px;background:#f8faf6;padding:22px 15px;text-align:center}
+.upload input{max-width:100%;margin-top:12px}
+.preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.photo{min-width:0}
+.photo img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
+.photo small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.total{display:flex;justify-content:space-between;padding:18px 0;margin-top:12px;border-top:1px solid var(--line);font-size:1.15rem}
+.note{background:#f4f1eb;border-radius:10px;padding:12px;font-size:.9rem}
+.check{display:flex;gap:9px;align-items:start;font-weight:400}
+.check input{margin-top:5px;accent-color:var(--sage)}
+button{width:100%;border:0;border-radius:12px;background:var(--sage);color:white;font-size:1rem;font-weight:750;padding:16px;cursor:pointer;margin-top:18px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.error{color:#9e3434;margin-top:12px}
+.success{text-align:center}
+.success h2{font:normal 2rem Georgia,serif;color:var(--dark)}
+.orderid{font-size:1.6rem;font-weight:800;letter-spacing:.05em}
+.hidden{display:none}
+footer{text-align:center;font-size:.8rem;color:#777;margin-top:25px}
+@media(max-width:400px){.wrap{padding:20px 12px}form{padding:16px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+<div class="eyebrow">Tiny Memories Magnet Co.</div>
+<h1>Upload Your Memories ♡</h1>
+<p>Ordering at our vendor booth? Upload your photos here and pay in person before we make your magnets.</p>
+</header>
+
+<form id="orderForm">
+<label for="customerName">Your name *</label>
+<input class="field" id="customerName" name="customerName" autocomplete="name" maxlength="100" required placeholder="First and last name">
+
+<label for="contact">Phone or email (optional)</label>
+<input class="field" id="contact" name="contact" maxlength="160" placeholder="For pickup updates">
+
+<div class="section">Choose your magnet bundle *</div>
+<div class="bundles" role="radiogroup" aria-label="Magnet bundle">
+<label class="bundle"><input type="radio" name="bundle" value="1" required checked><strong>1 magnet</strong>$3</label>
+<label class="bundle"><input type="radio" name="bundle" value="3"><strong>3 magnets</strong>$9</label>
+<label class="bundle"><input type="radio" name="bundle" value="6"><strong>6 magnets</strong>$18</label>
+<label class="bundle"><input type="radio" name="bundle" value="9"><strong>9 magnets</strong>$24</label>
+</div>
+
+<label for="photos">Upload your photos *</label>
+<p class="hint" id="uploadHint">Select 1 photo. You can choose a different picture for each magnet.</p>
+
+<div class="upload">
+📷
+<div><strong>Choose photos from your phone</strong></div>
+<input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/heic,image/heif" multiple required aria-describedby="uploadHint">
+<div class="hint">JPG, PNG, HEIC. Maximum 15 MB per photo.</div>
+</div>
+
+<div id="preview" class="preview" aria-live="polite"></div>
+
+<label for="notes">Order notes (optional)</label>
+<textarea class="field" id="notes" name="notes" rows="3" maxlength="500" placeholder="Any special instructions?"></textarea>
+
+<div class="total">
+<strong>Order total</strong>
+<strong id="total">$3.00</strong>
+</div>
+
+<div class="note">
+<strong>Free pickup at our booth.</strong>
+No shipping charge. Pay with cash, Cash App, PayPal, or credit/debit card at the booth.
+Your order will not be made until payment is confirmed.
+</div>
+
+<label class="check">
+<input type="checkbox" id="consent" required>
+<span>I confirm I have permission to submit these photos for printing into magnets.</span>
+</label>
+
+<button id="submitBtn" type="submit">Submit My Photos ♡</button>
+<p class="error hidden" id="error" role="alert"></p>
+</form>
+
+<section class="success hidden" id="success" aria-live="polite">
+<h2>You're all set! ♡</h2>
+<p>Show this order number at our booth and pay before we begin making your magnets.</p>
+<p class="orderid" id="orderId"></p>
+<p id="successDetails"></p>
+<p><strong>Pickup at booth • No shipping</strong></p>
+</section>
+
+<footer>Made with love by Tiny Memories Magnet Co.</footer>
+</main>
+
+<script>
+const prices={1:3,3:9,6:18,9:24};
+const form=document.getElementById('orderForm'),
+files=document.getElementById('photos'),
+hint=document.getElementById('uploadHint'),
+preview=document.getElementById('preview'),
+error=document.getElementById('error'),
+btn=document.getElementById('submitBtn');
+let urls=[];
+
+function bundle(){
+  return Number(document.querySelector('input[name="bundle"]:checked').value);
+}
+
+function update(){
+  const count=bundle();
+  document.getElementById('total').textContent='$'+prices[count].toFixed(2);
+  hint.textContent=`Select exactly ${count} photo${count===1?'':'s'}. You can choose a different picture for each magnet.`;
+  render();
+}
+
+function render(){
+  urls.forEach(u=>URL.revokeObjectURL(u));
+  urls=[];
+  preview.replaceChildren();
+  Array.from(files.files).forEach((file,i)=>{
+    const card=document.createElement('div');
+    card.className='photo';
+    const img=document.createElement('img');
+    const url=URL.createObjectURL(file);
+    urls.push(url);
+    img.src=url;
+    img.alt='Photo '+(i+1);
+    const label=document.createElement('small');
+    label.textContent=(i+1)+'. '+file.name;
+    card.append(img,label);
+    preview.append(card);
+  });
+}
+
+document.querySelectorAll('input[name="bundle"]').forEach(x=>x.addEventListener('change',update));
+files.addEventListener('change',render);
+update();
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  error.classList.add('hidden');
+
+  const count=bundle(),selected=Array.from(files.files);
+
+  if(selected.length!==count){
+    error.textContent=`Please upload exactly ${count} photo${count===1?'':'s'} for your bundle.`;
+    error.classList.remove('hidden');
+    return;
+  }
+
+  if(selected.some(f=>f.size>15*1024*1024)){
+    error.textContent='Each photo must be 15 MB or smaller.';
+    error.classList.remove('hidden');
+    return;
+  }
+
+  if(selected.some(f=>!['image/jpeg','image/png','image/heic','image/heif'].includes(f.type)&&! /\.(jpe?g|png|heic|heif)$/i.test(f.name))){
+    error.textContent='Please upload JPG, PNG, or HEIC images only.';
+    error.classList.remove('hidden');
+    return;
+  }
+
+  const data=new FormData();
+  data.append('customerName',document.getElementById('customerName').value.trim());
+  data.append('contact',document.getElementById('contact').value.trim());
+  data.append('bundle',String(count));
+  data.append('notes',document.getElementById('notes').value.trim());
+  selected.forEach(f=>data.append('photos',f,f.name));
+
+  btn.disabled=true;
+  btn.textContent='Submitting photos…';
+
+  try{
+    const response=await fetch('/api/vendor-orders',{method:'POST',body:data});
+    if(!response.ok)throw new Error('Unable to submit. Please ask us for help at the booth.');
+
+    const result=await response.json();
+    if(!result.orderId)throw new Error('Missing order confirmation. Please check with us at the booth.');
+
+    document.getElementById('orderId').textContent=result.orderId;
+    document.getElementById('successDetails').textContent=`${count} magnet${count===1?'':'s'} • $${prices[count].toFixed(2)} due at booth`;
+    form.classList.add('hidden');
+    document.getElementById('success').classList.remove('hidden');
+    window.scrollTo(0,0);
+  }catch(err){
+    error.textContent=err.message||'Something went wrong. Please ask us for help at the booth.';
+    error.classList.remove('hidden');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Submit My Photos ♡';
+  }
+});
+</script>
+</body>
+</html>
