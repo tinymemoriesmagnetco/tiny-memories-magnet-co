@@ -270,6 +270,13 @@ textarea {
 }
 
 .totals { margin-top: 20px; }
+.promo-row { display:flex; gap:9px; align-items:center; }
+.promo-row input { flex:1; min-width:0; text-transform:uppercase; }
+.promo-row button { border:0; background:var(--sage); color:white; border-radius:9px; padding:12px 16px; cursor:pointer; font:inherit; }
+.promo-row button:disabled { opacity:.55; cursor:not-allowed; }
+.promo-feedback { margin:8px 0 0; font-size:13px; }
+.promo-discount { color:#405c42; }
+
 
 .total-row {
   display: flex;
@@ -546,6 +553,10 @@ footer {
               <strong id="shipping">$5.00</strong>
             </div>
 
+            <div class="total-row promo-discount" id="discountRow" hidden>
+              <span>TINY10 discount (pending verification)</span>
+              <strong id="discountAmount">-$0.00</strong>
+            </div>
             <div class="total-row grand-total">
               <span>Total</span>
               <span id="total">$0.00</span>
@@ -622,6 +633,35 @@ const NAME_PRICES = {
 
 let checkoutBusy = false;
 let paypalButtonsReady = false;
+let appliedPromoCode = "";
+function previewDiscount(totals) {
+  if (appliedPromoCode !== "TINY10" || totals.customPhotoTotal < 20) return 0;
+  return Math.round(Math.min(5, totals.customPhotoTotal * .10) * 100) / 100;
+}
+function updatePromo() {
+  if (checkoutBusy) return;
+  const input = document.getElementById("promoCode");
+  const feedback = document.getElementById("promoFeedback");
+  const code = input.value.trim().toUpperCase();
+  appliedPromoCode = "";
+  if (!code) {
+    feedback.textContent = "Enter your subscriber code to see estimated savings.";
+  } else if (code !== "TINY10") {
+    feedback.textContent = "Promo code not recognized.";
+  } else {
+    try {
+      const totals = cartPricing(getCart());
+      if (totals.customPhotoTotal < 20) {
+        feedback.textContent = "TINY10 requires at least $20 in Custom Photo Magnets.";
+      } else {
+        appliedPromoCode = code;
+        feedback.textContent = "Estimated 10% savings, up to $5. Subscriber and first-order eligibility will be checked when you pay.";
+      }
+    } catch (error) { feedback.textContent = error.message; }
+  }
+  renderOrder();
+}
+
 
 function money(value) {
   return "$" + Number(value).toFixed(2);
@@ -768,7 +808,7 @@ function setCheckoutBusy(value) {
   checkoutBusy = value;
 
   document.querySelectorAll(
-    ".qty-btn, .remove-btn"
+    ".qty-btn, .remove-btn, #applyPromo, #promoCode"
   ).forEach(button => {
     button.disabled = value;
   });
@@ -1114,8 +1154,15 @@ function renderOrder() {
     document.getElementById("shipping").textContent =
       money(calculateShipping(cart));
 
+    if (appliedPromoCode && totals.customPhotoTotal < 20) {
+      appliedPromoCode = "";
+      document.getElementById("promoFeedback").textContent = "TINY10 needs at least $20 in Custom Photo Magnets.";
+    }
+    const discount = previewDiscount(totals);
+    document.getElementById("discountRow").hidden = !discount;
+    document.getElementById("discountAmount").textContent = "-" + money(discount);
     document.getElementById("total").textContent =
-      money(totals.subtotal + calculateShipping(cart));
+      money(totals.subtotal + calculateShipping(cart) - discount);
 
     clearPaypalStatus();
     return true;
@@ -1185,7 +1232,8 @@ async function createPaypalOrder() {
       cart,
       customer: getCustomerInformation(),
       shipping: getShippingInformation(),
-      orderNotes: document.getElementById("orderNotes").value.trim()
+      orderNotes: document.getElementById("orderNotes").value.trim(),
+      promoCode: appliedPromoCode
     })
   });
 
@@ -1423,6 +1471,10 @@ async function loadPayPal() {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (renderOrder()) {
+    document.getElementById("applyPromo").addEventListener("click", updatePromo);
+    document.getElementById("promoCode").addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); updatePromo(); }
+    });
     loadPayPal();
   }
 });
