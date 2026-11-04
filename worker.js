@@ -334,7 +334,8 @@ function priceCart(items) {
     cleanItems,
     totalQuantity,
     merchandiseTotal:
-      Number(merchandiseTotal.toFixed(2))
+      Number(merchandiseTotal.toFixed(2)),
+    customPhotoTotal: Number(customPhotoTotal.toFixed(2))
   };
 }
 
@@ -440,7 +441,8 @@ async function createOrder(request, env) {
     const {
       cleanItems,
       totalQuantity,
-      merchandiseTotal
+      merchandiseTotal,
+      customPhotoTotal
     } = priced;
 
     // Shipping is calculated server-side to match checkout.
@@ -449,7 +451,7 @@ async function createOrder(request, env) {
  
     // Apply TINY10 to eligible first-time customers.
     const requestedDiscountCode = String(
-      body.discountCode || ""
+      body.discountCode || body.promoCode || ""
     ).trim().toUpperCase();
 
     let discountCode = "";
@@ -467,7 +469,7 @@ async function createOrder(request, env) {
         discountAmount = await calculateTiny10Discount(
           env,
           customer.email,
-          merchandiseTotal
+          customPhotoTotal
         );
 
         discountCode = "TINY10";
@@ -1682,19 +1684,20 @@ async function validateDiscount(request, env) {
     }
 
     const merchandiseTotal = priced.merchandiseTotal;
+    const customPhotoTotal = priced.customPhotoTotal;
 
     // $20 minimum applies to merchandise only.
     // Shipping is excluded.
-    if (merchandiseTotal < FIRST_ORDER_MINIMUM) {
+    if (customPhotoTotal < FIRST_ORDER_MINIMUM) {
       return json({
         valid: false,
         minimumPurchase: FIRST_ORDER_MINIMUM,
         merchandiseTotal,
         amountNeeded: Number(
-          (FIRST_ORDER_MINIMUM - merchandiseTotal).toFixed(2)
+          (FIRST_ORDER_MINIMUM - customPhotoTotal).toFixed(2)
         ),
         error:
-          "Spend at least $20 on merchandise to use TINY10."
+          "Spend at least $20 on Custom Photo Magnets to use TINY10."
       }, 400);
     }
 
@@ -1741,7 +1744,7 @@ async function validateDiscount(request, env) {
 
     const discountAmount = Number(
       Math.min(
-        merchandiseTotal * (FIRST_ORDER_PERCENT / 100),
+        customPhotoTotal * (FIRST_ORDER_PERCENT / 100),
         FIRST_ORDER_MAX_SAVINGS
       ).toFixed(2)
     );
@@ -1763,6 +1766,7 @@ async function validateDiscount(request, env) {
       minimumPurchase: FIRST_ORDER_MINIMUM,
       maximumDiscount: FIRST_ORDER_MAX_SAVINGS,
       merchandiseTotal,
+      customPhotoTotal,
       discountAmount,
       shippingTotal,
       estimatedTotal,
@@ -1779,16 +1783,16 @@ async function validateDiscount(request, env) {
   }
 }
 
-async function calculateTiny10Discount(env, email, merchandiseTotal) {
+async function calculateTiny10Discount(env, email, customPhotoTotal) {
   const normalized = normalizedEmail(email);
 
   if (!normalized) {
     throw new Error("Enter a valid email address to use TINY10.");
   }
 
-  if (merchandiseTotal < 20) {
+  if (customPhotoTotal < 20) {
     throw new Error(
-      "Spend at least $20 on merchandise to use TINY10."
+      "Spend at least $20 on Custom Photo Magnets to use TINY10."
     );
   }
 
@@ -1832,7 +1836,7 @@ async function calculateTiny10Discount(env, email, merchandiseTotal) {
 
   const discountCents = Math.min(
     500,
-    Math.round(merchandiseTotal * 100 * 0.10)
+    Math.round(customPhotoTotal * 100 * 0.10)
   );
 
   return discountCents / 100;
