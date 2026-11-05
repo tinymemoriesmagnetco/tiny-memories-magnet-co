@@ -276,6 +276,7 @@ textarea {
 .promo-row button:disabled { opacity:.55; cursor:not-allowed; }
 .promo-feedback { margin:8px 0 0; font-size:13px; }
 .promo-discount { color:#405c42; }
+  [hidden] { display: none !important; }
 
 
 .total-row {
@@ -509,6 +510,15 @@ footer {
               ></textarea>
             </div>
 
+            <h3>Promo Code</h3>
+            <div class="field">
+              <label for="promoCode">Have a subscriber discount code?</label>
+              <div class="promo-row">
+                <input id="promoCode" type="text" placeholder="Enter promo code" autocomplete="off" maxlength="30">
+                <button id="applyPromo" type="button">Apply</button>
+              </div>
+              <p id="promoFeedback" class="promo-feedback" role="status">TINY10: 10% off $20+ in Custom Photo Magnets, up to $5. First-time newsletter subscribers only.</p>
+            </div>
           </form>
         </section>
 
@@ -1233,7 +1243,7 @@ async function createPaypalOrder() {
       customer: getCustomerInformation(),
       shipping: getShippingInformation(),
       orderNotes: document.getElementById("orderNotes").value.trim(),
-      promoCode: appliedPromoCode
+      discountCode: appliedPromoCode
     })
   });
 
@@ -1472,6 +1482,13 @@ async function loadPayPal() {
 document.addEventListener("DOMContentLoaded", () => {
   if (renderOrder()) {
     document.getElementById("applyPromo").addEventListener("click", updatePromo);
+    document.getElementById("promoCode").addEventListener("input", () => {
+      if (appliedPromoCode) {
+        appliedPromoCode = "";
+        document.getElementById("promoFeedback").textContent = "Click Apply to check your updated code.";
+        renderOrder();
+      }
+    });
     document.getElementById("promoCode").addEventListener("keydown", event => {
       if (event.key === "Enter") { event.preventDefault(); updatePromo(); }
     });
