@@ -904,7 +904,7 @@ function createOrderCard(order) {
         order,
         "delete",
         "Permanently delete this unpaid order? This cannot be undone. " +
-          "The server will verify that PayPal has not approved or completed payment."
+          "If verification is unavailable, you will be asked to confirm again."
       );
     });
     actions.appendChild(deleteButton);
@@ -1128,14 +1128,36 @@ async function performOrderAction(order, action, message) {
     "/" + action;
 
   try {
-    const response = await fetch(path, {
+    let response = await fetch(path, {
       method: "POST",
-      headers: {
-        "x-admin-password": adminPassword
-      }
+      headers: { "x-admin-password": adminPassword }
     });
+    let data = await response.json();
 
-    const data = await response.json();
+    if (!response.ok && action === "delete" && data.manualOverrideAvailable) {
+      const confirmed = confirm(
+        "PayPal could not verify this website order.\n\n" +
+        "ONLY continue if you personally checked that this website order " +
+        "was not paid through checkout. An outside PayPal invoice is NOT " +
+        "checked here.\n\n" +
+        "Deleting removes the order and its saved photos from the website. " +
+        "Save anything you need first.\n\n" +
+        "Delete this PENDING order anyway?"
+      );
+      if (!confirmed) return;
+      response = await fetch(path, {
+        method: "POST",
+        headers: {
+          "x-admin-password": adminPassword,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          manualOverride: true,
+          confirmation: "DELETE PENDING ORDER"
+        })
+      });
+      data = await response.json();
+    }
 
     if (!response.ok) {
       throw new Error(data.error || "Update failed.");
