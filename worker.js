@@ -52,6 +52,11 @@ export default {
       return submitSaveDateRequest(request, env);
     }
 
+    // LIVE SHIPPING QUOTE
+    if (path === "/api/shipping/quote" && method === "POST") {
+      return shippingQuoteEndpoint(request, env);
+    }
+
     // PAYPAL
     if (path === "/api/orders" && method === "POST") {
       return createOrder(request, env);
@@ -355,6 +360,104 @@ function calculateShipping(items) {
 }
 
 // ============================================
+// SHIPPO LIVE RATES: cheapest eligible service
+// ============================================
+function hasStandardMagnetShipping(items) {
+  return items.every(item => {
+    const sku = String(item.sku || "").trim().toUpperCase();
+    const type = String(item.type || "").toLowerCase();
+    return (sku === "CUSTOM-PHOTO" && type === "custom") ||
+      (/^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku) &&
+        (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")));
+  });
+}
+
+function shippingParcelList(items) {
+  const count = items.reduce((sum, item) => sum + Number(item.quantity), 0);
+  if (!Number.isSafeInteger(count) || count < 1 || count > 500) {
+    throw new Error("Invalid magnet quantity for shipping.");
+  }
+  const parcels = [];
+  let remaining = count;
+  while (remaining > 0) {
+    const qty = Math.min(remaining, 9);
+    // Conservative interpolation of measured packed weights in ounces.
+    const weight = qty <= 1 ? 1.8 : qty <= 3 ? 2.9 :
+      qty <= 6 ? 4.5 : 5.5;
+    parcels.push({length:"4",width:"4",height:"2",distance_unit:"in",weight:String(weight),mass_unit:"oz"});
+    remaining -= qty;
+  }
+  return parcels;
+}
+
+async function shippingCalculation(items, shipping, env) {
+  // Existing tiered shipping is retained for specialty and Save the Date carts.
+  if (!hasStandardMagnetShipping(items)) {
+    return {amount:calculateShipping(items),source:"existing"};
+  }
+  if (!env.SHIPPO_API_TOKEN || !env.SHIP_FROM_STREET1 ||
+      !env.SHIP_FROM_CITY || !env.SHIP_FROM_STATE ||
+      !env.SHIP_FROM_ZIP || !env.SHIP_FROM_COUNTRY) {
+    throw new Error("Live shipping is not configured. Please contact the shop.");
+  }
+  const dest = {
+    name:"Customer",street1:String(shipping?.address || "").trim(),
+    street2:String(shipping?.address2 || "").trim(),
+    city:String(shipping?.city || "").trim(),
+    state:String(shipping?.state || "").trim(),
+    zip:String(shipping?.zip || "").trim(),
+    country:String(shipping?.country || "US").trim().toUpperCase()
+  };
+  if (!dest.street1 || !dest.city || !dest.state || !dest.zip ||
+      !/^[A-Z]{2}$/.test(dest.country)) {
+    throw new Error("Enter your complete shipping address to calculate shipping.");
+  }
+  const origin = {
+    name:"Tiny Memories Magnet Co.",
+    street1:String(env.SHIP_FROM_STREET1),
+    city:String(env.SHIP_FROM_CITY),state:String(env.SHIP_FROM_STATE),
+    zip:String(env.SHIP_FROM_ZIP),country:String(env.SHIP_FROM_COUNTRY)
+  };
+  const response = await fetch("https://api.goshippo.com/shipments/", {
+    method:"POST",
+    headers:{Authorization:`ShippoToken ${env.SHIPPO_API_TOKEN}`,
+      "Content-Type":"application/json"},
+    body:JSON.stringify({address_from:origin,address_to:dest,
+      parcels:shippingParcelList(items),async:false})
+  });
+  if (!response.ok) {
+    console.error("Shippo rate request failed",response.status);
+    throw new Error("Shipping rates are temporarily unavailable. Please try again.");
+  }
+  const data = await response.json();
+  const rates = (Array.isArray(data.rates) ? data.rates : [])
+    .filter(rate => rate.currency === "USD" &&
+      Number.isFinite(Number(rate.amount)) && Number(rate.amount) > 0 &&
+      (!rate.attributes || !rate.attributes.includes("DEPRECATED")) &&
+      !rate.messages?.some(message => message.code === "RATE_UNAVAILABLE"))
+    .sort((a,b) => Number(a.amount) - Number(b.amount));
+  if (!rates.length) throw new Error("No shipping rates are available for this address. Please contact the shop.");
+  return {amount:Number(Number(rates[0].amount).toFixed(2)),
+    source:"shippo",service:rates[0].servicelevel?.name || "Shipping",
+    carrier:rates[0].provider || "Carrier"};
+}
+
+async function shippingQuoteEndpoint(request, env) {
+  if (!isSameSiteRequest(request)) return json({error:"Invalid origin."},403);
+  try {
+    const body = await request.json();
+    const items = Array.isArray(body.cart) ? body.cart : [];
+    if (!items.length || items.length > 100) return json({error:"Invalid cart."},400);
+    priceCart(items);
+    const quote = await shippingCalculation(items,body.shipping || {},env);
+    return json({shippingTotal:quote.amount,source:quote.source,
+      service:quote.service || null,carrier:quote.carrier || null});
+  } catch (error) {
+    return json({error:error.message || "Could not calculate shipping."},400);
+  }
+}
+
+// ============================================
 // PAYPAL AUTHENTICATION
 // ============================================
 
@@ -446,7 +549,7 @@ async function createOrder(request, env) {
     } = priced;
 
     // Shipping is calculated server-side to match checkout.
-    const shippingTotal = calculateShipping(items);
+    const shippingTotal = (await shippingCalculation(items, shipping, env)).amount;
 
  
     // Apply TINY10 to eligible first-time customers.
