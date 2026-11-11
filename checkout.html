@@ -277,6 +277,10 @@ textarea {
 .promo-feedback { margin:8px 0 0; font-size:13px; }
 .promo-discount { color:#405c42; }
   [hidden] { display: none !important; }
+.card-field { min-height: 48px; border: 1px solid #d7cec2; border-radius: 9px; background: white; padding: 4px 9px; }
+.card-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.card-pay-button { width: 100%; border: 0; background: var(--sage); color: white; border-radius: 9px; padding: 14px; font: inherit; font-weight: bold; cursor: pointer; margin-top: 18px; }
+.card-pay-button:disabled { opacity: .55; cursor: not-allowed; }
 
 
 .total-row {
@@ -542,6 +546,31 @@ footer {
           </p>
         </section>
 
+         <section class="card" id="card-payment-section" hidden>
+           <h2>Pay with Debit or Credit Card</h2>
+           <p class="hint">No PayPal account required. Card information is entered securely through PayPal.</p>
+           <div id="card-payment-status" class="status" role="status"></div>
+           <div class="field">
+             <label for="card-name-field">Name on Card</label>
+             <div id="card-name-field" class="card-field"></div>
+           </div>
+           <div class="field">
+             <label for="card-number-field">Card Number</label>
+             <div id="card-number-field" class="card-field"></div>
+           </div>
+           <div class="card-fields-grid">
+             <div class="field">
+               <label for="card-expiry-field">Expiration</label>
+               <div id="card-expiry-field" class="card-field"></div>
+             </div>
+             <div class="field">
+               <label for="card-cvv-field">Security Code</label>
+               <div id="card-cvv-field" class="card-field"></div>
+             </div>
+           </div>
+           <button type="button" id="pay-with-card" class="card-pay-button">Pay Securely with Card</button>
+         </section>
+
       </div>
 
       <div>
@@ -583,6 +612,31 @@ footer {
             Continue Shopping
           </a>
         </section>
+
+         <section class="card" id="card-payment-section" hidden>
+           <h2>Pay with Debit or Credit Card</h2>
+           <p class="hint">No PayPal account required. Card information is entered securely through PayPal.</p>
+           <div id="card-payment-status" class="status" role="status"></div>
+           <div class="field">
+             <label for="card-name-field">Name on Card</label>
+             <div id="card-name-field" class="card-field"></div>
+           </div>
+           <div class="field">
+             <label for="card-number-field">Card Number</label>
+             <div id="card-number-field" class="card-field"></div>
+           </div>
+           <div class="card-fields-grid">
+             <div class="field">
+               <label for="card-expiry-field">Expiration</label>
+               <div id="card-expiry-field" class="card-field"></div>
+             </div>
+             <div class="field">
+               <label for="card-cvv-field">Security Code</label>
+               <div id="card-cvv-field" class="card-field"></div>
+             </div>
+           </div>
+           <button type="button" id="pay-with-card" class="card-pay-button">Pay Securely with Card</button>
+         </section>
 
       </div>
 
@@ -808,7 +862,13 @@ function showPaypalStatus(message, type = "info") {
   element.className = "status show " + type;
 }
 
-function clearPaypalStatus() {
+ function showCardStatus(message, type = "info") {
+   const element = document.getElementById("card-payment-status");
+   element.textContent = message;
+   element.className = "status show " + type;
+ }
+
+ function clearPaypalStatus() {
   const element = document.getElementById("paypal-status");
   element.textContent = "";
   element.className = "status";
@@ -1335,7 +1395,7 @@ function loadPayPalSDK(clientId) {
       "?client-id=" + encodeURIComponent(clientId) +
       "&currency=USD" +
       "&intent=capture" +
-      "&components=buttons";
+      "&components=buttons,card-fields";
 
     script.onload = () => {
       if (window.paypal) {
@@ -1463,7 +1523,73 @@ async function loadPayPal() {
 
     }).render("#paypal-button-container");
 
-    paypalButtonsReady = true;
+     paypalButtonsReady = true;
+
+     // Hosted card fields keep sensitive card numbers out of our website code.
+     if (typeof window.paypal.CardFields === "function") {
+       const cardFields = window.paypal.CardFields({
+         createOrder: async () => {
+           if (!validateForm()) throw Error("Please complete your checkout information.");
+           setCheckoutBusy(true);
+           showCardStatus("Creating your secure card order...");
+           try {
+             return await createPaypalOrder();
+           } catch (error) {
+             setCheckoutBusy(false);
+             showCardStatus(error.message || "Could not create order.", "error");
+             throw error;
+           }
+         },
+         onApprove: async data => {
+           showCardStatus("Card authorized. Confirming your payment...");
+           try {
+             const result = await capturePaypalOrder(data.orderID);
+             if (result.success === true && result.status === "COMPLETED") {
+               finishSuccessfulOrder(data.orderID);
+             } else {
+               throw Error("Payment not confirmed. Please contact us before trying again.");
+             }
+           } catch (error) {
+             showCardStatus(error.message || "Could not confirm payment. Please contact us before retrying.", "error");
+           } finally {
+             setCheckoutBusy(false);
+           }
+         },
+         onError: error => {
+           console.error("Card payment error:", error);
+           showCardStatus("Card payment could not be completed. If you may have been charged, contact us before retrying.", "error");
+           setCheckoutBusy(false);
+         },
+         onCancel: () => {
+           showCardStatus("Card checkout was cancelled. Your cart is still saved.");
+           setCheckoutBusy(false);
+         }
+       });
+       if (cardFields.isEligible()) {
+         const section = document.getElementById("card-payment-section");
+         section.hidden = false;
+         await Promise.all([
+           cardFields.NameField().render("#card-name-field"),
+           cardFields.NumberField().render("#card-number-field"),
+           cardFields.ExpiryField().render("#card-expiry-field"),
+           cardFields.CVVField().render("#card-cvv-field")
+         ]);
+         document.getElementById("pay-with-card").addEventListener("click", async () => {
+           if (checkoutBusy || !validateForm()) return;
+           const button = document.getElementById("pay-with-card");
+           button.disabled = true;
+           try {
+             await cardFields.submit();
+           } catch (error) {
+             console.error("Card submission error:", error);
+             showCardStatus("Card payment could not be submitted. Check your card details. If payment may have been taken, contact us before retrying.", "error");
+             setCheckoutBusy(false);
+           } finally {
+             button.disabled = false;
+           }
+         });
+       }
+     }
 
   } catch (error) {
     console.error(error);
