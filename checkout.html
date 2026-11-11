@@ -613,30 +613,7 @@ footer {
           </a>
         </section>
 
-         <section class="card" id="card-payment-section" hidden>
-           <h2>Pay with Debit or Credit Card</h2>
-           <p class="hint">No PayPal account required. Card information is entered securely through PayPal.</p>
-           <div id="card-payment-status" class="status" role="status"></div>
-           <div class="field">
-             <label for="card-name-field">Name on Card</label>
-             <div id="card-name-field" class="card-field"></div>
-           </div>
-           <div class="field">
-             <label for="card-number-field">Card Number</label>
-             <div id="card-number-field" class="card-field"></div>
-           </div>
-           <div class="card-fields-grid">
-             <div class="field">
-               <label for="card-expiry-field">Expiration</label>
-               <div id="card-expiry-field" class="card-field"></div>
-             </div>
-             <div class="field">
-               <label for="card-cvv-field">Security Code</label>
-               <div id="card-cvv-field" class="card-field"></div>
-             </div>
-           </div>
-           <button type="button" id="pay-with-card" class="card-pay-button">Pay Securely with Card</button>
-         </section>
+
 
       </div>
 
@@ -674,12 +651,22 @@ const CART_KEY = "tinyMemoriesCart";
 // Handmade and seasonal magnets share one bundle-pricing pool.
 const STANDARD_MAGNET_SKU = /^(?:MAG|SEA)-[A-Z0-9-]+$/;
 const SHIPPING_COST = 5;
+let liveShippingQuote = null;
+let shippingQuoteRequest = 0;
+let shippingQuoteTimer = null;
 const SAVE_DATE_SHIPPING = {50:10,75:12,100:15,150:18,200:22};
 function calculateShipping(cart) {
   const saveDateRates = cart.filter(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")
     .map(item => SAVE_DATE_SHIPPING[Number(item.quantity)]);
   if (saveDateRates.some(rate => !Number.isFinite(rate))) throw Error("Invalid Save the Date shipping quantity.");
-  return saveDateRates.length ? Math.max(...saveDateRates) : SHIPPING_COST;
+  return saveDateRates.length ? Math.max(...saveDateRates) :
+    (cart.every(item => {
+      const sku = String(item.sku || "").trim().toUpperCase();
+      const type = String(item.type || "").toLowerCase();
+      return (sku === "CUSTOM-PHOTO" && type === "custom") ||
+        (/^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku) &&
+         (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")));
+    }) ? liveShippingQuote : SHIPPING_COST);
 }
 const SAVE_DATE_PRICES = {50:125,75:172.5,100:200,150:270,200:320};
 
@@ -1222,7 +1209,7 @@ function renderOrder() {
       money(totals.subtotal);
 
     document.getElementById("shipping").textContent =
-      money(calculateShipping(cart));
+      (calculateShipping(cart) === null ? "Enter shipping address" : money(calculateShipping(cart)));
 
     if (appliedPromoCode && totals.customPhotoTotal < 20) {
       appliedPromoCode = "";
@@ -1232,7 +1219,8 @@ function renderOrder() {
     document.getElementById("discountRow").hidden = !discount;
     document.getElementById("discountAmount").textContent = "-" + money(discount);
     document.getElementById("total").textContent =
-      money(totals.subtotal + calculateShipping(cart) - discount);
+      (calculateShipping(cart) === null ? "Calculated after address" :
+        money(totals.subtotal + calculateShipping(cart) - discount));
 
     clearPaypalStatus();
     return true;
@@ -1280,6 +1268,32 @@ function validateForm() {
   return true;
 }
 
+async function refreshLiveShipping() {
+  const requestId = ++shippingQuoteRequest;
+  const cart = getCart();
+  const shipping = getShippingInformation();
+  liveShippingQuote = null;
+  renderOrder();
+  if (!shipping.address || !shipping.city || !shipping.state || !shipping.zip) return;
+  try {
+    const response = await fetch("/api/shipping/quote", {
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cart,shipping})
+    });
+    const data = await response.json();
+    if (requestId !== shippingQuoteRequest) return;
+    if (!response.ok || !Number.isFinite(Number(data.shippingTotal))) {
+      throw Error(data.error || "Unable to calculate shipping.");
+    }
+    liveShippingQuote = Number(data.shippingTotal);
+    renderOrder();
+  } catch (error) {
+    if (requestId !== shippingQuoteRequest) return;
+    document.getElementById("shipping").textContent = "Rate unavailable";
+    showPaypalStatus(error.message,"error");
+  }
+}
+
 async function createPaypalOrder() {
   if (!validateForm()) {
     throw Error("Please complete your checkout information.");
@@ -1292,6 +1306,15 @@ async function createPaypalOrder() {
   }
 
   cartPricing(cart);
+  // A fresh server-side quote is required before the PayPal order is created.
+  const quoteResponse = await fetch("/api/shipping/quote", {
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({cart,shipping:getShippingInformation()})
+  });
+  const quoteData = await quoteResponse.json();
+  if (!quoteResponse.ok) throw Error(quoteData.error || "Shipping quote unavailable.");
+  liveShippingQuote = Number(quoteData.shippingTotal);
+  renderOrder();
 
   const response = await fetch("/api/orders", {
     method: "POST",
@@ -1618,6 +1641,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("promoCode").addEventListener("keydown", event => {
       if (event.key === "Enter") { event.preventDefault(); updatePromo(); }
     });
+    for (const id of ["address","address2","city","state","zip","country"]) {
+      document.getElementById(id).addEventListener("input", () => {
+        ++shippingQuoteRequest;
+        liveShippingQuote = null;
+        renderOrder();
+        clearTimeout(shippingQuoteTimer);
+        shippingQuoteTimer = setTimeout(refreshLiveShipping,650);
+      });
+      document.getElementById(id).addEventListener("change", () => {
+        clearTimeout(shippingQuoteTimer);
+        refreshLiveShipping();
+      });
+    }
     loadPayPal();
   }
 });
