@@ -1282,13 +1282,18 @@ async function deleteUnpaidOrder(request, env, orderId) {
     return json({ error: "Invalid order ID." }, 400);
   }
 
-  if (!env.DB || !env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
-    return json({ error: "Payment verification is unavailable." }, 503);
+  if (!env.DB) {
+    return json({ error: "Database is unavailable." }, 503);
   }
 
   try {
+    // Manual override is allowed only after an additional admin confirmation.
+    const body = await request.json().catch(() => ({}));
+    const manualOverride = body.manualOverride === true &&
+      body.confirmation === "DELETE PENDING ORDER";
+
     const order = await env.DB.prepare(`
-      SELECT id, status, paypal_order_id
+      SELECT id, status, paypal_order_id, paypal_capture_json, paid_at
       FROM orders WHERE id = ? LIMIT 1
     `).bind(orderId).first();
 
@@ -1309,25 +1314,37 @@ async function deleteUnpaidOrder(request, env, orderId) {
       }, 409);
     }
 
-    const token = await getPayPalAccessToken(env);
-    const paypalResponse = await fetch(
-      `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!paypalResponse.ok) {
-      return json({ error: "PayPal status could not be verified. Order was not deleted." }, 502);
+    // Local payment evidence always blocks deletion, including manual override.
+    if (order.paid_at || order.paypal_capture_json) {
+      return json({ error: "This order has payment records and cannot be deleted." }, 409);
     }
 
-    const paypalOrder = await paypalResponse.json();
-    // APPROVED might still be captured; COMPLETED is a real payment.
-    // Unknown states must be treated as unsafe.
-    const safeStatuses = ["CREATED", "PAYER_ACTION_REQUIRED", "VOIDED"];
-    if (!safeStatuses.includes(paypalOrder.status)) {
-      return json({
-        error: "PayPal status is " + String(paypalOrder.status || "unknown") +
-          ". This order cannot be safely deleted."
-      }, 409);
+    if (!manualOverride) {
+      if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
+        return json({ error: "PayPal verification is unavailable.", manualOverrideAvailable: true }, 502);
+      }
+      let paypalResponse;
+      try {
+        const token = await getPayPalAccessToken(env);
+        paypalResponse = await fetch(
+          `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (error) {
+        console.error("PayPal delete verification failed:", error);
+        return json({ error: "PayPal verification failed.", manualOverrideAvailable: true }, 502);
+      }
+      if (!paypalResponse.ok) {
+        return json({ error: "PayPal status could not be verified.", manualOverrideAvailable: true }, 502);
+      }
+      const paypalOrder = await paypalResponse.json();
+      const safeStatuses = ["CREATED", "PAYER_ACTION_REQUIRED", "VOIDED"];
+      if (!safeStatuses.includes(paypalOrder.status)) {
+        return json({
+          error: "PayPal status is " + String(paypalOrder.status || "unknown") +
+            ". This order cannot be safely deleted."
+        }, 409);
+      }
     }
 
     // Recheck the local state in the DELETE itself so a concurrent capture
@@ -1335,6 +1352,7 @@ async function deleteUnpaidOrder(request, env, orderId) {
     const deleted = await env.DB.prepare(`
       DELETE FROM orders
       WHERE id = ? AND status = 'PENDING' AND paypal_order_id = ?
+        AND paid_at IS NULL AND paypal_capture_json IS NULL
         AND NOT EXISTS (
           SELECT 1 FROM discount_redemptions
           WHERE paypal_order_id = ?
