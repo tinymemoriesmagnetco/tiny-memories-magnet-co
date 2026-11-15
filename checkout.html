@@ -650,23 +650,14 @@ footer {
 const CART_KEY = "tinyMemoriesCart";
 // Handmade and seasonal magnets share one bundle-pricing pool.
 const STANDARD_MAGNET_SKU = /^(?:MAG|SEA)-[A-Z0-9-]+$/;
-const SHIPPING_COST = 5;
 let liveShippingQuote = null;
 let shippingQuoteRequest = 0;
 let shippingQuoteTimer = null;
-const SAVE_DATE_SHIPPING = {50:10,75:12,100:15,150:18,200:22};
 function calculateShipping(cart) {
-  const saveDateRates = cart.filter(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")
-    .map(item => SAVE_DATE_SHIPPING[Number(item.quantity)]);
-  if (saveDateRates.some(rate => !Number.isFinite(rate))) throw Error("Invalid Save the Date shipping quantity.");
-  return saveDateRates.length ? Math.max(...saveDateRates) :
-    (cart.every(item => {
-      const sku = String(item.sku || "").trim().toUpperCase();
-      const type = String(item.type || "").toLowerCase();
-      return (sku === "CUSTOM-PHOTO" && type === "custom") ||
-        (/^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku) &&
-         (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")));
-    }) ? liveShippingQuote : SHIPPING_COST);
+  // Never show a flat-rate estimate. Shippo quotes all eligible products.
+  // Save the Date orders require a custom packaging quote.
+  if (cart.some(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")) return null;
+  return liveShippingQuote;
 }
 const SAVE_DATE_PRICES = {50:125,75:172.5,100:200,150:270,200:320};
 
@@ -1209,7 +1200,8 @@ function renderOrder() {
       money(totals.subtotal);
 
     document.getElementById("shipping").textContent =
-      (calculateShipping(cart) === null ? "Enter shipping address" : money(calculateShipping(cart)));
+      (calculateShipping(cart) === null ?
+        (cart.some(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET") ? "Contact us for a shipping quote" : "Enter shipping address") : money(calculateShipping(cart)));
 
     if (appliedPromoCode && totals.customPhotoTotal < 20) {
       appliedPromoCode = "";
@@ -1219,7 +1211,7 @@ function renderOrder() {
     document.getElementById("discountRow").hidden = !discount;
     document.getElementById("discountAmount").textContent = "-" + money(discount);
     document.getElementById("total").textContent =
-      (calculateShipping(cart) === null ? "Calculated after address" :
+      (calculateShipping(cart) === null ? "Calculated after shipping quote" :
         money(totals.subtotal + calculateShipping(cart) - discount));
 
     clearPaypalStatus();
@@ -1306,6 +1298,9 @@ async function createPaypalOrder() {
   }
 
   cartPricing(cart);
+  if (cart.some(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")) {
+    throw Error("Save the Date shipping requires a custom quote. Please contact Tiny Memories Magnet Co. before checkout.");
+  }
   // A fresh server-side quote is required before the PayPal order is created.
   const quoteResponse = await fetch("/api/shipping/quote", {
     method:"POST",headers:{"Content-Type":"application/json"},
