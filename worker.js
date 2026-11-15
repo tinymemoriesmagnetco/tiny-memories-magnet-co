@@ -237,29 +237,66 @@ function priceCart(items) {
     };
 
     if (sku === "SAVE-DATE-SET") {
-      const tiers = {50:125,75:172.5,100:200,150:270,200:320};
+      const tiers = {
+        50: 125,
+        75: 172.5,
+        100: 200,
+        150: 270,
+        200: 320
+      };
+
       if (!Object.prototype.hasOwnProperty.call(tiers, quantity)) {
         throw new Error("Choose an available Save the Date quantity.");
       }
+
       const details = item.saveDateDetails || {};
-      const names = String(details.names || "").trim().slice(0,200);
-      const date = String(details.date || "").trim().slice(0,100);
-      const colors = String(details.colors || "").trim().slice(0,500);
-      const design = String(details.design || "").trim().slice(0,100);
-      const ideas = String(details.ideas || "").trim().slice(0,2000);
-      const wording = String(details.wording || "").trim().slice(0,1000);
-      if (!names || !date || !design) throw new Error("Save the Date details are incomplete.");
-      if (details.envelopes !== "no") throw new Error("Envelope quotes must be requested before paying.");
-      if (!Array.isArray(item.photos) || item.photos.length !== 1 ||
-          !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(String(item.photos[0]?.dataUrl || "")) ||
-          String(item.photos[0].dataUrl).length > 450000) {
-        throw new Error("Please upload a valid Save the Date photo under 330 KB compressed.");
+      const names = String(details.names || "").trim().slice(0, 200);
+      const date = String(details.date || "").trim().slice(0, 100);
+      const colors = String(details.colors || "").trim().slice(0, 500);
+      const design = String(details.design || "").trim().slice(0, 100);
+      const ideas = String(details.ideas || "").trim().slice(0, 2000);
+      const wording = String(details.wording || "").trim().slice(0, 1000);
+
+      if (!names || !date || !design) {
+        throw new Error("Save the Date details are incomplete.");
       }
+
+      if (details.envelopes !== "no") {
+        throw new Error("Envelope quotes must be requested before paying.");
+      }
+
+      if (
+        !Array.isArray(item.photos) ||
+        item.photos.length !== 1 ||
+        !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(
+          String(item.photos[0]?.dataUrl || "")
+        ) ||
+        String(item.photos[0].dataUrl).length > 450000
+      ) {
+        throw new Error(
+          "Please upload a valid Save the Date photo under 330 KB compressed."
+        );
+      }
+
       clean.type = "save-date";
-      clean.saveDateDetails = {names,date,colors,design,ideas,wording,envelopes:"no"};
-      clean.photos = [{name:"save-the-date-photo.jpg",dataUrl:item.photos[0].dataUrl}];
+      clean.saveDateDetails = {
+        names,
+        date,
+        colors,
+        design,
+        ideas,
+        wording,
+        envelopes: "no"
+      };
+
+      clean.photos = [{
+        name: "save-the-date-photo.jpg",
+        dataUrl: item.photos[0].dataUrl
+      }];
+
       clean.lineTotal = tiers[quantity];
       saveDateTotal += clean.lineTotal;
+
     } else if (sku === "SPECIAL-WESTERN") {
       clean.type = "specialty";
       clean.lineTotal = quantity * 20;
@@ -271,15 +308,10 @@ function priceCart(items) {
       specialtyTotal += clean.lineTotal;
 
     } else if (sku === "SPECIAL-CUSTOM-NAME") {
-      const magnetCount = validQuantity(
-        item.magnetCount,
-        9
-      );
+      const magnetCount = validQuantity(item.magnetCount, 9);
 
       if (![1, 3, 6, 9].includes(magnetCount)) {
-        throw new Error(
-          "Invalid personalized magnet bundle size."
-        );
+        throw new Error("Invalid personalized magnet bundle size.");
       }
 
       clean.type = "specialty";
@@ -313,7 +345,9 @@ function priceCart(items) {
       customPhotoTotal += clean.lineTotal;
 
     } else if (
-      (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")) &&
+      (type === "handmade" ||
+       type === "seasonal" ||
+       sku.startsWith("SEA-")) &&
       /^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku)
     ) {
       handmadeQuantity += quantity;
@@ -338,122 +372,268 @@ function priceCart(items) {
   return {
     cleanItems,
     totalQuantity,
-    merchandiseTotal:
-      Number(merchandiseTotal.toFixed(2)),
+    merchandiseTotal: Number(merchandiseTotal.toFixed(2)),
     customPhotoTotal: Number(customPhotoTotal.toFixed(2))
   };
 }
 
-// Save the Date shipping tiers. Regular orders remain $5.
-// For mixed carts or multiple Save the Date sets, use the highest tier,
-// matching the checkout page's displayed shipping calculation.
-const SAVE_DATE_SHIPPING = {50:10,75:12,100:15,150:18,200:22};
+// ============================================
+// SHIPPO LIVE SHIPPING
+// ============================================
 
+// Save the Date shipping requires a custom quote.
+// No automatic $5 fallback.
 function calculateShipping(items) {
-  const saveDateRates = items
-    .filter(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")
-    .map(item => SAVE_DATE_SHIPPING[Number(item.quantity)]);
-  if (saveDateRates.some(rate => !Number.isFinite(rate))) {
-    throw new Error("Invalid Save the Date shipping quantity.");
-  }
-  return saveDateRates.length ? Math.max(...saveDateRates) : 5;
-}
-
-// ============================================
-// SHIPPO LIVE RATES: cheapest eligible service
-// ============================================
-function hasStandardMagnetShipping(items) {
-  return items.every(item => {
-    const sku = String(item.sku || "").trim().toUpperCase();
-    const type = String(item.type || "").toLowerCase();
-    return (sku === "CUSTOM-PHOTO" && type === "custom") ||
-      (/^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku) &&
-        (type === "handmade" || type === "seasonal" || sku.startsWith("SEA-")));
-  });
+  return null;
 }
 
 function shippingParcelList(items) {
-  const count = items.reduce((sum, item) => sum + Number(item.quantity), 0);
-  if (!Number.isSafeInteger(count) || count < 1 || count > 500) {
-    throw new Error("Invalid magnet quantity for shipping.");
-  }
   const parcels = [];
-  let remaining = count;
-  while (remaining > 0) {
-    const qty = Math.min(remaining, 9);
-    // Conservative interpolation of measured packed weights in ounces.
-    const weight = qty <= 1 ? 1.8 : qty <= 3 ? 2.9 :
-      qty <= 6 ? 4.5 : 5.5;
-    parcels.push({length:"4",width:"4",height:"2",distance_unit:"in",weight:String(weight),mass_unit:"oz"});
-    remaining -= qty;
+  let looseMagnets = 0;
+
+  function addBox(magnetCount) {
+    if (
+      !Number.isSafeInteger(magnetCount) ||
+      magnetCount < 1 ||
+      magnetCount > 18
+    ) {
+      throw new Error("Invalid magnet count for shipping box.");
+    }
+
+    const weight = Number(
+      (1.1 + 0.6 * magnetCount).toFixed(2)
+    );
+
+    parcels.push({
+      length: "4",
+      width: "4",
+      height: "2",
+      distance_unit: "in",
+      weight: String(weight),
+      mass_unit: "oz"
+    });
   }
+
+  for (const item of items) {
+    const sku = String(item.sku || "")
+      .trim()
+      .toUpperCase();
+
+    const qty = validQuantity(item.quantity);
+
+    if (!qty) {
+      throw new Error("Invalid item quantity for shipping.");
+    }
+
+    if (sku === "SAVE-DATE-SET") {
+      throw new Error(
+        "Save the Date orders require a custom shipping quote. Please contact the shop before paying."
+      );
+    }
+
+    if (sku === "SPECIAL-WESTERN") {
+      for (let i = 0; i < qty; i++) {
+        addBox(6);
+      }
+
+    } else if (sku === "SPECIAL-ALPHABET") {
+      // 52 magnets packed in 3 estimated boxes.
+      for (let i = 0; i < qty; i++) {
+        addBox(18);
+        addBox(17);
+        addBox(17);
+      }
+
+    } else if (sku === "SPECIAL-CUSTOM-NAME") {
+      const count = validQuantity(item.magnetCount, 9);
+
+      if (![1, 3, 6, 9].includes(count)) {
+        throw new Error("Invalid custom name magnet count.");
+      }
+
+      looseMagnets += qty * count;
+
+    } else if (
+      sku === "CUSTOM-PHOTO" ||
+      /^(?:MAG|SEA)-[A-Z0-9-]+$/.test(sku)
+    ) {
+      looseMagnets += qty;
+
+    } else {
+      throw new Error(
+        "Unrecognized product for shipping: " + sku
+      );
+    }
+  }
+
+  if (looseMagnets > 500 || parcels.length > 500) {
+    throw new Error(
+      "This order is too large for automatic shipping. Please contact the shop."
+    );
+  }
+
+  while (looseMagnets > 0) {
+    const count = Math.min(9, looseMagnets);
+    addBox(count);
+    looseMagnets -= count;
+  }
+
+  if (!parcels.length || parcels.length > 500) {
+    throw new Error("Invalid shipping parcels.");
+  }
+
   return parcels;
 }
 
 async function shippingCalculation(items, shipping, env) {
-  // Existing tiered shipping is retained for specialty and Save the Date carts.
-  if (!hasStandardMagnetShipping(items)) {
-    return {amount:calculateShipping(items),source:"existing"};
+  if (
+    !env.SHIPPO_API_TOKEN ||
+    !env.SHIP_FROM_STREET1 ||
+    !env.SHIP_FROM_CITY ||
+    !env.SHIP_FROM_STATE ||
+    !env.SHIP_FROM_ZIP ||
+    !env.SHIP_FROM_COUNTRY
+  ) {
+    throw new Error(
+      "Live shipping is not configured. Please contact the shop."
+    );
   }
-  if (!env.SHIPPO_API_TOKEN || !env.SHIP_FROM_STREET1 ||
-      !env.SHIP_FROM_CITY || !env.SHIP_FROM_STATE ||
-      !env.SHIP_FROM_ZIP || !env.SHIP_FROM_COUNTRY) {
-    throw new Error("Live shipping is not configured. Please contact the shop.");
-  }
+
   const dest = {
-    name:"Customer",street1:String(shipping?.address || "").trim(),
-    street2:String(shipping?.address2 || "").trim(),
-    city:String(shipping?.city || "").trim(),
-    state:String(shipping?.state || "").trim(),
-    zip:String(shipping?.zip || "").trim(),
-    country:String(shipping?.country || "US").trim().toUpperCase()
+    name: "Customer",
+    street1: String(shipping?.address || "").trim(),
+    street2: String(shipping?.address2 || "").trim(),
+    city: String(shipping?.city || "").trim(),
+    state: String(shipping?.state || "").trim(),
+    zip: String(shipping?.zip || "").trim(),
+    country: String(shipping?.country || "US")
+      .trim()
+      .toUpperCase()
   };
-  if (!dest.street1 || !dest.city || !dest.state || !dest.zip ||
-      !/^[A-Z]{2}$/.test(dest.country)) {
-    throw new Error("Enter your complete shipping address to calculate shipping.");
+
+  if (
+    !dest.street1 ||
+    !dest.city ||
+    !dest.state ||
+    !dest.zip ||
+    !/^[A-Z]{2}$/.test(dest.country)
+  ) {
+    throw new Error(
+      "Enter your complete shipping address to calculate shipping."
+    );
   }
+
   const origin = {
-    name:"Tiny Memories Magnet Co.",
-    street1:String(env.SHIP_FROM_STREET1),
-    city:String(env.SHIP_FROM_CITY),state:String(env.SHIP_FROM_STATE),
-    zip:String(env.SHIP_FROM_ZIP),country:String(env.SHIP_FROM_COUNTRY)
+    name: "Tiny Memories Magnet Co.",
+    street1: String(env.SHIP_FROM_STREET1),
+    city: String(env.SHIP_FROM_CITY),
+    state: String(env.SHIP_FROM_STATE),
+    zip: String(env.SHIP_FROM_ZIP),
+    country: String(env.SHIP_FROM_COUNTRY)
   };
-  const response = await fetch("https://api.goshippo.com/shipments/", {
-    method:"POST",
-    headers:{Authorization:`ShippoToken ${env.SHIPPO_API_TOKEN}`,
-      "Content-Type":"application/json"},
-    body:JSON.stringify({address_from:origin,address_to:dest,
-      parcels:shippingParcelList(items),async:false})
-  });
+
+  const response = await fetch(
+    "https://api.goshippo.com/shipments/",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `ShippoToken ${env.SHIPPO_API_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        address_from: origin,
+        address_to: dest,
+        parcels: shippingParcelList(items),
+        async: false
+      })
+    }
+  );
+
   if (!response.ok) {
-    console.error("Shippo rate request failed",response.status);
-    throw new Error("Shipping rates are temporarily unavailable. Please try again.");
+    console.error(
+      "Shippo rate request failed",
+      response.status
+    );
+
+    throw new Error(
+      "Shipping rates are temporarily unavailable. Please try again."
+    );
   }
+
   const data = await response.json();
-  const rates = (Array.isArray(data.rates) ? data.rates : [])
-    .filter(rate => rate.currency === "USD" &&
-      Number.isFinite(Number(rate.amount)) && Number(rate.amount) > 0 &&
-      (!rate.attributes || !rate.attributes.includes("DEPRECATED")) &&
-      !rate.messages?.some(message => message.code === "RATE_UNAVAILABLE"))
-    .sort((a,b) => Number(a.amount) - Number(b.amount));
-  if (!rates.length) throw new Error("No shipping rates are available for this address. Please contact the shop.");
-  return {amount:Number(Number(rates[0].amount).toFixed(2)),
-    source:"shippo",service:rates[0].servicelevel?.name || "Shipping",
-    carrier:rates[0].provider || "Carrier"};
+
+  const rates = (
+    Array.isArray(data.rates) ? data.rates : []
+  )
+    .filter(rate =>
+      rate.currency === "USD" &&
+      Number.isFinite(Number(rate.amount)) &&
+      Number(rate.amount) > 0 &&
+      (
+        !rate.attributes ||
+        !rate.attributes.includes("DEPRECATED")
+      ) &&
+      !rate.messages?.some(
+        message => message.code === "RATE_UNAVAILABLE"
+      )
+    )
+    .sort(
+      (a, b) =>
+        Number(a.amount) - Number(b.amount)
+    );
+
+  if (!rates.length) {
+    throw new Error(
+      "No shipping rates are available for this address. Please contact the shop."
+    );
+  }
+
+  return {
+    amount: Number(
+      Number(rates[0].amount).toFixed(2)
+    ),
+    source: "shippo",
+    service: rates[0].servicelevel?.name || "Shipping",
+    carrier: rates[0].provider || "Carrier"
+  };
 }
 
 async function shippingQuoteEndpoint(request, env) {
-  if (!isSameSiteRequest(request)) return json({error:"Invalid origin."},403);
+  if (!isSameSiteRequest(request)) {
+    return json({ error: "Invalid origin." }, 403);
+  }
+
   try {
     const body = await request.json();
-    const items = Array.isArray(body.cart) ? body.cart : [];
-    if (!items.length || items.length > 100) return json({error:"Invalid cart."},400);
+
+    const items = Array.isArray(body.cart)
+      ? body.cart
+      : [];
+
+    if (!items.length || items.length > 100) {
+      return json({ error: "Invalid cart." }, 400);
+    }
+
     priceCart(items);
-    const quote = await shippingCalculation(items,body.shipping || {},env);
-    return json({shippingTotal:quote.amount,source:quote.source,
-      service:quote.service || null,carrier:quote.carrier || null});
+
+    const quote = await shippingCalculation(
+      items,
+      body.shipping || {},
+      env
+    );
+
+    return json({
+      shippingTotal: quote.amount,
+      source: quote.source,
+      service: quote.service || null,
+      carrier: quote.carrier || null
+    });
+
   } catch (error) {
-    return json({error:error.message || "Could not calculate shipping."},400);
+    return json({
+      error: error.message ||
+        "Could not calculate shipping."
+    }, 400);
   }
 }
 
@@ -468,9 +648,10 @@ function getPayPalBaseUrl(env) {
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
+
 async function getPayPalAccessToken(env) {
-const credentials =
-  `${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`;
+  const credentials =
+    `${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`;
 
   const response = await fetch(
     `${getPayPalBaseUrl(env)}/v1/oauth2/token`,
@@ -478,24 +659,23 @@ const credentials =
       method: "POST",
       headers: {
         Authorization: `Basic ${btoa(credentials)}`,
-        "Content-Type":
-          "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded"
       },
       body: "grant_type=client_credentials"
     }
   );
 
-if (!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
 
-  console.error("PayPal authentication error:", {
-    status: response.status,
-    error: errorData.error || "unknown",
-    description: errorData.error_description || ""
-  });
+    console.error("PayPal authentication error:", {
+      status: response.status,
+      error: errorData.error || "unknown",
+      description: errorData.error_description || ""
+    });
 
-  throw new Error("PayPal authentication failed.");
-}
+    throw new Error("PayPal authentication failed.");
+  }
 
   const data = await response.json();
   return data.access_token;
@@ -549,9 +729,9 @@ async function createOrder(request, env) {
     } = priced;
 
     // Shipping is calculated server-side to match checkout.
-    const shippingTotal = (await shippingCalculation(items, shipping, env)).amount;
+    const shippingTotal =
+      (await shippingCalculation(items, shipping, env)).amount;
 
- 
     // Apply TINY10 to eligible first-time customers.
     const requestedDiscountCode = String(
       body.discountCode || body.promoCode || ""
@@ -592,7 +772,6 @@ async function createOrder(request, env) {
       ).toFixed(2)
     );
 
-
     const accessToken = await getPayPalAccessToken(env);
 
     const paypalResponse = await fetch(
@@ -615,7 +794,6 @@ async function createOrder(request, env) {
                     currency_code: "USD",
                     value: merchandiseTotal.toFixed(2)
                   },
-                 
                   shipping: {
                     currency_code: "USD",
                     value: shippingTotal.toFixed(2)
@@ -628,11 +806,9 @@ async function createOrder(request, env) {
                         }
                       }
                     : {})
-
                 }
               },
-              description:
-                "Tiny Memories Magnet Co. order"
+              description: "Tiny Memories Magnet Co. order"
             }
           ]
         })
@@ -654,7 +830,6 @@ async function createOrder(request, env) {
       "-" +
       Math.random().toString(36).slice(2, 8);
 
-   
     await env.DB.prepare(`
       INSERT INTO orders (
         id,
@@ -708,7 +883,6 @@ async function createOrder(request, env) {
       )
       .run();
 
-
     return json({
       id: paypalData.id,
       total
@@ -730,18 +904,21 @@ async function findActiveTiny10Claim(env, email) {
   const claim = await env.DB.prepare(`
     SELECT paypal_order_id, redeemed_at
     FROM discount_redemptions
-    WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10'
+    WHERE LOWER(TRIM(email)) = ?
+      AND UPPER(TRIM(discount_code)) = 'TINY10'
     LIMIT 1
   `).bind(email).first();
+
   if (!claim) return null;
 
   // Completed discounts must never be released, including legacy records.
   const owner = await env.DB.prepare(`
-    SELECT status FROM orders WHERE paypal_order_id = ? LIMIT 1
+    SELECT status FROM orders
+    WHERE paypal_order_id = ? LIMIT 1
   `).bind(claim.paypal_order_id).first();
-  if (!owner || owner.status === 'PAID') return claim;
 
-  // Do not mistake a capture timeout for a failed payment.
+  if (!owner || owner.status === "PAID") return claim;
+
   // Only PayPal's explicit VOIDED state authorizes releasing a reservation.
   try {
     const token = await getPayPalAccessToken(env);
@@ -749,12 +926,12 @@ async function findActiveTiny10Claim(env, email) {
       `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(claim.paypal_order_id)}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    if (!response.ok) return claim;
-    const paypalOrder = await response.json();
-    if (paypalOrder.status !== 'VOIDED') return claim;
 
-    // Conditional delete avoids removing a paid redemption if another
-    // request has updated the local order while this check was in flight.
+    if (!response.ok) return claim;
+
+    const paypalOrder = await response.json();
+    if (paypalOrder.status !== "VOIDED") return claim;
+
     await env.DB.prepare(`
       DELETE FROM discount_redemptions
       WHERE LOWER(TRIM(email)) = ?
@@ -764,14 +941,24 @@ async function findActiveTiny10Claim(env, email) {
           SELECT 1 FROM orders
           WHERE paypal_order_id = ? AND status = 'PAID'
         )
-    `).bind(email, claim.paypal_order_id, claim.paypal_order_id).run();
+    `).bind(
+      email,
+      claim.paypal_order_id,
+      claim.paypal_order_id
+    ).run();
+
     return await env.DB.prepare(`
       SELECT paypal_order_id FROM discount_redemptions
-      WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10'
+      WHERE LOWER(TRIM(email)) = ?
+        AND UPPER(TRIM(discount_code)) = 'TINY10'
       LIMIT 1
     `).bind(email).first();
+
   } catch (error) {
-    console.error('TINY10 reservation reconciliation failed:', error);
+    console.error(
+      "TINY10 reservation reconciliation failed:",
+      error
+    );
     return claim;
   }
 }
@@ -782,117 +969,252 @@ async function findActiveTiny10Claim(env, email) {
 
 async function captureOrder(orderID, env) {
   try {
-    if (!env.DB || !env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
-      return json({ error: "Payment configuration is unavailable." }, 500);
+    if (
+      !env.DB ||
+      !env.PAYPAL_CLIENT_ID ||
+      !env.PAYPAL_CLIENT_SECRET
+    ) {
+      return json({
+        error: "Payment configuration is unavailable."
+      }, 500);
     }
 
     const order = await env.DB.prepare(`
-      SELECT id, status, customer_json, discount_code, discount_amount
-      FROM orders WHERE paypal_order_id = ? LIMIT 1
+      SELECT id, status, customer_json,
+             discount_code, discount_amount
+      FROM orders
+      WHERE paypal_order_id = ?
+      LIMIT 1
     `).bind(orderID).first();
-    if (!order) return json({ error: "Order not found." }, 404);
+
+    if (!order) {
+      return json({ error: "Order not found." }, 404);
+    }
+
     if (order.status === "PAID") {
-      return json({ success: true, status: "COMPLETED" });
+      return json({
+        success: true,
+        status: "COMPLETED"
+      });
     }
 
     const token = await getPayPalAccessToken(env);
     const base = getPayPalBaseUrl(env);
-    const endpoint = `${base}/v2/checkout/orders/${encodeURIComponent(orderID)}`;
-    const headers = { Authorization: `Bearer ${token}` };
+    const endpoint =
+      `${base}/v2/checkout/orders/${encodeURIComponent(orderID)}`;
+
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
 
     // Reconcile a previous successful capture whose database update failed.
-    const checkResponse = await fetch(endpoint, { method: "GET", headers });
+    const checkResponse = await fetch(endpoint, {
+      method: "GET",
+      headers
+    });
+
     if (!checkResponse.ok) {
-      return json({ error: "Could not verify PayPal payment status. Please retry this order." }, 502);
+      return json({
+        error: "Could not verify PayPal payment status. Please retry this order."
+      }, 502);
     }
+
     const paypalOrder = await checkResponse.json();
-    const usesTiny10 = order.discount_code === "TINY10" && Number(order.discount_amount) > 0;
-    const customer = JSON.parse(order.customer_json || "{}");
-    const email = usesTiny10 ? normalizedEmail(customer.email) : null;
+
+    const usesTiny10 =
+      order.discount_code === "TINY10" &&
+      Number(order.discount_amount) > 0;
+
+    const customer = JSON.parse(
+      order.customer_json || "{}"
+    );
+
+    const email = usesTiny10
+      ? normalizedEmail(customer.email)
+      : null;
 
     // A completed payment must be recorded even if discount checks have changed.
     if (paypalOrder.status === "COMPLETED") {
       const paidAt = new Date().toISOString();
+
       await env.DB.prepare(`
-        UPDATE orders SET status = 'PAID', paypal_capture_json = ?, paid_at = ?
+        UPDATE orders
+        SET status = 'PAID',
+            paypal_capture_json = ?,
+            paid_at = ?
         WHERE paypal_order_id = ?
-      `).bind(JSON.stringify(paypalOrder), paidAt, orderID).run();
+      `).bind(
+        JSON.stringify(paypalOrder),
+        paidAt,
+        orderID
+      ).run();
+
       if (usesTiny10 && email) {
         await env.DB.prepare(`
-          UPDATE discount_redemptions SET redeemed_at = ?
-          WHERE LOWER(email) = ? AND UPPER(discount_code) = 'TINY10'
+          UPDATE discount_redemptions
+          SET redeemed_at = ?
+          WHERE LOWER(email) = ?
+            AND UPPER(discount_code) = 'TINY10'
             AND paypal_order_id = ?
-        `).bind(paidAt, email, orderID).run();
+        `).bind(
+          paidAt,
+          email,
+          orderID
+        ).run();
       }
-      return json({ success: true, status: "COMPLETED", paypal: paypalOrder });
+
+      return json({
+        success: true,
+        status: "COMPLETED",
+        paypal: paypalOrder
+      });
     }
 
     if (paypalOrder.status !== "APPROVED") {
-      return json({ error: "PayPal payment has not been approved.", status: paypalOrder.status }, 400);
+      return json({
+        error: "PayPal payment has not been approved.",
+        status: paypalOrder.status
+      }, 400);
     }
 
     if (usesTiny10) {
-      if (!email) return json({ error: "Invalid customer email for TINY10." }, 400);
+      if (!email) {
+        return json({
+          error: "Invalid customer email for TINY10."
+        }, 400);
+      }
+
       const priorPaid = await env.DB.prepare(`
-        SELECT id FROM orders WHERE status = 'PAID' AND id != ?
-          AND LOWER(TRIM(json_extract(customer_json, '$.email'))) = ? LIMIT 1
+        SELECT id FROM orders
+        WHERE status = 'PAID'
+          AND id != ?
+          AND LOWER(TRIM(json_extract(
+            customer_json, '$.email'
+          ))) = ?
+        LIMIT 1
       `).bind(order.id, email).first();
-      if (priorPaid) return json({ error: "TINY10 is for first-time customers only." }, 400);
+
+      if (priorPaid) {
+        return json({
+          error: "TINY10 is for first-time customers only."
+        }, 400);
+      }
 
       // Database UNIQUE index on normalized email + code is mandatory.
-      const existingClaim = await findActiveTiny10Claim(env, email);
-      if (existingClaim && existingClaim.paypal_order_id !== orderID) {
-        return json({ error: "TINY10 is already reserved or used." }, 409);
+      const existingClaim =
+        await findActiveTiny10Claim(env, email);
+
+      if (
+        existingClaim &&
+        existingClaim.paypal_order_id !== orderID
+      ) {
+        return json({
+          error: "TINY10 is already reserved or used."
+        }, 409);
       }
+
       const reservation = await env.DB.prepare(`
         INSERT INTO discount_redemptions
-          (email, discount_code, paypal_order_id, discount_amount, redeemed_at)
+          (email, discount_code, paypal_order_id,
+           discount_amount, redeemed_at)
         VALUES (?, 'TINY10', ?, ?, NULL)
         ON CONFLICT DO NOTHING
-      `).bind(email, orderID, Number(order.discount_amount)).run();
+      `).bind(
+        email,
+        orderID,
+        Number(order.discount_amount)
+      ).run();
+
       if (reservation.meta?.changes !== 1) {
         const owner = await env.DB.prepare(`
-          SELECT paypal_order_id FROM discount_redemptions
-          WHERE LOWER(TRIM(email)) = ? AND UPPER(TRIM(discount_code)) = 'TINY10' LIMIT 1
+          SELECT paypal_order_id
+          FROM discount_redemptions
+          WHERE LOWER(TRIM(email)) = ?
+            AND UPPER(TRIM(discount_code)) = 'TINY10'
+          LIMIT 1
         `).bind(email).first();
+
         if (!owner || owner.paypal_order_id !== orderID) {
-          return json({ error: "TINY10 has already been reserved or used." }, 409);
+          return json({
+            error: "TINY10 has already been reserved or used."
+          }, 409);
         }
       }
     }
 
-    // Stable request ID makes retries of this specific PayPal capture idempotent.
-    const captureResponse = await fetch(`${endpoint}/capture`, {
-      method: "POST",
-      headers: {
-        ...headers,
-        "Content-Type": "application/json",
-        "PayPal-Request-Id": `capture-${order.id}`.slice(0, 108)
+    // Stable request ID makes retries of this PayPal capture idempotent.
+    const captureResponse = await fetch(
+      `${endpoint}/capture`,
+      {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+          "PayPal-Request-Id":
+            `capture-${order.id}`.slice(0, 108)
+        }
       }
-    });
+    );
+
     const captureData = await captureResponse.json();
+
     if (!captureResponse.ok) {
-      console.error("PayPal capture not confirmed:", captureData);
-      return json({ error: "Payment could not be confirmed. Retry this same order; do not place a second order yet." }, 502);
+      console.error(
+        "PayPal capture not confirmed:",
+        captureData
+      );
+
+      return json({
+        error: "Payment could not be confirmed. Retry this same order; do not place a second order yet."
+      }, 502);
     }
 
-    const paid = captureData.status === "COMPLETED";
-    const paidAt = paid ? new Date().toISOString() : null;
+    const paid =
+      captureData.status === "COMPLETED";
+
+    const paidAt = paid
+      ? new Date().toISOString()
+      : null;
+
     await env.DB.prepare(`
-      UPDATE orders SET status = ?, paypal_capture_json = ?, paid_at = ?
+      UPDATE orders
+      SET status = ?,
+          paypal_capture_json = ?,
+          paid_at = ?
       WHERE paypal_order_id = ?
-    `).bind(paid ? "PAID" : "PENDING", JSON.stringify(captureData), paidAt, orderID).run();
+    `).bind(
+      paid ? "PAID" : "PENDING",
+      JSON.stringify(captureData),
+      paidAt,
+      orderID
+    ).run();
+
     if (paid && usesTiny10 && email) {
       await env.DB.prepare(`
-        UPDATE discount_redemptions SET redeemed_at = ?
-        WHERE LOWER(email) = ? AND UPPER(discount_code) = 'TINY10'
+        UPDATE discount_redemptions
+        SET redeemed_at = ?
+        WHERE LOWER(email) = ?
+          AND UPPER(discount_code) = 'TINY10'
           AND paypal_order_id = ?
-      `).bind(paidAt, email, orderID).run();
+      `).bind(
+        paidAt,
+        email,
+        orderID
+      ).run();
     }
-    return json({ success: paid, status: captureData.status, paypal: captureData });
+
+    return json({
+      success: paid,
+      status: captureData.status,
+      paypal: captureData
+    });
+
   } catch (error) {
     console.error("Capture order error:", error);
-    return json({ error: "Unable to confirm payment. Retry the same order or contact us." }, 500);
+
+    return json({
+      error: "Unable to confirm payment. Retry the same order or contact us."
+    }, 500);
   }
 }
 
@@ -1056,9 +1378,13 @@ async function getAdminSubscribers(request, env) {
       subscribedAt: row.subscribed_at,
       status: row.status
     })));
+
   } catch (error) {
     console.error("Admin subscribers error:", error);
-    return json({ error: "Unable to load email subscribers." }, 500);
+
+    return json({
+      error: "Unable to load email subscribers."
+    }, 500);
   }
 }
 
@@ -1287,90 +1613,163 @@ async function deleteUnpaidOrder(request, env, orderId) {
   }
 
   try {
-    // Manual override is allowed only after an additional admin confirmation.
+    // Manual override requires additional admin confirmation.
     const body = await request.json().catch(() => ({}));
-    const manualOverride = body.manualOverride === true &&
+
+    const manualOverride =
+      body.manualOverride === true &&
       body.confirmation === "DELETE PENDING ORDER";
 
     const order = await env.DB.prepare(`
-      SELECT id, status, paypal_order_id, paypal_capture_json, paid_at
-      FROM orders WHERE id = ? LIMIT 1
+      SELECT
+        id,
+        status,
+        paypal_order_id,
+        paypal_capture_json,
+        paid_at
+      FROM orders
+      WHERE id = ?
+      LIMIT 1
     `).bind(orderId).first();
 
-    if (!order) return json({ error: "Order not found." }, 404);
-    if (order.status !== "PENDING" || !order.paypal_order_id) {
-      return json({ error: "Only unpaid pending orders can be deleted." }, 409);
+    if (!order) {
+      return json({ error: "Order not found." }, 404);
     }
 
-    // A reserved TINY10 discount must not be orphaned by deletion.
-    // Keep the order so the existing discount reconciliation can verify it.
-    const claim = await env.DB.prepare(`
-      SELECT paypal_order_id FROM discount_redemptions
-      WHERE paypal_order_id = ? LIMIT 1
-    `).bind(order.paypal_order_id).first();
-    if (claim) {
+    if (
+      order.status !== "PENDING" ||
+      !order.paypal_order_id
+    ) {
       return json({
-        error: "This order has a discount reservation. Contact support before deleting it."
+        error: "Only unpaid pending orders can be deleted."
       }, 409);
     }
 
-    // Local payment evidence always blocks deletion, including manual override.
+    // A reserved TINY10 discount must not be orphaned.
+    const claim = await env.DB.prepare(`
+      SELECT paypal_order_id
+      FROM discount_redemptions
+      WHERE paypal_order_id = ?
+      LIMIT 1
+    `).bind(order.paypal_order_id).first();
+
+    if (claim) {
+      return json({
+        error:
+          "This order has a discount reservation. Contact support before deleting it."
+      }, 409);
+    }
+
+    // Payment evidence blocks deletion, even with manual override.
     if (order.paid_at || order.paypal_capture_json) {
-      return json({ error: "This order has payment records and cannot be deleted." }, 409);
+      return json({
+        error:
+          "This order has payment records and cannot be deleted."
+      }, 409);
     }
 
     if (!manualOverride) {
-      if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
-        return json({ error: "PayPal verification is unavailable.", manualOverrideAvailable: true }, 502);
+      if (
+        !env.PAYPAL_CLIENT_ID ||
+        !env.PAYPAL_CLIENT_SECRET
+      ) {
+        return json({
+          error: "PayPal verification is unavailable.",
+          manualOverrideAvailable: true
+        }, 502);
       }
+
       let paypalResponse;
+
       try {
         const token = await getPayPalAccessToken(env);
+
         paypalResponse = await fetch(
           `${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
         );
+
       } catch (error) {
-        console.error("PayPal delete verification failed:", error);
-        return json({ error: "PayPal verification failed.", manualOverrideAvailable: true }, 502);
+        console.error(
+          "PayPal delete verification failed:",
+          error
+        );
+
+        return json({
+          error: "PayPal verification failed.",
+          manualOverrideAvailable: true
+        }, 502);
       }
+
       if (!paypalResponse.ok) {
-        return json({ error: "PayPal status could not be verified.", manualOverrideAvailable: true }, 502);
+        return json({
+          error: "PayPal status could not be verified.",
+          manualOverrideAvailable: true
+        }, 502);
       }
+
       const paypalOrder = await paypalResponse.json();
-      const safeStatuses = ["CREATED", "PAYER_ACTION_REQUIRED", "VOIDED"];
+
+      const safeStatuses = [
+        "CREATED",
+        "PAYER_ACTION_REQUIRED",
+        "VOIDED"
+      ];
+
       if (!safeStatuses.includes(paypalOrder.status)) {
         return json({
-          error: "PayPal status is " + String(paypalOrder.status || "unknown") +
+          error:
+            "PayPal status is " +
+            String(paypalOrder.status || "unknown") +
             ". This order cannot be safely deleted."
         }, 409);
       }
     }
 
-    // Recheck the local state in the DELETE itself so a concurrent capture
-    // that has already marked the order PAID cannot be erased.
+    // Recheck local state to prevent deleting a newly paid order.
     const deleted = await env.DB.prepare(`
       DELETE FROM orders
-      WHERE id = ? AND status = 'PENDING' AND paypal_order_id = ?
-        AND paid_at IS NULL AND paypal_capture_json IS NULL
+      WHERE id = ?
+        AND status = 'PENDING'
+        AND paypal_order_id = ?
+        AND paid_at IS NULL
+        AND paypal_capture_json IS NULL
         AND NOT EXISTS (
-          SELECT 1 FROM discount_redemptions
+          SELECT 1
+          FROM discount_redemptions
           WHERE paypal_order_id = ?
         )
         AND NOT EXISTS (
-          SELECT 1 FROM order_fulfillment
+          SELECT 1
+          FROM order_fulfillment
           WHERE order_id = ?
         )
-    `).bind(orderId, order.paypal_order_id, order.paypal_order_id, orderId).run();
+    `).bind(
+      orderId,
+      order.paypal_order_id,
+      order.paypal_order_id,
+      orderId
+    ).run();
 
     if (deleted.meta?.changes !== 1) {
-      return json({ error: "Order changed or has related records. Nothing was deleted." }, 409);
+      return json({
+        error:
+          "Order changed or has related records. Nothing was deleted."
+      }, 409);
     }
 
     return json({ success: true });
+
   } catch (error) {
     console.error("Delete unpaid order error:", error);
-    return json({ error: "Unable to safely delete this order." }, 500);
+
+    return json({
+      error: "Unable to safely delete this order."
+    }, 500);
   }
 }
 
@@ -1777,9 +2176,6 @@ async function validateDiscount(request, env) {
       }, 400);
     }
 
-    // Recalculate merchandise pricing from the
-    // actual cart. Never trust a subtotal supplied
-    // by the customer's browser.
     const items = Array.isArray(body.cart)
       ? body.cart
       : Array.isArray(body.items)
@@ -1807,8 +2203,6 @@ async function validateDiscount(request, env) {
     const merchandiseTotal = priced.merchandiseTotal;
     const customPhotoTotal = priced.customPhotoTotal;
 
-    // $20 minimum applies to merchandise only.
-    // Shipping is excluded.
     if (customPhotoTotal < FIRST_ORDER_MINIMUM) {
       return json({
         valid: false,
@@ -1854,7 +2248,10 @@ async function validateDiscount(request, env) {
       }, 400);
     }
 
-    const redemption = await findActiveTiny10Claim(env, email);
+    const redemption = await findActiveTiny10Claim(
+      env,
+      email
+    );
 
     if (redemption) {
       return json({
@@ -1870,14 +2267,10 @@ async function validateDiscount(request, env) {
       ).toFixed(2)
     );
 
-    const shippingTotal = calculateShipping(items);
-
-    const estimatedTotal = Number(
-      (
-        merchandiseTotal -
-        discountAmount +
-        shippingTotal
-      ).toFixed(2)
+    // Live shipping is calculated separately by Shippo.
+    // Do not substitute a fixed shipping amount.
+    const discountedMerchandiseTotal = Number(
+      (merchandiseTotal - discountAmount).toFixed(2)
     );
 
     return json({
@@ -1889,10 +2282,11 @@ async function validateDiscount(request, env) {
       merchandiseTotal,
       customPhotoTotal,
       discountAmount,
-      shippingTotal,
-      estimatedTotal,
+      shippingTotal: null,
+      estimatedTotal: null,
+      discountedMerchandiseTotal,
       message:
-        "TINY10 is eligible for this cart and email."
+        "TINY10 is eligible for this cart and email. Shipping is calculated separately."
     });
 
   } catch (error) {
@@ -1904,14 +2298,20 @@ async function validateDiscount(request, env) {
   }
 }
 
-async function calculateTiny10Discount(env, email, customPhotoTotal) {
+async function calculateTiny10Discount(
+  env,
+  email,
+  customPhotoTotal
+) {
   const normalized = normalizedEmail(email);
 
   if (!normalized) {
-    throw new Error("Enter a valid email address to use TINY10.");
+    throw new Error(
+      "Enter a valid email address to use TINY10."
+    );
   }
 
-  if (customPhotoTotal < 20) {
+  if (customPhotoTotal < FIRST_ORDER_MINIMUM) {
     throw new Error(
       "Spend at least $20 on Custom Photo Magnets to use TINY10."
     );
@@ -1947,7 +2347,10 @@ async function calculateTiny10Discount(env, email, customPhotoTotal) {
     );
   }
 
-  const alreadyUsed = await findActiveTiny10Claim(env, normalized);
+  const alreadyUsed = await findActiveTiny10Claim(
+    env,
+    normalized
+  );
 
   if (alreadyUsed) {
     throw new Error(
@@ -1956,47 +2359,140 @@ async function calculateTiny10Discount(env, email, customPhotoTotal) {
   }
 
   const discountCents = Math.min(
-    500,
-    Math.round(customPhotoTotal * 100 * 0.10)
+    Math.round(FIRST_ORDER_MAX_SAVINGS * 100),
+    Math.round(
+      customPhotoTotal *
+      100 *
+      (FIRST_ORDER_PERCENT / 100)
+    )
   );
 
   return discountCents / 100;
 }
-// Custom design requests are emailed to the shop, not charged.
+
+// ============================================
+// SAVE THE DATE CUSTOM DESIGN REQUESTS
+// ============================================
+
+// Custom design requests are emailed to the shop,
+// not charged through checkout.
+
 async function submitSaveDateRequest(request, env) {
-  if (!isSameSiteRequest(request)) return json({error:"Invalid origin."},403);
+  if (!isSameSiteRequest(request)) {
+    return json({ error: "Invalid origin." }, 403);
+  }
+
   try {
     const body = await request.json();
-    if (body.website) return json({success:true});
-    const email = normalizedEmail(body.email);
-    const name = String(body.name || "").trim().slice(0,150);
-    const details = body.details || {};
-    const names = String(details.names || "").trim().slice(0,200);
-    const date = String(details.date || "").trim().slice(0,100);
-    const colors = String(details.colors || "").trim().slice(0,500);
-    const design = String(details.design || "").trim().slice(0,100);
-    const ideas = String(details.ideas || "").trim().slice(0,2000);
-    const wording = String(details.wording || "").trim().slice(0,1000);
-    const quantity = Number(body.quantity);
-    if (!email || !name || !names || !date || !design || ![50,75,100,150,200].includes(quantity)) {
-      return json({error:"Please complete the required request details."},400);
+
+    if (body.website) {
+      return json({ success: true });
     }
+
+    const email = normalizedEmail(body.email);
+
+    const name = String(body.name || "")
+      .trim()
+      .slice(0, 150);
+
+    const details = body.details || {};
+
+    const names = String(details.names || "")
+      .trim()
+      .slice(0, 200);
+
+    const date = String(details.date || "")
+      .trim()
+      .slice(0, 100);
+
+    const colors = String(details.colors || "")
+      .trim()
+      .slice(0, 500);
+
+    const design = String(details.design || "")
+      .trim()
+      .slice(0, 100);
+
+    const ideas = String(details.ideas || "")
+      .trim()
+      .slice(0, 2000);
+
+    const wording = String(details.wording || "")
+      .trim()
+      .slice(0, 1000);
+
+    const quantity = Number(body.quantity);
+
+    if (
+      !email ||
+      !name ||
+      !names ||
+      !date ||
+      !design ||
+      ![50, 75, 100, 150, 200].includes(quantity)
+    ) {
+      return json({
+        error: "Please complete the required request details."
+      }, 400);
+    }
+
     const photo = String(body.photo || "");
-    const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(photo);
-    if (!match || photo.length > 450000) return json({error:"Please upload a valid compressed photo."},400);
-    const lines = ["New Save the Date custom design request",`Customer: ${name}`,`Email: ${email}`,`Sets: ${quantity}`,`Names: ${names}`,`Date: ${date}`,`Design: ${design}`,`Colors: ${colors}`,`Wording: ${wording}`,`Ideas: ${ideas}`,`Envelopes: ${details.envelopes === "quote" ? "Quote requested" : "Not needed"}`];
+
+    const match =
+      /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/
+        .exec(photo);
+
+    if (!match || photo.length > 450000) {
+      return json({
+        error: "Please upload a valid compressed photo."
+      }, 400);
+    }
+
+    const lines = [
+      "New Save the Date custom design request",
+      `Customer: ${name}`,
+      `Email: ${email}`,
+      `Sets: ${quantity}`,
+      `Names: ${names}`,
+      `Date: ${date}`,
+      `Design: ${design}`,
+      `Colors: ${colors}`,
+      `Wording: ${wording}`,
+      `Ideas: ${ideas}`,
+      `Envelopes: ${
+        details.envelopes === "quote"
+          ? "Quote requested"
+          : "Not needed"
+      }`
+    ];
+
     const message = lines.join("\n");
+
     await sendResendEmail(env, {
-      to:"tinymemoriesmagnetco@outlook.com",
-      subject:"New Save the Date custom request",
-      html:"<pre style=\"white-space:pre-wrap;font-family:Arial,sans-serif\">"+escapeEmailHtml(message)+"</pre>",
-      text:message,
-      attachments:[{filename:"save-the-date-photo."+(match[1]==="jpeg"?"jpg":match[1]),content:match[2]}]
+      to: "tinymemoriesmagnetco@outlook.com",
+      subject: "New Save the Date custom request",
+      html:
+        '<pre style="white-space:pre-wrap;font-family:Arial,sans-serif">' +
+        escapeEmailHtml(message) +
+        "</pre>",
+      text: message,
+      attachments: [{
+        filename:
+          "save-the-date-photo." +
+          (match[1] === "jpeg" ? "jpg" : match[1]),
+        content: match[2]
+      }]
     });
-    return json({success:true});
-  } catch(error) {
-    console.error("Save the Date request error:",error);
-    return json({error:"Could not send your request. Please email us directly."},500);
+
+    return json({ success: true });
+
+  } catch (error) {
+    console.error("Save the Date request error:", error);
+
+    return json({
+      error:
+        "Could not send your request. Please email us directly."
+    }, 500);
   }
 }
 
@@ -2007,10 +2503,12 @@ async function submitSaveDateRequest(request, env) {
 const VENDOR_PRICES = { 1: 3, 3: 9, 6: 18, 9: 24 };
 const VENDOR_MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const VENDOR_MAX_REQUEST_BYTES = 9 * VENDOR_MAX_PHOTO_BYTES + 1000000;
+
 function vendorOriginOK(request) {
   const origin = request.headers.get("Origin");
   return !origin || origin === new URL(request.url).origin;
 }
+
 function vendorFileType(bytes, filename) {
   const a = new Uint8Array(bytes.slice(0, 16));
   if (a[0] === 255 && a[1] === 216 && a[2] === 255) return "image/jpeg";
@@ -2020,13 +2518,16 @@ function vendorFileType(bytes, filename) {
   if (boxType === "ftyp" && /^(heic|heix|hevc|hevx|mif1|msf1)$/.test(heicBrand)) return "image/heic";
   return null;
 }
+
 async function submitVendorOrder(request, env) {
   if (!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
   if (!env.DB || !env.VENDOR_PHOTOS) return json({error:"Vendor storage is not configured."},503);
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > VENDOR_MAX_REQUEST_BYTES) return json({error:"Photos exceed upload limit."},413);
+
   let uploaded = [];
   let saved = false;
+
   try {
     const form = await request.formData();
     const name = String(form.get("customerName") || "").trim().slice(0,100);
@@ -2034,21 +2535,27 @@ async function submitVendorOrder(request, env) {
     const notes = String(form.get("notes") || "").trim().slice(0,500);
     const quantity = Number(form.get("bundle"));
     const photos = form.getAll("photos");
+
     if (!name || !Object.hasOwn(VENDOR_PRICES, quantity) || photos.length !== quantity) {
       return json({error:"Enter your name and upload exactly one photo per magnet."},400);
     }
+
     const validated = [];
+
     for (const photo of photos) {
       if (typeof photo === "string" || !photo.size || photo.size > VENDOR_MAX_PHOTO_BYTES) {
         return json({error:"Each photo must be between 1 byte and 15 MB."},400);
       }
+
       const bytes = await photo.arrayBuffer();
       const type = vendorFileType(bytes, photo.name);
       if (!type) return json({error:"Only JPG, PNG, or HEIC photos are supported."},400);
       validated.push({bytes, type});
     }
+
     const orderId = "VM-" + crypto.randomUUID().slice(0, 8).toUpperCase();
     const photoKeys = [];
+
     for (let i = 0; i < validated.length; i++) {
       const file = validated[i];
       const ext = file.type === "image/png" ? "png" : file.type === "image/heic" ? "heic" : "jpg";
@@ -2057,123 +2564,226 @@ async function submitVendorOrder(request, env) {
       uploaded.push(key);
       photoKeys.push(key);
     }
+
     await env.DB.prepare(`INSERT INTO vendor_orders
       (id, created_at, customer_name, contact, notes, quantity, total, status, photo_keys_json)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'AWAITING_PAYMENT', ?)`)
       .bind(orderId, new Date().toISOString(), name, contact, notes, quantity,
         VENDOR_PRICES[quantity], JSON.stringify(photoKeys)).run();
+
     saved = true;
+
     return json({orderId, quantity, total:VENDOR_PRICES[quantity], status:"AWAITING_PAYMENT"},201);
+
   } catch (err) {
     console.error("Vendor order error:",err);
     return json({error:"Unable to save order. Please ask for help at the booth."},500);
   } finally {
-    if (!saved) for (const key of uploaded) { try { await env.VENDOR_PHOTOS.delete(key); } catch(e) { console.error("Orphan cleanup failed", e); } }
+    if (!saved) {
+      for (const key of uploaded) {
+        try {
+          await env.VENDOR_PHOTOS.delete(key);
+        } catch(e) {
+          console.error("Orphan cleanup failed", e);
+        }
+      }
+    }
   }
 }
+
 async function listVendorOrders(request, env) {
-  const auth = adminError(request,env); if (auth) return auth;
+  const auth = adminError(request,env);
+  if (auth) return auth;
   if (!env.DB) return json({error:"Database unavailable."},503);
+
   try {
     const rows = await env.DB.prepare(`SELECT id,created_at,customer_name,contact,notes,quantity,total,status,paid_at,ready_at,picked_up_at,photo_keys_json
       FROM vendor_orders WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 200`).all();
-    return json((rows.results || []).map(r=>({id:r.id,createdAt:r.created_at,name:r.customer_name,
-      contact:r.contact,notes:r.notes,quantity:r.quantity,total:r.total,status:r.status,
-      paidAt:r.paid_at,readyAt:r.ready_at,pickedUpAt:r.picked_up_at,
-      photoCount:JSON.parse(r.photo_keys_json).length})));
-  } catch(e) {console.error(e);return json({error:"Unable to load vendor orders."},500);}
+
+    return json((rows.results || []).map(r=>({
+      id:r.id,
+      createdAt:r.created_at,
+      name:r.customer_name,
+      contact:r.contact,
+      notes:r.notes,
+      quantity:r.quantity,
+      total:r.total,
+      status:r.status,
+      paidAt:r.paid_at,
+      readyAt:r.ready_at,
+      pickedUpAt:r.picked_up_at,
+      photoCount:JSON.parse(r.photo_keys_json).length
+    })));
+
+  } catch(e) {
+    console.error(e);
+    return json({error:"Unable to load vendor orders."},500);
+  }
 }
+
 async function getVendorPhoto(request,env,id,index) {
-  const auth = adminError(request,env); if(auth) return auth;
+  const auth = adminError(request,env);
+  if(auth) return auth;
+
   if(!env.DB || !env.VENDOR_PHOTOS) return json({error:"Storage unavailable."},503);
   if(!/^VM-[0-9A-F]{8}$/.test(id) || !Number.isSafeInteger(index)) return json({error:"Invalid photo."},400);
+
   const row = await env.DB.prepare("SELECT photo_keys_json FROM vendor_orders WHERE id=?").bind(id).first();
   if(!row) return json({error:"Order not found."},404);
+
   const keys = JSON.parse(row.photo_keys_json);
   if(index < 1 || index > keys.length) return json({error:"Photo not found."},404);
+
   const object = await env.VENDOR_PHOTOS.get(keys[index-1]);
   if(!object) return json({error:"Photo missing from storage."},404);
-  return new Response(object.body,{headers:{"Content-Type":object.httpMetadata?.contentType || "application/octet-stream",
-    "Cache-Control":"private, no-store", "Content-Disposition":`attachment; filename="${id}-photo-${index}.${(keys[index-1].split('.').pop())}"`,
-    "X-Content-Type-Options":"nosniff"}});
+
+  return new Response(object.body,{
+    headers:{
+      "Content-Type":object.httpMetadata?.contentType || "application/octet-stream",
+      "Cache-Control":"private, no-store",
+      "Content-Disposition":`attachment; filename="${id}-photo-${index}.${(keys[index-1].split('.').pop())}"`,
+      "X-Content-Type-Options":"nosniff"
+    }
+  });
 }
+
 async function setVendorStatus(request,env,id) {
-  const auth=adminError(request,env);if(auth)return auth;
+  const auth=adminError(request,env);
+  if(auth)return auth;
   if(!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
   if(!/^VM-[0-9A-F]{8}$/.test(id))return json({error:"Invalid order ID."},400);
+
   const {status}=await request.json();
-  const transitions={AWAITING_PAYMENT:["PAID"],PAID:["IN_PROGRESS"],IN_PROGRESS:["READY"],READY:["PICKED_UP"]};
+  const transitions={
+    AWAITING_PAYMENT:["PAID"],
+    PAID:["IN_PROGRESS"],
+    IN_PROGRESS:["READY"],
+    READY:["PICKED_UP"]
+  };
+
   if(!["PAID","IN_PROGRESS","READY","PICKED_UP"].includes(status))return json({error:"Invalid status."},400);
+
   const now=new Date().toISOString();
   const row=await env.DB.prepare("SELECT status FROM vendor_orders WHERE id=?").bind(id).first();
   if(!row)return json({error:"Order not found."},404);
   if(!transitions[row.status]?.includes(status))return json({error:"Invalid status transition."},409);
+
   const result=await env.DB.prepare(`UPDATE vendor_orders SET status=?,
     paid_at=CASE WHEN ?='PAID' THEN ? ELSE paid_at END,
     ready_at=CASE WHEN ?='READY' THEN ? ELSE ready_at END,
     picked_up_at=CASE WHEN ?='PICKED_UP' THEN ? ELSE picked_up_at END
-    WHERE id=? AND status=?`).bind(status,status,now,status,now,status,now,id,row.status).run();
+    WHERE id=? AND status=?`)
+    .bind(status,status,now,status,now,status,now,id,row.status).run();
+
   if(result.meta?.changes!==1)return json({error:"Order changed; refresh and retry."},409);
   return json({success:true,status});
 }
+
 // ============================================
 // VENDOR EVENT ARCHIVE, HISTORY, DELETION
 // ============================================
+
 async function archiveVendorOrders(request, env) {
-  const auth = adminError(request, env); if (auth) return auth;
+  const auth = adminError(request, env);
+  if (auth) return auth;
   if (!vendorOriginOK(request)) return json({error:"Invalid origin."},403);
+
   try {
     const now = new Date().toISOString();
     const result = await env.DB.prepare(`UPDATE vendor_orders SET archived_at = ?
       WHERE status = 'PICKED_UP' AND archived_at IS NULL`).bind(now).run();
+
     return json({success:true, archived:Number(result.meta?.changes || 0)});
-  } catch(e) { console.error('Vendor archive failed',e); return json({error:'Could not archive orders.'},500); }
+  } catch(e) {
+    console.error('Vendor archive failed',e);
+    return json({error:'Could not archive orders.'},500);
+  }
 }
+
 async function listArchivedVendorOrders(request, env) {
-  const auth = adminError(request, env); if (auth) return auth;
+  const auth = adminError(request, env);
+  if (auth) return auth;
+
   try {
     const result = await env.DB.prepare(`SELECT id,created_at,archived_at,customer_name,contact,notes,
       quantity,total,status,paid_at,ready_at,picked_up_at,photo_keys_json
       FROM vendor_orders WHERE archived_at IS NOT NULL ORDER BY archived_at DESC LIMIT 1000`).all();
-    return json((result.results||[]).map(r=>({id:r.id,createdAt:r.created_at,archivedAt:r.archived_at,
-      name:r.customer_name,contact:r.contact,notes:r.notes,quantity:r.quantity,total:r.total,
-      status:r.status,paidAt:r.paid_at,readyAt:r.ready_at,pickedUpAt:r.picked_up_at,
-      photoCount:JSON.parse(r.photo_keys_json||'[]').length})));
-  } catch(e) {console.error('Vendor history failed',e);return json({error:'Could not load history.'},500);}
+
+    return json((result.results||[]).map(r=>({
+      id:r.id,
+      createdAt:r.created_at,
+      archivedAt:r.archived_at,
+      name:r.customer_name,
+      contact:r.contact,
+      notes:r.notes,
+      quantity:r.quantity,
+      total:r.total,
+      status:r.status,
+      paidAt:r.paid_at,
+      readyAt:r.ready_at,
+      pickedUpAt:r.picked_up_at,
+      photoCount:JSON.parse(r.photo_keys_json||'[]').length
+    })));
+  } catch(e) {
+    console.error('Vendor history failed',e);
+    return json({error:'Could not load history.'},500);
+  }
 }
+
 async function deleteArchivedVendorOrder(request,env,id) {
-  const auth=adminError(request,env);if(auth)return auth;
+  const auth=adminError(request,env);
+  if(auth)return auth;
   if(!vendorOriginOK(request))return json({error:'Invalid origin.'},403);
   if(!/^VM-[0-9A-F]{8}$/.test(id))return json({error:'Invalid order ID.'},400);
+
   try {
     const row=await env.DB.prepare(`SELECT photo_keys_json FROM vendor_orders
       WHERE id=? AND archived_at IS NOT NULL AND status='PICKED_UP'`).bind(id).first();
+
     if(!row)return json({error:'Only archived, picked-up orders can be deleted.'},409);
+
     const keys=JSON.parse(row.photo_keys_json||'[]');
-    // Delete R2 objects before deleting the database record. A failed deletion keeps the record retryable.
+
     for(const key of keys) await env.VENDOR_PHOTOS.delete(key);
+
     const deleted=await env.DB.prepare(`DELETE FROM vendor_orders WHERE id=? AND archived_at IS NOT NULL
       AND status='PICKED_UP'`).bind(id).run();
+
     if(deleted.meta?.changes!==1)return json({error:'Order changed. Refresh and retry.'},409);
+
     return json({success:true});
-  }catch(e){console.error('Vendor delete failed',e);return json({error:'Could not delete order. Please retry.'},500);}
+
+  } catch(e) {
+    console.error('Vendor delete failed',e);
+    return json({error:'Could not delete order. Please retry.'},500);
+  }
 }
+
 // Invoked by a Cloudflare Cron Trigger (configure separately).
 // Only remove photos for orders at least 30 days old AND already picked up.
 // Keep basic order and sales details in D1 for bookkeeping.
+
 async function cleanupOldVendorPhotos(env) {
   if(!env.DB || !env.VENDOR_PHOTOS)return;
+
   const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+
   const result=await env.DB.prepare(`SELECT id,photo_keys_json FROM vendor_orders
     WHERE status='PICKED_UP' AND created_at < ? AND photo_keys_json != '[]'
     ORDER BY created_at ASC LIMIT 100`).bind(cutoff).all();
+
   for(const row of result.results||[]) {
     try {
       const keys=JSON.parse(row.photo_keys_json||'[]');
+
       for(const key of keys)await env.VENDOR_PHOTOS.delete(key);
+
       await env.DB.prepare(`UPDATE vendor_orders SET photo_keys_json='[]'
         WHERE id=? AND status='PICKED_UP' AND photo_keys_json=?`)
         .bind(row.id,row.photo_keys_json).run();
-    }catch(e){console.error('Vendor photo cleanup failed',row.id,e);}
+
+    } catch(e) {
+      console.error('Vendor photo cleanup failed',row.id,e);
+    }
   }
 }
