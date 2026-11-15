@@ -589,7 +589,7 @@ footer {
 
             <div class="total-row">
               <span>Shipping</span>
-              <strong id="shipping">$5.00</strong>
+              <strong id="shipping">Enter shipping address</strong>
             </div>
 
             <div class="total-row promo-discount" id="discountRow" hidden>
@@ -873,7 +873,11 @@ function removeCartItem(index) {
 
   try {
     saveCart(cart);
+    ++shippingQuoteRequest;
+    liveShippingQuote = null;
     renderOrder();
+    clearTimeout(shippingQuoteTimer);
+    shippingQuoteTimer = setTimeout(refreshLiveShipping, 150);
 
     if (cart.length) {
       showStatus(
@@ -937,7 +941,11 @@ function changeQuantity(index, change) {
 
   try {
     saveCart(cart);
+    ++shippingQuoteRequest;
+    liveShippingQuote = null;
     renderOrder();
+    clearTimeout(shippingQuoteTimer);
+    shippingQuoteTimer = setTimeout(refreshLiveShipping, 150);
 
   } catch (error) {
     showStatus(
@@ -1211,7 +1219,7 @@ function renderOrder() {
     document.getElementById("discountRow").hidden = !discount;
     document.getElementById("discountAmount").textContent = "-" + money(discount);
     document.getElementById("total").textContent =
-      (calculateShipping(cart) === null ? "Calculated after shipping quote" :
+      (calculateShipping(cart) === null ? "Awaiting shipping quote" :
         money(totals.subtotal + calculateShipping(cart) - discount));
 
     clearPaypalStatus();
@@ -1266,6 +1274,7 @@ async function refreshLiveShipping() {
   const shipping = getShippingInformation();
   liveShippingQuote = null;
   renderOrder();
+  if (!cart.length || cart.some(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET")) return;
   if (!shipping.address || !shipping.city || !shipping.state || !shipping.zip) return;
   try {
     const response = await fetch("/api/shipping/quote", {
@@ -1274,7 +1283,7 @@ async function refreshLiveShipping() {
     });
     const data = await response.json();
     if (requestId !== shippingQuoteRequest) return;
-    if (!response.ok || !Number.isFinite(Number(data.shippingTotal))) {
+    if (!response.ok || data.shippingTotal == null || !Number.isFinite(Number(data.shippingTotal)) || Number(data.shippingTotal) <= 0 || data.source !== "shippo") {
       throw Error(data.error || "Unable to calculate shipping.");
     }
     liveShippingQuote = Number(data.shippingTotal);
@@ -1282,6 +1291,7 @@ async function refreshLiveShipping() {
   } catch (error) {
     if (requestId !== shippingQuoteRequest) return;
     document.getElementById("shipping").textContent = "Rate unavailable";
+    document.getElementById("total").textContent = "Awaiting shipping quote";
     showPaypalStatus(error.message,"error");
   }
 }
@@ -1307,7 +1317,9 @@ async function createPaypalOrder() {
     body:JSON.stringify({cart,shipping:getShippingInformation()})
   });
   const quoteData = await quoteResponse.json();
-  if (!quoteResponse.ok) throw Error(quoteData.error || "Shipping quote unavailable.");
+  if (!quoteResponse.ok || quoteData.shippingTotal == null || !Number.isFinite(Number(quoteData.shippingTotal)) || Number(quoteData.shippingTotal) <= 0 || quoteData.source !== "shippo") {
+    throw Error(quoteData.error || "A valid live shipping quote is unavailable. Please try again.");
+  }
   liveShippingQuote = Number(quoteData.shippingTotal);
   renderOrder();
 
