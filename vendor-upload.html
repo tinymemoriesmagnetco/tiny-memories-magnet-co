@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,209 +6,49 @@
 <title>Vendor Market Photo Magnets | Tiny Memories Magnet Co.</title>
 <style>
 :root{--sage:#75886d;--dark:#3e4c3a;--rose:#c9939b;--ivory:#fbf8f2;--line:#e3ded4}
-*{box-sizing:border-box}
-body{margin:0;background:var(--ivory);color:#343b33;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-.wrap{max-width:660px;margin:auto;padding:28px 18px 60px}
-.eyebrow{text-align:center;letter-spacing:.13em;text-transform:uppercase;color:var(--sage);font-size:.72rem;font-weight:750}
-h1{font:normal 2.4rem/1.1 Georgia,serif;text-align:center;color:var(--dark);margin:10px 0}
-header p{text-align:center;color:#666}
-form,.success{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:25px;box-shadow:0 8px 30px #433c3010}
-label,.section{display:block;font-weight:650;margin:18px 0 7px}
-.hint{color:#6d706a;font-size:.86rem;margin:5px 0 12px}
-.bundles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.bundle{border:1px solid var(--line);padding:14px 10px;border-radius:12px;cursor:pointer;text-align:center}
-.bundle:has(input:checked){border:2px solid var(--sage);background:#f2f6ef;padding:13px 9px}
-.bundle input{accent-color:var(--sage)}
-.bundle strong{display:block;font-size:1.08rem}
-.field{width:100%;border:1px solid #c9cfc6;border-radius:10px;padding:12px;font:inherit;background:#fff}
-.upload{border:2px dashed #abb8a6;border-radius:14px;background:#f8faf6;padding:22px 15px;text-align:center}
-.upload input{max-width:100%;margin-top:12px}
-.preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-.photo{min-width:0}
-.photo img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
-.photo small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.total{display:flex;justify-content:space-between;padding:18px 0;margin-top:12px;border-top:1px solid var(--line);font-size:1.15rem}
-.note{background:#f4f1eb;border-radius:10px;padding:12px;font-size:.9rem}
-.check{display:flex;gap:9px;align-items:start;font-weight:400}
-.check input{margin-top:5px;accent-color:var(--sage)}
-button{width:100%;border:0;border-radius:12px;background:var(--sage);color:white;font-size:1rem;font-weight:750;padding:16px;cursor:pointer;margin-top:18px}
-button:disabled{opacity:.5;cursor:not-allowed}
-.error{color:#9e3434;margin-top:12px}
-.success{text-align:center}
-.success h2{font:normal 2rem Georgia,serif;color:var(--dark)}
-.orderid{font-size:1.6rem;font-weight:800;letter-spacing:.05em}
-.hidden{display:none}
-footer{text-align:center;font-size:.8rem;color:#777;margin-top:25px}
-@media(max-width:400px){.wrap{padding:20px 12px}form{padding:16px}}
+*{box-sizing:border-box}body{margin:0;background:var(--ivory);color:#343b33;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:660px;margin:auto;padding:28px 18px 60px}.eyebrow{text-align:center;letter-spacing:.13em;text-transform:uppercase;color:var(--sage);font-size:.72rem;font-weight:750}h1{font:normal 2.4rem/1.1 Georgia,serif;text-align:center;color:var(--dark);margin:10px 0}header p{text-align:center;color:#666}form,.success{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:25px;box-shadow:0 8px 30px #433c3010}label,.section{display:block;font-weight:650;margin:18px 0 7px}.hint{color:#6d706a;font-size:.86rem;margin:5px 0 12px}.bundles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bundle{border:1px solid var(--line);padding:14px 10px;border-radius:12px;cursor:pointer;text-align:center}.bundle:has(input:checked){border:2px solid var(--sage);background:#f2f6ef;padding:13px 9px}.bundle input{accent-color:var(--sage)}.bundle strong{display:block;font-size:1.08rem}.field{width:100%;border:1px solid #c9cfc6;border-radius:10px;padding:12px;font:inherit;background:#fff}.upload{border:2px dashed #abb8a6;border-radius:14px;background:#f8faf6;padding:22px 15px;text-align:center}.upload input{max-width:100%;margin-top:12px}.preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.photo{min-width:0}.photo img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}.photo small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.edit-photo{width:100%;margin-top:5px;padding:8px;font-size:.85rem;background:#f2f6ef;color:var(--dark);border:1px solid var(--sage)}.total{display:flex;justify-content:space-between;padding:18px 0;margin-top:12px;border-top:1px solid var(--line);font-size:1.15rem}.note{background:#f4f1eb;border-radius:10px;padding:12px;font-size:.9rem}.check{display:flex;gap:9px;align-items:start;font-weight:400}.check input{margin-top:5px;accent-color:var(--sage)}button{width:100%;border:0;border-radius:12px;background:var(--sage);color:white;font-size:1rem;font-weight:750;padding:16px;cursor:pointer;margin-top:18px}button:disabled{opacity:.5;cursor:not-allowed}.error{color:#9e3434;margin-top:12px}.success{text-align:center}.success h2{font:normal 2rem Georgia,serif;color:var(--dark)}.orderid{font-size:1.6rem;font-weight:800;letter-spacing:.05em}.hidden{display:none!important}footer{text-align:center;font-size:.8rem;color:#777;margin-top:25px}.editor{position:fixed;inset:0;background:#20271fe8;z-index:10;display:flex;align-items:center;justify-content:center;padding:12px}.editor-panel{width:min(100%,450px);max-height:96dvh;overflow:auto;background:var(--ivory);border-radius:18px;padding:18px}.editor-panel h2{font:normal 1.5rem Georgia,serif;color:var(--dark);margin:0 0 8px}.crop-area{width:min(100%,350px);aspect-ratio:1;touch-action:none;background:#252525;overflow:hidden;margin:12px auto;border:3px solid var(--sage);border-radius:10px;position:relative;cursor:grab}.crop-area:active{cursor:grabbing}.crop-area img{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none}.crop-area:after{content:"";position:absolute;inset:0;border:1px solid #ffffff66;pointer-events:none}.zoom{width:100%;accent-color:var(--sage)}.editor-actions{display:flex;gap:10px}.editor-actions button{margin-top:8px}.editor-actions .secondary{background:#e6e8e2;color:var(--dark)}@media(max-width:400px){.wrap{padding:20px 12px}form{padding:16px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-<header>
-<div class="eyebrow">Tiny Memories Magnet Co.</div>
-<h1>Upload Your Memories ♡</h1>
-<p>Ordering at our vendor booth? Upload your photos here and pay in person before we make your magnets.</p>
-</header>
-
+<header><div class="eyebrow">Tiny Memories Magnet Co.</div><h1>Upload Your Memories ♡</h1><p>Ordering at our vendor booth? Upload your photos here and pay in person before we make your magnets.</p></header>
 <form id="orderForm">
-<label for="customerName">Your name *</label>
-<input class="field" id="customerName" name="customerName" autocomplete="name" maxlength="100" required placeholder="First and last name">
-
-<label for="contact">Phone or email (optional)</label>
-<input class="field" id="contact" name="contact" maxlength="160" placeholder="For pickup updates">
-
-<div class="section">Choose your magnet bundle *</div>
-<div class="bundles" role="radiogroup" aria-label="Magnet bundle">
-<label class="bundle"><input type="radio" name="bundle" value="1" required checked><strong>1 magnet</strong>$3</label>
-<label class="bundle"><input type="radio" name="bundle" value="3"><strong>3 magnets</strong>$9</label>
-<label class="bundle"><input type="radio" name="bundle" value="6"><strong>6 magnets</strong>$18</label>
-<label class="bundle"><input type="radio" name="bundle" value="9"><strong>9 magnets</strong>$24</label>
-</div>
-
-<label for="photos">Upload your photos *</label>
-<p class="hint" id="uploadHint">Select 1 photo. You can choose a different picture for each magnet.</p>
-
-<div class="upload">
-📷
-<div><strong>Choose photos from your phone</strong></div>
-<input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/heic,image/heif" multiple required aria-describedby="uploadHint">
-<div class="hint">JPG, PNG, HEIC. Maximum 15 MB per photo.</div>
-</div>
-
-<div id="preview" class="preview" aria-live="polite"></div>
-
-<label for="notes">Order notes (optional)</label>
-<textarea class="field" id="notes" name="notes" rows="3" maxlength="500" placeholder="Any special instructions?"></textarea>
-
-<div class="total">
-<strong>Order total</strong>
-<strong id="total">$3.00</strong>
-</div>
-
-<div class="note">
-<strong>Free pickup at our booth.</strong>
-No shipping charge. Pay with cash, Cash App, PayPal, or credit/debit card at the booth.
-Your order will not be made until payment is confirmed.
-</div>
-
-<label class="check">
-<input type="checkbox" id="consent" required>
-<span>I confirm I have permission to submit these photos for printing into magnets.</span>
-</label>
-
-<button id="submitBtn" type="submit">Submit My Photos ♡</button>
-<p class="error hidden" id="error" role="alert"></p>
+<label for="customerName">Your name *</label><input class="field" id="customerName" name="customerName" autocomplete="name" maxlength="100" required placeholder="First and last name">
+<label for="contact">Phone or email (optional)</label><input class="field" id="contact" name="contact" maxlength="160" placeholder="For pickup updates">
+<div class="section">Choose your magnet bundle *</div><div class="bundles" role="radiogroup" aria-label="Magnet bundle"><label class="bundle"><input type="radio" name="bundle" value="1" required checked><strong>1 magnet</strong>$3</label><label class="bundle"><input type="radio" name="bundle" value="3"><strong>3 magnets</strong>$9</label><label class="bundle"><input type="radio" name="bundle" value="6"><strong>6 magnets</strong>$18</label><label class="bundle"><input type="radio" name="bundle" value="9"><strong>9 magnets</strong>$24</label></div>
+<label for="photos">Upload your photos *</label><p class="hint" id="uploadHint">Select 1 photo. You can choose a different picture for each magnet.</p><div class="upload">📷<div><strong>Choose photos from your phone</strong></div><input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/heic,image/heif" multiple required aria-describedby="uploadHint"><div class="hint">JPG, PNG, HEIC. Maximum 15 MB per photo.</div></div>
+<div id="preview" class="preview" aria-live="polite"></div><p class="hint" id="editHint">Tap “Adjust crop” on any photo to move or zoom it into the square.</p>
+<label for="notes">Order notes (optional)</label><textarea class="field" id="notes" name="notes" rows="3" maxlength="500" placeholder="Any special instructions?"></textarea>
+<div class="total"><strong>Order total</strong><strong id="total">$3.00</strong></div><div class="note"><strong>Free pickup at our booth.</strong> No shipping charge. Pay with cash, Cash App, PayPal, or credit/debit card at the booth. Your order will not be made until payment is confirmed.</div><label class="check"><input type="checkbox" id="consent" required><span>I confirm I have permission to submit these photos for printing into magnets.</span></label>
+<button id="submitBtn" type="submit">Submit My Photos ♡</button><p class="error hidden" id="error" role="alert"></p>
 </form>
-
-<section class="success hidden" id="success" aria-live="polite">
-<h2>You're all set! ♡</h2>
-<p>Show this order number at our booth and pay before we begin making your magnets.</p>
-<p class="orderid" id="orderId"></p>
-<p id="successDetails"></p>
-<p><strong>Pickup at booth • No shipping</strong></p>
-</section>
-
+<section class="success hidden" id="success" aria-live="polite"><h2>You're all set! ♡</h2><p>Show this order number at our booth and pay before we begin making your magnets.</p><p class="orderid" id="orderId"></p><p id="successDetails"></p><p><strong>Pickup at booth • No shipping</strong></p></section>
 <footer>Made with love by Tiny Memories Magnet Co.</footer>
 </main>
-
+<div id="editor" class="editor hidden" role="dialog" aria-modal="true" aria-labelledby="editorTitle"><div class="editor-panel"><h2 id="editorTitle">Adjust your magnet photo ♡</h2><p class="hint">Drag to reposition. Zoom until the square looks just right.</p><div id="cropArea" class="crop-area"><img id="cropImage" alt="Photo being adjusted" draggable="false"></div><label for="zoom">Zoom</label><input id="zoom" class="zoom" type="range" min="1" max="3" step="0.01" value="1"><div class="editor-actions"><button type="button" id="cancelCrop" class="secondary">Cancel</button><button type="button" id="saveCrop">Save crop ♡</button></div></div></div>
 <script>
 const prices={1:3,3:9,6:18,9:24};
-const form=document.getElementById('orderForm'),
-files=document.getElementById('photos'),
-hint=document.getElementById('uploadHint'),
-preview=document.getElementById('preview'),
-error=document.getElementById('error'),
-btn=document.getElementById('submitBtn');
-let urls=[];
-
-function bundle(){
-  return Number(document.querySelector('input[name="bundle"]:checked').value);
-}
-
-function update(){
-  const count=bundle();
-  document.getElementById('total').textContent='$'+prices[count].toFixed(2);
-  hint.textContent=`Select exactly ${count} photo${count===1?'':'s'}. You can choose a different picture for each magnet.`;
-  render();
-}
-
-function render(){
-  urls.forEach(u=>URL.revokeObjectURL(u));
-  urls=[];
-  preview.replaceChildren();
-  Array.from(files.files).forEach((file,i)=>{
-    const card=document.createElement('div');
-    card.className='photo';
-    const img=document.createElement('img');
-    const url=URL.createObjectURL(file);
-    urls.push(url);
-    img.src=url;
-    img.alt='Photo '+(i+1);
-    const label=document.createElement('small');
-    label.textContent=(i+1)+'. '+file.name;
-    card.append(img,label);
-    preview.append(card);
-  });
-}
-
-document.querySelectorAll('input[name="bundle"]').forEach(x=>x.addEventListener('change',update));
-files.addEventListener('change',render);
-update();
-
-form.addEventListener('submit',async e=>{
-  e.preventDefault();
-  error.classList.add('hidden');
-
-  const count=bundle(),selected=Array.from(files.files);
-
-  if(selected.length!==count){
-    error.textContent=`Please upload exactly ${count} photo${count===1?'':'s'} for your bundle.`;
-    error.classList.remove('hidden');
-    return;
-  }
-
-  if(selected.some(f=>f.size>15*1024*1024)){
-    error.textContent='Each photo must be 15 MB or smaller.';
-    error.classList.remove('hidden');
-    return;
-  }
-
-  if(selected.some(f=>!['image/jpeg','image/png','image/heic','image/heif'].includes(f.type)&&! /\.(jpe?g|png|heic|heif)$/i.test(f.name))){
-    error.textContent='Please upload JPG, PNG, or HEIC images only.';
-    error.classList.remove('hidden');
-    return;
-  }
-
-  const data=new FormData();
-  data.append('customerName',document.getElementById('customerName').value.trim());
-  data.append('contact',document.getElementById('contact').value.trim());
-  data.append('bundle',String(count));
-  data.append('notes',document.getElementById('notes').value.trim());
-  selected.forEach(f=>data.append('photos',f,f.name));
-
-  btn.disabled=true;
-  btn.textContent='Submitting photos…';
-
-  try{
-    const response=await fetch('/api/vendor-orders',{method:'POST',body:data});
-    if(!response.ok)throw new Error('Unable to submit. Please ask us for help at the booth.');
-
-    const result=await response.json();
-    if(!result.orderId)throw new Error('Missing order confirmation. Please check with us at the booth.');
-
-    document.getElementById('orderId').textContent=result.orderId;
-    document.getElementById('successDetails').textContent=`${count} magnet${count===1?'':'s'} • $${prices[count].toFixed(2)} due at booth`;
-    form.classList.add('hidden');
-    document.getElementById('success').classList.remove('hidden');
-    window.scrollTo(0,0);
-  }catch(err){
-    error.textContent=err.message||'Something went wrong. Please ask us for help at the booth.';
-    error.classList.remove('hidden');
-  }finally{
-    btn.disabled=false;
-    btn.textContent='Submit My Photos ♡';
-  }
-});
+const form=document.getElementById('orderForm'),files=document.getElementById('photos'),hint=document.getElementById('uploadHint'),preview=document.getElementById('preview'),error=document.getElementById('error'),btn=document.getElementById('submitBtn');
+const editor=document.getElementById('editor'),cropArea=document.getElementById('cropArea'),cropImage=document.getElementById('cropImage'),zoom=document.getElementById('zoom');
+let items=[],active=-1,editorState=null,previousFocus=null,selectionVersion=0;
+function bundle(){return Number(document.querySelector('input[name="bundle"]:checked').value)}
+function showError(message){error.textContent=message;error.classList.remove('hidden')}
+function update(){const count=bundle();document.getElementById('total').textContent='$'+prices[count].toFixed(2);hint.textContent=`Select exactly ${count} photo${count===1?'':'s'}. You can choose a different picture for each magnet.`;render()}
+function releaseItems(){for(const item of items)URL.revokeObjectURL(item.url);items=[]}
+function render(){preview.replaceChildren();items.forEach((item,i)=>{const card=document.createElement('div');card.className='photo';const img=document.createElement('img');img.src=item.preview||item.url;img.alt='Magnet photo '+(i+1);const label=document.createElement('small');label.textContent=(i+1)+'. '+item.file.name;const edit=document.createElement('button');edit.type='button';edit.className='edit-photo';edit.textContent='Adjust crop';edit.addEventListener('click',()=>openCrop(i));card.append(img,label,edit);preview.append(card)})}
+function supported(file){return ['image/jpeg','image/png','image/heic','image/heif'].includes(file.type)||/\.(jpe?g|png|heic|heif)$/i.test(file.name)}
+files.addEventListener('change',()=>{selectionVersion++;releaseItems();error.classList.add('hidden');const selected=Array.from(files.files);if(selected.some(f=>f.size>15*1024*1024))showError('Each photo must be 15 MB or smaller.');else if(selected.some(f=>!supported(f)))showError('Please upload JPG, PNG, or HEIC images only.');items=selected.map(file=>({file,url:URL.createObjectURL(file),preview:null,blob:null}));render()});
+document.querySelectorAll('input[name="bundle"]').forEach(x=>x.addEventListener('change',update));update();
+function clampState(){if(!editorState)return;const s=editorState;const side=cropArea.clientWidth;const scale=Math.max(side/s.width,side/s.height)*s.zoom;const maxX=Math.max(0,(s.width*scale-side)/2),maxY=Math.max(0,(s.height*scale-side)/2);s.x=Math.max(-maxX,Math.min(maxX,s.x));s.y=Math.max(-maxY,Math.min(maxY,s.y));cropImage.style.width=(s.width*scale)+'px';cropImage.style.height=(s.height*scale)+'px';cropImage.style.left=((side-s.width*scale)/2+s.x)+'px';cropImage.style.top=((side-s.height*scale)/2+s.y)+'px'}
+function openCrop(i){active=i;previousFocus=document.activeElement;const item=items[i];editor.classList.remove('hidden');cropImage.onload=()=>{editorState={width:cropImage.naturalWidth,height:cropImage.naturalHeight,zoom:1,x:0,y:0};zoom.value='1';clampState()};cropImage.onerror=()=>{closeCrop();showError('This photo cannot be opened in your browser. Please convert it to JPG or PNG and try again.')};cropImage.src=item.url;document.getElementById('saveCrop').focus()}
+function closeCrop(){editor.classList.add('hidden');cropImage.removeAttribute('src');cropImage.onload=null;cropImage.onerror=null;active=-1;editorState=null;if(previousFocus?.isConnected)previousFocus.focus()}
+zoom.addEventListener('input',()=>{if(!editorState)return;editorState.zoom=Number(zoom.value);clampState()});
+let drag=null;cropArea.addEventListener('pointerdown',e=>{if(!editorState)return;drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:editorState.x,y:editorState.y};cropArea.setPointerCapture(e.pointerId)});cropArea.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id||!editorState)return;editorState.x=drag.x+e.clientX-drag.startX;editorState.y=drag.y+e.clientY-drag.startY;clampState()});function stopDrag(){drag=null}cropArea.addEventListener('pointerup',stopDrag);cropArea.addEventListener('pointercancel',stopDrag);document.getElementById('cancelCrop').addEventListener('click',closeCrop);editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeCrop()}if(e.key==='Tab'){const buttons=[zoom,document.getElementById('cancelCrop'),document.getElementById('saveCrop')];const first=buttons[0],last=buttons[2];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+function makeCrop(item,s){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=900;canvas.height=900;const ctx=canvas.getContext('2d');if(!ctx)throw Error('Unable to prepare image.');const side=cropArea.clientWidth;const scale=Math.max(side/img.naturalWidth,side/img.naturalHeight)*s.zoom;const factor=900/side;ctx.fillStyle='#fff';ctx.fillRect(0,0,900,900);ctx.drawImage(img,((side-img.naturalWidth*scale)/2+s.x)*factor,((side-img.naturalHeight*scale)/2+s.y)*factor,img.naturalWidth*scale*factor,img.naturalHeight*scale*factor);canvas.toBlob(blob=>{if(!blob)reject(Error('Unable to prepare photo.'));else resolve(blob)},'image/jpeg',0.88)}catch(err){reject(err)}};img.onerror=()=>reject(Error('Could not read this photo. Please use JPG or PNG.'));img.src=item.url})}
+document.getElementById('saveCrop').addEventListener('click',async()=>{if(active<0||!editorState)return;const i=active,s={...editorState},version=selectionVersion,save=document.getElementById('saveCrop');save.disabled=true;save.textContent='Saving…';try{const blob=await makeCrop(items[i],s);if(version!==selectionVersion)return;items[i].blob=blob;items[i].preview=URL.createObjectURL(blob);closeCrop();render()}catch(err){showError(err.message);closeCrop()}finally{save.disabled=false;save.textContent='Save crop ♡'}});
+async function defaultCrop(item){const img=new Image();return new Promise((resolve,reject)=>{img.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=900;canvas.height=900;const ctx=canvas.getContext('2d');const side=Math.min(img.naturalWidth,img.naturalHeight);ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,900,900);canvas.toBlob(blob=>blob?resolve(blob):reject(Error('Could not process photo.')),'image/jpeg',0.88)}catch(e){reject(e)}};img.onerror=()=>reject(Error('A photo could not be opened. If it is HEIC, convert it to JPG first.'));img.src=item.url})}
+form.addEventListener('submit',async e=>{e.preventDefault();error.classList.add('hidden');const count=bundle();if(items.length!==count){showError(`Please upload exactly ${count} photo${count===1?'':'s'} for your bundle.`);return}if(items.some(x=>x.file.size>15*1024*1024||!supported(x.file))){showError('Please select valid JPG, PNG, or HEIC photos under 15 MB each.');return}btn.disabled=true;btn.textContent='Preparing photos…';try{const blobs=[];for(const item of items)blobs.push(item.blob||await defaultCrop(item));const data=new FormData();data.append('customerName',document.getElementById('customerName').value.trim());data.append('contact',document.getElementById('contact').value.trim());data.append('bundle',String(count));data.append('notes',document.getElementById('notes').value.trim());blobs.forEach((blob,i)=>data.append('photos',blob,`magnet-${i+1}.jpg`));btn.textContent='Submitting photos…';const response=await fetch('/api/vendor-orders',{method:'POST',body:data});if(!response.ok)throw Error('Unable to submit. Please ask us for help at the booth.');const result=await response.json();if(!result.orderId)throw Error('Missing order confirmation. Please check with us at the booth.');document.getElementById('orderId').textContent=result.orderId;document.getElementById('successDetails').textContent=`${count} magnet${count===1?'':'s'} • $${prices[count].toFixed(2)} due at booth`;form.classList.add('hidden');document.getElementById('success').classList.remove('hidden');window.scrollTo(0,0)}catch(err){showError(err.message||'Something went wrong. Please ask us for help at the booth.')}finally{btn.disabled=false;btn.textContent='Submit My Photos ♡'}});
+window.addEventListener('beforeunload',releaseItems);
 </script>
 </body>
 </html>
