@@ -298,6 +298,7 @@ function priceCart(items) {
       saveDateTotal += clean.lineTotal;
 
     } else if (sku === "SPECIAL-WESTERN") {
+
       clean.type = "specialty";
       clean.lineTotal = quantity * 20;
       specialtyTotal += clean.lineTotal;
@@ -898,8 +899,8 @@ async function createOrder(request, env) {
   }
 }
 
-// A reservation may be released ONLY after PayPal confirms its order is VOIDED.
-// Unknown/network-error states stay reserved to avoid a second discounted capture.
+ // A reservation may be released ONLY after PayPal confirms its order is VOIDED.
+ // Unknown/network-error states stay reserved to avoid a second discounted capture.
 async function findActiveTiny10Claim(env, email) {
   const claim = await env.DB.prepare(`
     SELECT paypal_order_id, redeemed_at
@@ -1218,9 +1219,9 @@ async function captureOrder(orderID, env) {
   }
 }
 
-// ============================================
-// ADMIN AUTHENTICATION
-// ============================================
+ // ============================================
+ // ADMIN AUTHENTICATION
+ // ============================================
 
 function isAdmin(request, env) {
   if (!env.ADMIN_PASSWORD) return false;
@@ -1595,10 +1596,6 @@ async function updateFulfillment(
     );
   }
 }
-
-// ============================================
-// DELETE UNPAID TEST ORDERS (ADMIN ONLY)
-// ============================================
 
 async function deleteUnpaidOrder(request, env, orderId) {
   const authError = adminError(request, env);
@@ -2078,6 +2075,7 @@ async function subscribeToEmails(request, env) {
           "Welcome email could not be sent:",
           error
         );
+
       }
     }
 
@@ -2306,9 +2304,7 @@ async function calculateTiny10Discount(
   const normalized = normalizedEmail(email);
 
   if (!normalized) {
-    throw new Error(
-      "Enter a valid email address to use TINY10."
-    );
+    throw new Error("Enter a valid email address.");
   }
 
   if (customPhotoTotal < FIRST_ORDER_MINIMUM) {
@@ -2320,7 +2316,7 @@ async function calculateTiny10Discount(
   const subscriber = await env.DB.prepare(`
     SELECT email
     FROM email_subscribers
-    WHERE LOWER(email) = ?
+    WHERE email = ?
       AND status = 'subscribed'
     LIMIT 1
   `).bind(normalized).first();
@@ -2335,9 +2331,7 @@ async function calculateTiny10Discount(
     SELECT id
     FROM orders
     WHERE status = 'PAID'
-      AND LOWER(
-        TRIM(json_extract(customer_json, '$.email'))
-      ) = ?
+      AND LOWER(TRIM(json_extract(customer_json, '$.email'))) = ?
     LIMIT 1
   `).bind(normalized).first();
 
@@ -2498,15 +2492,22 @@ async function submitSaveDateRequest(request, env) {
 
 // ============================================
 // VENDOR MARKET: separate D1 table and private R2 photos
-// Required bindings: DB (D1), VENDOR_PHOTOS (R2), ADMIN_PASSWORD (secret).
+// Required bindings: DB (D1), VENDOR_PHOTOS (R2),
+// ADMIN_PASSWORD (secret).
 // ============================================
+
 const VENDOR_PRICES = { 1: 3, 3: 9, 6: 18, 9: 24 };
+
 const VENDOR_MAX_PHOTO_BYTES = 15 * 1024 * 1024;
-const VENDOR_MAX_REQUEST_BYTES = 9 * VENDOR_MAX_PHOTO_BYTES + 1000000;
+
+const VENDOR_MAX_REQUEST_BYTES =
+  9 * VENDOR_MAX_PHOTO_BYTES + 1000000;
 
 function vendorOriginOK(request) {
   const origin = request.headers.get("Origin");
-  return !origin || origin === new URL(request.url).origin;
+
+  return !origin ||
+    origin === new URL(request.url).origin;
 }
 
 function vendorFileType(bytes, filename) {
@@ -2556,14 +2557,19 @@ async function submitVendorOrder(request, env) {
     const orderId = "VM-" + crypto.randomUUID().slice(0, 8).toUpperCase();
     const photoKeys = [];
 
-    for (let i = 0; i < validated.length; i++) {
-      const file = validated[i];
+    // Upload photos concurrently to reduce wait time at the booth.
+    // allSettled ensures every upload finishes before cleanup on failure.
+    const candidateKeys = validated.map((file, i) => {
       const ext = file.type === "image/png" ? "png" : file.type === "image/heic" ? "heic" : "jpg";
-      const key = `vendor/${orderId}/${i + 1}.${ext}`;
-      await env.VENDOR_PHOTOS.put(key, file.bytes, {httpMetadata:{contentType:file.type}});
-      uploaded.push(key);
-      photoKeys.push(key);
-    }
+      return `vendor/${orderId}/${i + 1}.${ext}`;
+    });
+    uploaded.push(...candidateKeys);
+    const results = await Promise.allSettled(validated.map(async (file, i) => {
+      await env.VENDOR_PHOTOS.put(candidateKeys[i], file.bytes, {httpMetadata:{contentType:file.type}});
+    }));
+    const failed = results.find(result => result.status === "rejected");
+    if (failed) throw failed.reason;
+    photoKeys.push(...candidateKeys);
 
     await env.DB.prepare(`INSERT INTO vendor_orders
       (id, created_at, customer_name, contact, notes, quantity, total, status, photo_keys_json)
