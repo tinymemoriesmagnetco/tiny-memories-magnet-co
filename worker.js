@@ -99,6 +99,9 @@ export default {
       );
     }
 
+    const manualMatch = path.match(/^\/api\/admin\/orders\/([^/]+)\/(manual-paid|duplicate)$/);
+    if (manualMatch && method === "POST") return manualOrderAction(request, env, decodeURIComponent(manualMatch[1]), manualMatch[2]);
+
     // ADMIN: delete an unpaid, unapproved order only after checking PayPal.
     const deleteOrderMatch = path.match(
       /^\/api\/admin\/orders\/([^/]+)\/delete$/
@@ -1024,6 +1027,13 @@ async function findActiveTiny10Claim(env, email) {
 // ============================================
 
 async function captureOrder(orderID, env) {
+  const lock = await env.DB.prepare("INSERT OR IGNORE INTO order_payment_locks (paypal_order_id, kind) VALUES (?, 'capture')").bind(orderID).run();
+  if (lock.meta?.changes !== 1) return json({error: "This order is being processed or was closed. Contact the shop before paying again."}, 409);
+  try { return await captureOrderUnlocked(orderID, env); }
+  finally { await env.DB.prepare("DELETE FROM order_payment_locks WHERE paypal_order_id = ? AND kind = 'capture'").bind(orderID).run(); }
+}
+
+async function captureOrderUnlocked(orderID, env) {
   try {
     if (
       !env.DB ||
@@ -1387,7 +1397,7 @@ async function getAdminStats(request, env) {
 
     const orders = await env.DB.prepare(`
       SELECT
-        COUNT(*) AS total_orders,
+        COUNT(CASE WHEN NOT EXISTS (SELECT 1 FROM order_payment_locks l WHERE l.paypal_order_id = orders.paypal_order_id AND l.kind = 'duplicate') THEN 1 END) AS total_orders,
         COALESCE(
           SUM(CASE WHEN status = 'PAID' THEN 1 ELSE 0 END),
           0
@@ -1496,6 +1506,15 @@ async function getAdminOrders(request, env) {
           : "ACTIVE"
     }));
 
+    const closed = await env.DB.prepare("SELECT * FROM order_payment_locks WHERE kind IN ('manual-paid','duplicate')").all();
+    const closedMap = new Map((closed.results || []).map(r => [r.paypal_order_id, r]));
+    for (const order of orders) {
+      const record = closedMap.get(order.paypalOrderId);
+      if (!record) continue;
+      if (record.kind === 'duplicate') { order.archivedAt = record.recorded_at; order.fulfillmentStatus = 'ARCHIVED'; order.status = 'DUPLICATE'; }
+      else { order.paymentMethod = record.payment_method; }
+      order.orderNotes += '\n' + (record.kind === 'duplicate' ? 'Archived duplicate of ' : 'Manual payment: ' + record.payment_method + ' / reference: ') + record.reference;
+    }
     const rewards = await env.DB.prepare('SELECT order_id FROM black_friday_rewards').all();
     const winners = new Set((rewards.results || []).map(r => r.order_id));
     for (const order of orders) {
@@ -1709,6 +1728,7 @@ async function deleteUnpaidOrder(request, env, orderId) {
       }, 409);
     }
 
+    if (await env.DB.prepare("SELECT 1 FROM order_payment_locks WHERE paypal_order_id = ?").bind(order.paypal_order_id).first()) return json({error: "Order is locked or closed."}, 409);
     // A reserved TINY10 discount must not be orphaned.
     const claim = await env.DB.prepare(`
       SELECT paypal_order_id
@@ -2866,4 +2886,36 @@ async function cleanupOldVendorPhotos(env) {
       console.error('Vendor photo cleanup failed',row.id,e);
     }
   }
+}
+async function manualOrderAction(request, env, id, action) {
+  const auth = adminError(request, env); if (auth) return auth;
+  const body = await request.json().catch(() => ({}));
+  const method = String(body.paymentMethod || '');
+  const reference = String(body.reference || '').trim().slice(0,200);
+  if (!reference || (action === 'manual-paid' && !['Cash App','Venmo','Cash','Other'].includes(method))) return json({error:'Payment method and reference are required.'},400);
+  const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+  if (!order || order.status !== 'PENDING' || !order.paypal_order_id) return json({error:'Only pending orders can be closed.'},409);
+  if (action === 'manual-paid' && Number(body.amount) !== Number(order.total)) return json({error:'Received amount must match the order total.'},400);
+  const lock = await env.DB.prepare("INSERT OR IGNORE INTO order_payment_locks (paypal_order_id, kind) VALUES (?, 'review')").bind(order.paypal_order_id).run();
+  if (lock.meta?.changes !== 1) return json({error:'Order already locked or closed.'},409);
+  try {
+    const token = await getPayPalAccessToken(env);
+    const response = await fetch(`${getPayPalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`, {headers:{Authorization:`Bearer ${token}`}});
+    if (!response.ok) return json({error:'Cannot verify PayPal. No changes made.'},502);
+    const pp = await response.json();
+    if (!['CREATED','APPROVED','PAYER_ACTION_REQUIRED','VOIDED'].includes(pp.status) || (pp.purchase_units || []).some(u => (u.payments?.captures || []).length || (u.payments?.authorizations || []).length)) return json({error:'PayPal has payment evidence or an uncertain status. Review before closing.'},409);
+    const fresh = await env.DB.prepare('SELECT status, paid_at, paypal_capture_json FROM orders WHERE id = ?').bind(id).first();
+    if (!fresh || fresh.status !== 'PENDING' || fresh.paid_at || fresh.paypal_capture_json) return json({error:'Order has changed or contains payment evidence.'},409);
+    if (action === 'duplicate') {
+      const keeper = await env.DB.prepare("SELECT id FROM orders WHERE paypal_order_id = ? AND id != ? AND status = 'PAID'").bind(reference,id).first();
+      if (!keeper) return json({error:'Enter the PayPal order number of the paid order you are keeping.'},400);
+    }
+    const now = new Date().toISOString();
+    const statements = [env.DB.prepare("UPDATE order_payment_locks SET kind=?, payment_method=?, reference=?, recorded_at=? WHERE paypal_order_id=? AND kind='review'").bind(action,method,reference,now,order.paypal_order_id)];
+    if (action === 'manual-paid') statements.push(env.DB.prepare("UPDATE orders SET status='PAID', paid_at=? WHERE id=? AND status='PENDING'").bind(now,id));
+    await env.DB.batch(statements);
+    if (action === 'manual-paid' && order.discount_code === 'BLACKFRIDAY') await awardBlackFriday(env,order.paypal_order_id);
+    return json({success:true});
+  } catch (error) { console.error('Manual order update failed',error); return json({error:'Update could not be confirmed. Refresh before retrying.'},500); }
+  finally { await env.DB.prepare("DELETE FROM order_payment_locks WHERE paypal_order_id=? AND kind='review'").bind(order.paypal_order_id).run(); }
 }
