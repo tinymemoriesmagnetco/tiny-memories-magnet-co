@@ -516,7 +516,7 @@ footer {
 
             <h3>Promo Code</h3>
             <div class="field">
-              <label for="promoCode">Have a subscriber discount code?</label>
+              <label for="promoCode">Have a promo code?</label>
               <div class="promo-row">
                 <input id="promoCode" type="text" placeholder="Enter promo code" autocomplete="off" maxlength="30">
                 <button id="applyPromo" type="button">Apply</button>
@@ -593,7 +593,7 @@ footer {
             </div>
 
             <div class="total-row promo-discount" id="discountRow" hidden>
-              <span>TINY10 discount (pending verification)</span>
+              <span id="discountLabel">Promo discount</span>
               <strong id="discountAmount">-$0.00</strong>
             </div>
             <div class="total-row grand-total">
@@ -626,6 +626,10 @@ footer {
     <p>Your PayPal payment has been confirmed.</p>
 
     <p>We're excited to create your tiny memories!</p>
+    <div id="blackFridayBonus" class="paypal-handle" hidden>
+      <strong>Congratulations! You earned a FREE additional photo magnet!</strong>
+      <p>Email your additional photo and PayPal order ID to <a href="mailto:tinymemoriesmagnetco@outlook.com">tinymemoriesmagnetco@outlook.com</a>. No additional shipping charge.</p>
+    </div>
 
     <p>
       <strong>PayPal Order ID:</strong>
@@ -676,23 +680,62 @@ const NAME_PRICES = {
 let checkoutBusy = false;
 let paypalButtonsReady = false;
 let appliedPromoCode = "";
+let verifiedPromoAmount = 0;
+let verifiedPromoKey = "";
+let promoRequest = 0;
+let promoPending = false;
+function promoKey(cart) {
+  return JSON.stringify(cart);
+}
 function previewDiscount(totals) {
+  if (appliedPromoCode === "BLACKFRIDAY") {
+    return verifiedPromoKey === promoKey(getCart()) ? verifiedPromoAmount : 0;
+  }
   if (appliedPromoCode !== "TINY10" || totals.customPhotoTotal < 20) return 0;
   return Math.round(Math.min(5, totals.customPhotoTotal * .10) * 100) / 100;
 }
-function updatePromo() {
+async function updatePromo() {
   if (checkoutBusy) return;
+  const requestId = ++promoRequest;
   const input = document.getElementById("promoCode");
   const feedback = document.getElementById("promoFeedback");
   const code = input.value.trim().toUpperCase();
+  const cart = getCart();
+  const key = promoKey(cart);
   appliedPromoCode = "";
+  verifiedPromoAmount = 0;
+  verifiedPromoKey = "";
+  promoPending = false;
   if (!code) {
-    feedback.textContent = "Enter your subscriber code to see estimated savings.";
+    feedback.textContent = "Enter a promo code to see savings.";
+  } else if (code === "BLACKFRIDAY") {
+    promoPending = true;
+    feedback.textContent = "Checking Black Friday eligibility...";
+    renderOrder();
+    try {
+      const response = await fetch("/api/discount/validate", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({discountCode: code, cart, email: getCustomerInformation().email})
+      });
+      const data = await response.json();
+      if (requestId !== promoRequest) return;
+      if (key !== promoKey(getCart())) throw Error("Your cart changed. Please apply the code again.");
+      if (!response.ok || data.valid !== true || !Number.isFinite(Number(data.discountAmount)) || Number(data.discountAmount) < 0) throw Error(data.error || "Unable to validate promo code.");
+      appliedPromoCode = code;
+      verifiedPromoAmount = Number(data.discountAmount);
+      verifiedPromoKey = key;
+      feedback.textContent = "BLACKFRIDAY applied! First 10 qualifying paid orders of 12+ custom photo magnets earn a free additional magnet.";
+    } catch (error) {
+      if (requestId === promoRequest) feedback.textContent = error.message;
+    } finally {
+      if (requestId === promoRequest) promoPending = false;
+    }
+    if (requestId !== promoRequest) return;
   } else if (code !== "TINY10") {
     feedback.textContent = "Promo code not recognized.";
   } else {
     try {
-      const totals = cartPricing(getCart());
+      const totals = cartPricing(cart);
       if (totals.customPhotoTotal < 20) {
         feedback.textContent = "TINY10 requires at least $20 in Custom Photo Magnets.";
       } else {
@@ -703,7 +746,6 @@ function updatePromo() {
   }
   renderOrder();
 }
-
 
 function money(value) {
   return "$" + Number(value).toFixed(2);
@@ -1211,10 +1253,15 @@ function renderOrder() {
       (calculateShipping(cart) === null ?
         (cart.some(item => String(item.sku || "").trim().toUpperCase() === "SAVE-DATE-SET") ? "Contact us for a shipping quote" : "Enter shipping address") : money(calculateShipping(cart)));
 
-    if (appliedPromoCode && totals.customPhotoTotal < 20) {
+    if (appliedPromoCode === "TINY10" && totals.customPhotoTotal < 20) {
       appliedPromoCode = "";
       document.getElementById("promoFeedback").textContent = "TINY10 needs at least $20 in Custom Photo Magnets.";
     }
+    if (appliedPromoCode === "BLACKFRIDAY" && verifiedPromoKey !== promoKey(cart)) {
+      appliedPromoCode = "";
+      document.getElementById("promoFeedback").textContent = "Cart changed. Click Apply to check BLACKFRIDAY again.";
+    }
+    document.getElementById("discountLabel").textContent = appliedPromoCode === "BLACKFRIDAY" ? "BLACKFRIDAY discount" : "TINY10 discount (pending verification)";
     const discount = previewDiscount(totals);
     document.getElementById("discountRow").hidden = !discount;
     document.getElementById("discountAmount").textContent = "-" + money(discount);
@@ -1297,6 +1344,9 @@ async function refreshLiveShipping() {
 }
 
 async function createPaypalOrder() {
+  if (promoPending) throw Error("Please wait for promo validation.");
+  const enteredCode = document.getElementById("promoCode").value.trim().toUpperCase();
+  if (enteredCode === "BLACKFRIDAY" && appliedPromoCode !== enteredCode) throw Error("Please apply BLACKFRIDAY successfully or clear the code before paying.");
   if (!validateForm()) {
     throw Error("Please complete your checkout information.");
   }
@@ -1372,7 +1422,8 @@ async function capturePaypalOrder(orderID) {
   return data;
 }
 
-function finishSuccessfulOrder(orderID) {
+function finishSuccessfulOrder(orderID, result) {
+  document.getElementById("blackFridayBonus").hidden = result?.blackFridayBonus !== true;
   const record = {
     orderID,
     customer: getCustomerInformation(),
@@ -1511,7 +1562,7 @@ async function loadPayPal() {
             result.success === true &&
             result.status === "COMPLETED"
           ) {
-            finishSuccessfulOrder(data.orderID);
+            finishSuccessfulOrder(data.orderID, result);
 
           } else {
             throw Error(
@@ -1575,7 +1626,7 @@ async function loadPayPal() {
            try {
              const result = await capturePaypalOrder(data.orderID);
              if (result.success === true && result.status === "COMPLETED") {
-               finishSuccessfulOrder(data.orderID);
+               finishSuccessfulOrder(data.orderID, result);
              } else {
                throw Error("Payment not confirmed. Please contact us before trying again.");
              }
@@ -1639,7 +1690,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (renderOrder()) {
     document.getElementById("applyPromo").addEventListener("click", updatePromo);
     document.getElementById("promoCode").addEventListener("input", () => {
-      if (appliedPromoCode) {
+      ++promoRequest;
+      promoPending = false;
+      if (appliedPromoCode || verifiedPromoAmount) {
         appliedPromoCode = "";
         document.getElementById("promoFeedback").textContent = "Click Apply to check your updated code.";
         renderOrder();
