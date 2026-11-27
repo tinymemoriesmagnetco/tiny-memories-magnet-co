@@ -190,6 +190,53 @@ function calculateMerchandiseTotal(quantity) {
   return Number(total.toFixed(2));
 }
 
+function blackFridayIsActive(env) {
+  const start = Date.parse(String(env.BLACK_FRIDAY_START || '').trim());
+  const end = Date.parse(String(env.BLACK_FRIDAY_END || '').trim());
+  return String(env.BLACK_FRIDAY_ENABLED || '').trim().toLowerCase() === 'true' &&
+    Date.now() >= start && Date.now() < end;
+}
+function blackFridayCode(env) {
+  return String(env.BLACK_FRIDAY_CODE || '').trim().toUpperCase();
+}
+function blackFridayQuantity(items) {
+  return items.reduce((n, i) => n + (i.type === 'custom' && i.sku === 'CUSTOM-PHOTO' ? i.quantity : 0), 0);
+}
+function blackFridayBundleTotal(n) {
+  const prices = [0];
+  for (let i = 1; i <= n; i++) {
+    prices[i] = Math.min(...[[1,3],[6,16],[9,21],[12,28],[18,40]]
+      .filter(([q]) => q <= i).map(([q,p]) => prices[i-q]+p));
+  }
+  return prices[n];
+}
+function calculateBlackFridayDiscount(env, priced) {
+  if (!blackFridayIsActive(env)) throw new Error('The Black Friday promotion is not currently active.');
+  const n = blackFridayQuantity(priced.cleanItems);
+  if (n < 6) throw new Error('Add at least 6 Custom Photo Magnets to use BLACKFRIDAY.');
+  return Math.max(0, priced.customPhotoTotal - blackFridayBundleTotal(n));
+}
+// Award only after payment. A single atomic insert enforces the ten-slot limit.
+async function awardBlackFriday(env, orderID) {
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO black_friday_rewards
+      (slot, order_id, paypal_order_id, customer_email, awarded_at)
+    SELECT slots.slot, o.id, o.paypal_order_id,
+      COALESCE(json_extract(o.customer_json, '$.email'), ''), o.paid_at
+    FROM orders o CROSS JOIN (
+      SELECT 1 AS slot UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+      UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
+      UNION ALL SELECT 9 UNION ALL SELECT 10
+    ) slots
+    WHERE o.paypal_order_id = ? AND o.status = 'PAID' AND o.discount_code = 'BLACKFRIDAY'
+      AND (SELECT COALESCE(SUM(json_extract(value,'$.quantity')),0) FROM json_each(o.items_json)
+        WHERE json_extract(value,'$.type') = 'custom' AND json_extract(value,'$.sku') = 'CUSTOM-PHOTO') >= 12
+      AND NOT EXISTS (SELECT 1 FROM black_friday_rewards r WHERE r.slot = slots.slot)
+    ORDER BY slots.slot LIMIT 1
+  `).bind(orderID).run();
+  return !!(await env.DB.prepare('SELECT slot FROM black_friday_rewards WHERE paypal_order_id = ?').bind(orderID).first());
+}
+
 function priceCart(items) {
   let handmadeQuantity = 0;
   let customPhotoTotal = 0;
@@ -742,6 +789,12 @@ async function createOrder(request, env) {
     let discountAmount = 0;
 
     if (requestedDiscountCode) {
+      if (requestedDiscountCode === "BLACKFRIDAY" && requestedDiscountCode === blackFridayCode(env)) {
+        try {
+          discountAmount = calculateBlackFridayDiscount(env, priced);
+          discountCode = requestedDiscountCode;
+        } catch (error) { return json({ error: error.message }, 400); }
+      } else {
       if (requestedDiscountCode !== "TINY10") {
         return json(
           { error: "Invalid discount code." },
@@ -763,6 +816,8 @@ async function createOrder(request, env) {
           400
         );
       }
+    }
+
     }
 
     const total = Number(
@@ -993,7 +1048,9 @@ async function captureOrder(orderID, env) {
     }
 
     if (order.status === "PAID") {
+      const blackFridayBonus = order.discount_code === 'BLACKFRIDAY' ? await awardBlackFriday(env, orderID) : false;
       return json({
+        blackFridayBonus,
         success: true,
         status: "COMPLETED"
       });
@@ -1064,7 +1121,9 @@ async function captureOrder(orderID, env) {
         ).run();
       }
 
+      const blackFridayBonus = order.discount_code === 'BLACKFRIDAY' ? await awardBlackFriday(env, orderID) : false;
       return json({
+        blackFridayBonus,
         success: true,
         status: "COMPLETED",
         paypal: paypalOrder
@@ -1204,7 +1263,9 @@ async function captureOrder(orderID, env) {
       ).run();
     }
 
+    const blackFridayBonus = paid && order.discount_code === 'BLACKFRIDAY' ? await awardBlackFriday(env, orderID) : false;
     return json({
+      blackFridayBonus,
       success: paid,
       status: captureData.status,
       paypal: captureData
@@ -1435,6 +1496,12 @@ async function getAdminOrders(request, env) {
           : "ACTIVE"
     }));
 
+    const rewards = await env.DB.prepare('SELECT order_id FROM black_friday_rewards').all();
+    const winners = new Set((rewards.results || []).map(r => r.order_id));
+    for (const order of orders) {
+      order.blackFridayBonus = winners.has(order.id);
+      if (order.blackFridayBonus) order.orderNotes += '\nBLACK FRIDAY: 1 free additional photo magnet. Await customer photo.';
+    }
     return json(orders);
 
   } catch (error) {
@@ -2160,6 +2227,13 @@ async function validateDiscount(request, env) {
 
     const email = normalizedEmail(body.email);
 
+    if (code === 'BLACKFRIDAY' && code === blackFridayCode(env)) {
+      try {
+        const priced = priceCart(Array.isArray(body.cart) ? body.cart : (Array.isArray(body.items) ? body.items : []));
+        const discountAmount = calculateBlackFridayDiscount(env, priced);
+        return json({ valid: true, discountCode: code, discountAmount, merchandiseTotal: priced.merchandiseTotal });
+      } catch (error) { return json({ valid: false, error: error.message }, 400); }
+    }
     if (code !== FIRST_ORDER_CODE) {
       return json({
         valid: false,
