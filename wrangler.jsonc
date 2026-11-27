@@ -1,9 +1,17 @@
-
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tiny-memories-magnet-co",
   "main": "worker.js",
   "compatibility_date": "2026-10-05",
+
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
 
   "assets": {
     "directory": "./",
