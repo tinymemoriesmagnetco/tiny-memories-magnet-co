@@ -26,6 +26,10 @@
   ],
 
   "vars": {
-    "PAYPAL_ENV": "live"
+    "PAYPAL_ENV": "live",
+    "BLACK_FRIDAY_ENABLED": "true",
+    "BLACK_FRIDAY_CODE": "BLACKFRIDAY",
+    "BLACK_FRIDAY_START": "2026-11-27T08:00:00-05:00",
+    "BLACK_FRIDAY_END": "2026-12-01T00:00:00-05:00"
   }
 }
