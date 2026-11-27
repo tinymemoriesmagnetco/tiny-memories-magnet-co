@@ -739,7 +739,7 @@ function createOrderCard(order) {
   const paymentBadge = document.createElement("span");
   paymentBadge.className =
     "status " + (status === "PAID" ? "" : "pending");
-  paymentBadge.textContent = status;
+  paymentBadge.textContent = status + (order.paymentMethod ? " · " + order.paymentMethod : "");
   badges.appendChild(paymentBadge);
 
   if (archived || shipped) {
@@ -843,7 +843,7 @@ function createOrderCard(order) {
   const actions = document.createElement("div");
   actions.className = "order-actions";
 
-  if (archived) {
+  if (archived && status !== "DUPLICATE") {
     const restoreButton = document.createElement("button");
     restoreButton.className = "action-button restore";
     restoreButton.textContent = "Restore Order";
@@ -895,6 +895,22 @@ function createOrderCard(order) {
   // Only show delete for unpaid, non-archived orders.
   // The server independently verifies the current PayPal payment status.
   if (!archived && status === "PENDING") {
+    for (const [action,label] of [["manual-paid","Mark as Paid Manually"],["duplicate","Archive Duplicate Order"]]) {
+      const b = document.createElement("button"); b.type="button"; b.className="action-button"; b.textContent=label;
+      b.addEventListener("click", async () => {
+        const paymentMethod = action === "manual-paid" ? prompt("Payment method: Cash App, Venmo, Cash, or Other", "Cash App") : "";
+        if (paymentMethod === null) return;
+        const reference = prompt(action === "manual-paid" ? "Enter the payment transaction reference" : "Enter the PayPal order number of the PAID order you are keeping");
+        if (!reference) return;
+        const amount = action === "manual-paid" ? prompt("Actual amount received (USD)", Number(order.total).toFixed(2)) : "";
+        if (amount === null || !confirm("Confirm this update? No PayPal payment will be captured.")) return;
+        b.disabled=true;
+        try {
+          const response = await fetch("/api/admin/orders/"+encodeURIComponent(order.id)+"/"+action,{method:"POST",headers:{"x-admin-password":adminPassword,"Content-Type":"application/json"},body:JSON.stringify({paymentMethod,reference,amount})});
+          const data=await response.json(); if(!response.ok) throw new Error(data.error || "Update failed"); await loadDashboard();
+        } catch(e) { alert(e.message); } finally { b.disabled=false; }
+      }); actions.appendChild(b);
+    }
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "action-button delete";
